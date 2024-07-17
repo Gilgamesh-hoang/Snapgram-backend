@@ -8,6 +8,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.snapgram.entity.generator.UUIDGenerator;
+import org.snapgram.enums.Gender;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -59,9 +60,4 @@ public class User {
     @Temporal(TemporalType.TIMESTAMP)
     private Timestamp createdAt;
 
-    public enum Gender {
-        MALE, FEMALE
-    }
-
-    // getters and setters
 }

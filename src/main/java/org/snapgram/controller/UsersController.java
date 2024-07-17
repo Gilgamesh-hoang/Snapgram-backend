@@ -1,34 +1,31 @@
 package org.snapgram.controller;
 
-import org.snapgram.entity.User;
-import org.snapgram.mapper.UserMapper;
-import org.snapgram.model.UserDTO;
-import org.snapgram.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
+import jakarta.validation.Valid;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.snapgram.model.request.SignupRequest;
+import org.snapgram.service.impl.UserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("${API_PREFIX}/users")
 public class UsersController {
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    UserMapper userMapper;
+    UserService userService;
 
-    @GetMapping
-    public UserDTO statusCheck() {
-        // create a user and fake data for user
-
-        User user = new User();
-        user.setNickName("test");
-        user.setEmail("a");
-        user.setPassword("a");
-        user.setFullName("a");
-        user.setAvatarUrl("a");
-        user.setBio("a");
-        user.setGender(User.Gender.FEMALE);
-        return userMapper.toDTO(userRepository.save(user));
+    @PostMapping
+    public ResponseEntity<String> signup(@Valid @RequestBody SignupRequest request) {
+        boolean created = userService.createUser(request);
+        if (!created) {
+            return new ResponseEntity<>("User creation failed", HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>("User created successfully", HttpStatus.OK);
     }
 }
