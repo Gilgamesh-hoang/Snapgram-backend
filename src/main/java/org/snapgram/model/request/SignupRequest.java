@@ -5,7 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import org.snapgram.annotation.PasswordMatches.PasswordMatches;
+import org.snapgram.annotation.enumPattern.EnumPattern;
+import org.snapgram.annotation.passwordMatches.PasswordMatches;
 import org.snapgram.enums.Gender;
 
 import java.io.Serializable;
@@ -34,5 +35,6 @@ public class SignupRequest implements Serializable {
     private String fullName;
 
     @NotNull(message = "Gender is mandatory")
+    @EnumPattern(name = "gender", regexp = "FEMALE|MALE")
     private Gender gender;
 }
