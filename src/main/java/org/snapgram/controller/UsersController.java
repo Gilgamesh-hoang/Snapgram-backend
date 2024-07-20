@@ -6,13 +6,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.model.request.SignupRequest;
 import org.snapgram.model.response.ResponseObject;
+import org.snapgram.model.response.UserDTO;
 import org.snapgram.service.impl.UserService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,7 +20,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class UsersController {
     UserService userService;
 
-    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping
+    public ResponseObject<UserDTO> getUsers() {
+        return new ResponseObject<UserDTO>(HttpStatus.OK, "Users retrieved successfully",
+                UserDTO.builder().email("cacafc").id(UUID.randomUUID()).nickName("fsfsgnuin").build());
+    }
+
+    @PostMapping
     public ResponseObject<Void> signup(@Valid @RequestBody SignupRequest request) {
         boolean created = userService.createUser(request);
         if (!created) {
