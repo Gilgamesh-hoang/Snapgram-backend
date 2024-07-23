@@ -31,7 +31,7 @@ public class User {
     private UUID id;
 
     @Column(name = "nick_name", length = 50, nullable = false, unique = true)
-    private String nickName;
+    private String nickname;
 
     @Column(length = 100, nullable = false, unique = true)
     private String email;

@@ -14,9 +14,9 @@ import java.io.Serializable;
 @Data
 @PasswordMatches
 public class SignupRequest implements Serializable {
-    @NotBlank(message = "NickName is mandatory")
+    @NotBlank(message = "Nickname is mandatory")
     @Size(min = 3, max = 50, message = "NickName must be between 3 and 50 characters")
-    private String nickName;
+    private String nickname;
 
     @NotBlank(message = "Email is mandatory")
     @Email(message = "Email should be valid")

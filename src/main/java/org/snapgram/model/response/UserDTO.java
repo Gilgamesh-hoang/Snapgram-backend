@@ -9,6 +9,6 @@ import java.util.UUID;
 @Builder
 public class UserDTO {
     private UUID id;
-    private String nickName;
+    private String nickname;
     private String email;
 }

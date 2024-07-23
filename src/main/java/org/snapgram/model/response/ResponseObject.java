@@ -10,6 +10,9 @@ public class ResponseObject<T> extends ResponseEntity<ResponseObject.Payload<T>>
     public ResponseObject(HttpStatus status, String message) {
         this(status, message, null);
     }
+    public ResponseObject(HttpStatus status, T data) {
+        this(status, null, data);
+    }
 
     public ResponseObject(HttpStatus status, String message, T data) {
         super(new Payload<T>(status.value(), message, data), status == HttpStatus.NO_CONTENT ? HttpStatus.OK : status);

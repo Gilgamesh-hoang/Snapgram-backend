@@ -15,7 +15,6 @@ import java.sql.Timestamp;
 @Data
 public class ErrorResponse implements Serializable {
     final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-    int status;
     String error;
     String message;
     String path;

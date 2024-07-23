@@ -2,6 +2,7 @@ package org.snapgram.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import org.snapgram.model.response.ErrorResponse;
+import org.snapgram.model.response.ResponseObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 
 import java.nio.file.AccessDeniedException;
 
@@ -21,13 +23,23 @@ public class GlobalExceptionHandler {
         return request.getDescription(false).replace("uri=", "");
     }
 
-    @ExceptionHandler({ConstraintViolationException.class,
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseObject<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("Invalid Data")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
+    }
+
+    @ExceptionHandler({
             MissingServletRequestParameterException.class,
             MethodArgumentNotValidException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleValidationException(Exception e, WebRequest request, BindingResult bindingResult) {
+    public ResponseObject<ErrorResponse> handleValidationException(Exception e, WebRequest request, BindingResult bindingResult) {
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
                 .path(getPath(request))
                 .build();
 //        String message = e.getMessage();
@@ -46,59 +58,67 @@ public class GlobalExceptionHandler {
         } else if (e instanceof MissingServletRequestParameterException) {
             errorResponse.setError("Invalid Parameter");
             errorResponse.setMessage(message);
-        } else if (e instanceof ConstraintViolationException) {
-            errorResponse.setError("Invalid Parameter");
-            errorResponse.setMessage(message.substring(message.indexOf(" ") + 1));
         } else {
             errorResponse.setError("Invalid Data");
             errorResponse.setMessage(message);
         }
-
-        return errorResponse;
+        return new ResponseObject<>(HttpStatus.BAD_REQUEST, errorResponse);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
-        return ErrorResponse.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
+    public ResponseObject<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
                 .error("Invalid Data")
                 .path(getPath(request))
                 .message(ex.getMessage())
                 .build();
+        return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
+    }
+
+    // validate in @RequestParam
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseObject<ErrorResponse> handleMethodValidationException(HandlerMethodValidationException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("Invalid Data")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleHttpMessageNotReadableException(HttpMessageNotReadableException ex, WebRequest request) {
-        return ErrorResponse.builder()
-                .status(HttpStatus.BAD_REQUEST.value())
+    public ResponseObject<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
                 .error("Invalid Data")
                 .path(getPath(request))
                 .message(ex.getMessage())
                 .build();
+        return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ErrorResponse handleAccessDenied(WebRequest request) {
-        return ErrorResponse.builder()
-                .status(HttpStatus.UNAUTHORIZED.value())
+    public ResponseObject<ErrorResponse> handleAccessDenied(WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
                 .error("Access Denied")
                 .path(getPath(request))
                 .message("You are not authorized to access this resource")
                 .build();
+        return new ResponseObject<>(HttpStatus.UNAUTHORIZED, error);
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleException(Exception ex) {
+    public ResponseObject<ErrorResponse> handleException(Exception ex) {
         ex.printStackTrace();
-        return ErrorResponse.builder()
-                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+        ErrorResponse error = ErrorResponse.builder()
                 .error("Internal Server Error")
                 .message(ex.getMessage())
                 .build();
+        return new ResponseObject<>(HttpStatus.UNAUTHORIZED, error);
     }
 
 
