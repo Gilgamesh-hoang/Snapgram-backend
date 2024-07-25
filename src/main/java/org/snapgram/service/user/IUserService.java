@@ -3,12 +3,50 @@ package org.snapgram.service.user;
 import org.snapgram.model.request.SignupRequest;
 import org.snapgram.model.response.UserDTO;
 
+/**
+ * Interface for User Service.
+ * This interface provides methods for user management.
+ */
 public interface IUserService {
+
+    /**
+     * Creates a new user.
+     *
+     * @param request the signup request containing user details
+     * @return the created user as a UserDTO
+     */
     UserDTO createUser(SignupRequest request);
 
+    /**
+     * Checks if an email already exists in the system.
+     *
+     * @param email the email to check
+     * @return true if the email exists, false otherwise
+     */
     boolean emailExists(String email);
 
+    /**
+     * Checks if a nickname already exists in the system.
+     *
+     * @param nickname the nickname to check
+     * @return true if the nickname exists, false otherwise
+     */
     boolean nicknameExists(String nickname);
 
+    /**
+     * Verifies a user's email with a provided code.
+     *
+     * @param email the email to verify
+     * @param code  the verification code
+     * @return true if the verification is successful, false otherwise
+     */
     boolean verifyEmail(String email, String code);
+
+    /**
+     * Generates a forgot password code for a user.
+     *
+     * @param email the email of the user who forgot their password
+     * @return the generated forgot password code
+     */
+    String generateForgotPasswordCode(String email);
 }

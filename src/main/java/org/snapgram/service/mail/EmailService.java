@@ -45,6 +45,15 @@ public class EmailService implements IEmailService {
         sendMail(user.getEmail(), "Snapgram - Xác thực tài khoản", process);
     }
 
+    @Override
+    public void sendForgotPasswordEmail(String email, String newPassword) {
+        Context context = new Context();
+        context.setVariable("newPassword", newPassword);
+        context.setVariable("email", email);
+        String process = templateEngine.process("forgot-password.html", context);
+        sendMail(email, "Snapgram - Quên mật khẩu", process);
+    }
+
     private void sendMail(String to, String subject, String content) {
         executorService.submit(() -> {
             try {

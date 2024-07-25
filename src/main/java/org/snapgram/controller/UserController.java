@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.exception.ResourceNotFoundException;
+import org.snapgram.model.request.EmailRequest;
 import org.snapgram.model.request.SignupRequest;
 import org.snapgram.model.response.ResponseObject;
 import org.snapgram.model.response.UserDTO;
@@ -24,6 +26,17 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     IUserService userService;
     IEmailService emailService;
+
+    @PostMapping("/forgot-password")
+    public ResponseObject<Void> verifyEmail(@RequestBody @Valid EmailRequest request) {
+        boolean isExists = userService.emailExists(request.getEmail());
+        if (!isExists) {
+            throw new ResourceNotFoundException("Email not found");
+        }
+        String newPassword = userService.generateForgotPasswordCode(request.getEmail());
+        emailService.sendForgotPasswordEmail(request.getEmail(), newPassword);
+        return new ResponseObject<>(HttpStatus.CREATED, "Set new password successfully");
+    }
 
     @GetMapping("/email-exists")
     public ResponseObject<Boolean> emailExists(@RequestParam @NotBlank @Email String email) {
@@ -45,6 +58,5 @@ public class UserController {
         }
         emailService.sendVerificationEmail(user);
         return new ResponseObject<>(HttpStatus.CREATED, "User created successfully");
-
     }
 }

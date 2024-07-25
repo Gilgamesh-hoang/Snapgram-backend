@@ -10,6 +10,7 @@ import org.snapgram.mapper.UserMapper;
 import org.snapgram.model.request.SignupRequest;
 import org.snapgram.model.response.UserDTO;
 import org.snapgram.repository.UserRepository;
+import org.springframework.data.domain.Example;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -70,5 +71,16 @@ public class UserService implements IUserService {
         user.setIsActive(true);
         userRepository.save(user);
         return true;
+    }
+
+    @Override
+    public String generateForgotPasswordCode(String email) {
+        Example<User> example = Example.of(User.builder().email(email).isActive(true).build());
+        User user = userRepository.findOne(example).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        String newPassword = Generators.randomBasedGenerator().generate().toString()
+                .replaceAll("-", "").substring(0, 10);
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return newPassword;
     }
 }
