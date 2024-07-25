@@ -3,6 +3,7 @@ package org.snapgram.model.response;
 import lombok.Builder;
 import lombok.Data;
 
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @Data
@@ -10,5 +11,8 @@ import java.util.UUID;
 public class UserDTO {
     private UUID id;
     private String nickname;
+    private String fullName;
     private String email;
+    private String activeCode;
+    private Timestamp createdAt;
 }

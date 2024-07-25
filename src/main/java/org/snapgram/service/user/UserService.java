@@ -1,16 +1,20 @@
-package org.snapgram.service.impl;
+package org.snapgram.service.user;
 
+import com.fasterxml.uuid.Generators;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.entity.User;
-import org.snapgram.enums.Gender;
+import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.model.request.SignupRequest;
+import org.snapgram.model.response.UserDTO;
 import org.snapgram.repository.UserRepository;
-import org.snapgram.service.IUserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +25,7 @@ public class UserService implements IUserService {
     PasswordEncoder passwordEncoder;
 
     @Override
-    public boolean createUser(SignupRequest request) {
+    public UserDTO createUser(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("User with email already exists");
         }
@@ -32,11 +36,12 @@ public class UserService implements IUserService {
         // Map the SignupRequest to a User entity
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setActiveCode(Generators.randomBasedGenerator().generate().toString());
         // Save the User entity to the database
         user = userRepository.save(user);
 
         // Return true if the user was created successfully, false otherwise
-        return user != null;
+        return userMapper.toDTO(user);
     }
 
     @Override
@@ -47,5 +52,23 @@ public class UserService implements IUserService {
     @Override
     public boolean nicknameExists(String nickname) {
         return userRepository.existsByNickname(nickname);
+    }
+
+    @Override
+    public boolean verifyEmail(String email, String code) {
+        User user = userRepository.findByEmailAndActiveCode(email, code).orElse(null);
+        if (user == null)
+            throw new ResourceNotFoundException("Email or code is invalid");
+
+        LocalDateTime userCreationTime = user.getCreatedAt().toLocalDateTime();
+        LocalDateTime currentTime = new Timestamp(System.currentTimeMillis()).toLocalDateTime();
+        if (userCreationTime.plusDays(3).isBefore(currentTime)) {
+            return false;
+        }
+
+        user.setActiveCode(null);
+        user.setIsActive(true);
+        userRepository.save(user);
+        return true;
     }
 }

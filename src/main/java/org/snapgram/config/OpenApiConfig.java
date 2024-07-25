@@ -13,7 +13,7 @@ import java.util.List;
 @Configuration
 public class OpenApiConfig {
 
-    @Value("${application.url}")
+    @Value("${application.backend.url}")
     private String devUrl;
 
 

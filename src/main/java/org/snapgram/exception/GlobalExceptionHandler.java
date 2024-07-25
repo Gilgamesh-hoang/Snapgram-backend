@@ -34,6 +34,17 @@ public class GlobalExceptionHandler {
         return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseObject<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("Resource Not Found")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.NOT_FOUND, error);
+    }
+
     @ExceptionHandler({
             MissingServletRequestParameterException.class,
             MethodArgumentNotValidException.class})

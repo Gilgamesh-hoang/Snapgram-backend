@@ -9,7 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.model.request.SignupRequest;
 import org.snapgram.model.response.ResponseObject;
-import org.snapgram.service.impl.UserService;
+import org.snapgram.model.response.UserDTO;
+import org.snapgram.service.mail.IEmailService;
+import org.snapgram.service.user.IUserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +21,9 @@ import org.springframework.web.bind.annotation.*;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequestMapping("${API_PREFIX}/users")
 @Validated
-public class UsersController {
-    UserService userService;
+public class UserController {
+    IUserService userService;
+    IEmailService emailService;
 
     @GetMapping("/email-exists")
     public ResponseObject<Boolean> emailExists(@RequestParam @NotBlank @Email String email) {
@@ -36,12 +39,12 @@ public class UsersController {
 
     @PostMapping("/sign-up")
     public ResponseObject<Void> signup(@Valid @RequestBody SignupRequest request) {
-        boolean created = userService.createUser(request);
-
-        if (created) {
-            return new ResponseObject<>(HttpStatus.CREATED, "User created successfully");
+        UserDTO user = userService.createUser(request);
+        if (user == null) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST, "User creation failed");
         }
+        emailService.sendVerificationEmail(user);
+        return new ResponseObject<>(HttpStatus.CREATED, "User created successfully");
 
-        return new ResponseObject<>(HttpStatus.BAD_REQUEST, "User creation failed");
     }
 }
