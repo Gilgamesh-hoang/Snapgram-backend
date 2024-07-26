@@ -8,12 +8,16 @@ plugins {
 group = 'org.snapgram'
 version = '1.0'
 
+//sonar {
+//    properties {
+//        property "sonar.projectKey", "Snapgram-backend"
+//    }
+//}
 sonar {
     properties {
         property "sonar.projectKey", "Snapgram-backend"
     }
 }
-
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
