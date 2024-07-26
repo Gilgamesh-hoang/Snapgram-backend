@@ -1,4 +1,5 @@
 package org.snapgram.entity;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
@@ -6,7 +7,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.snapgram.entity.generator.UUIDGenerator;
 
-import java.sql.Timestamp;
 import java.util.UUID;
 
 @Data

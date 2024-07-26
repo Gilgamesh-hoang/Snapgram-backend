@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class EmailService implements IEmailService {
     private final ExecutorService executorService = Executors.newFixedThreadPool(2);
     private final TemplateEngine templateEngine;
     private final JavaMailSender mailSender;
-
+    private final Logger logger = Logger.getLogger(getClass().getName());
     @Value("${spring.mail.username}")
     private String username;
     @Value("${application.frontend.url}")
@@ -65,9 +66,8 @@ public class EmailService implements IEmailService {
                 helper.setText(content, true);
 
                 mailSender.send(message);
-                System.out.println("Message sent successfully");
             } catch (MessagingException ex) {
-                ex.printStackTrace();
+                logger.warning(ex.getMessage());
             }
         });
     }

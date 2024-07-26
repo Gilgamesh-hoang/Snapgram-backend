@@ -5,8 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import org.snapgram.annotation.enumPattern.EnumPattern;
-import org.snapgram.annotation.passwordMatches.PasswordMatches;
+import org.snapgram.annotation.enum_pattern.EnumPattern;
+import org.snapgram.annotation.password_matches.PasswordMatches;
 import org.snapgram.enums.Gender;
 
 import java.io.Serializable;

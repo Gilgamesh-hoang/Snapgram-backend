@@ -1,4 +1,4 @@
-package org.snapgram.annotation.passwordMatches;
+package org.snapgram.annotation.password_matches;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

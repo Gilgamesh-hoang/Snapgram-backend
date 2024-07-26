@@ -7,7 +7,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.snapgram.entity.generator.UUIDGenerator;
 
-import java.sql.Timestamp;
 import java.util.UUID;
 
 @Data

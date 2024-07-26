@@ -78,7 +78,7 @@ public class UserService implements IUserService {
         Example<User> example = Example.of(User.builder().email(email).isActive(true).build());
         User user = userRepository.findOne(example).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         String newPassword = Generators.randomBasedGenerator().generate().toString()
-                .replaceAll("-", "").substring(0, 10);
+                .replace("-", "").substring(0, 10);
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         return newPassword;

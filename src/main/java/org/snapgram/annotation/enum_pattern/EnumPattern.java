@@ -1,4 +1,4 @@
-package org.snapgram.annotation.enumPattern;
+package org.snapgram.annotation.enum_pattern;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

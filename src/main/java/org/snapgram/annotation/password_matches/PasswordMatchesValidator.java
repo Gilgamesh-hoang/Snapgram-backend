@@ -1,4 +1,4 @@
-package org.snapgram.annotation.passwordMatches;
+package org.snapgram.annotation.password_matches;
 
 
 import jakarta.validation.ConstraintValidator;
@@ -8,7 +8,7 @@ import org.snapgram.model.request.SignupRequest;
 public class PasswordMatchesValidator implements ConstraintValidator<PasswordMatches, SignupRequest> {
 
     @Override
-    public void initialize(PasswordMatches constraintAnnotation) {
+    public void initialize(PasswordMatches constraintAnnotation) { // default implementation ignored
     }
 
     @Override
