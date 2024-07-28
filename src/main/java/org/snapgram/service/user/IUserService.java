@@ -10,6 +10,14 @@ import org.snapgram.model.response.UserDTO;
 public interface IUserService {
 
     /**
+     * Deletes a user.
+     *
+     * @param userDTO the user to delete
+     * @return the deleted user as a UserDTO
+     */
+    UserDTO deleteUser(UserDTO userDTO);
+
+    /**
      * Creates a new user.
      *
      * @param request the signup request containing user details
@@ -23,7 +31,7 @@ public interface IUserService {
      * @param email the email to check
      * @return true if the email exists, false otherwise
      */
-    boolean emailExists(String email);
+    boolean isEmailExists(String email);
 
     /**
      * Checks if a nickname already exists in the system.
@@ -31,7 +39,7 @@ public interface IUserService {
      * @param nickname the nickname to check
      * @return true if the nickname exists, false otherwise
      */
-    boolean nicknameExists(String nickname);
+    boolean isNicknameExists(String nickname);
 
     /**
      * Verifies a user's email with a provided code.

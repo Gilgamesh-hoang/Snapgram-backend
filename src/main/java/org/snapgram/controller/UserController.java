@@ -29,7 +29,7 @@ public class UserController {
 
     @PostMapping("/forgot-password")
     public ResponseObject<Void> verifyEmail(@RequestBody @Valid EmailRequest request) {
-        boolean isExists = userService.emailExists(request.getEmail());
+        boolean isExists = userService.isEmailExists(request.getEmail());
         if (!isExists) {
             throw new ResourceNotFoundException("Email not found");
         }
@@ -40,13 +40,13 @@ public class UserController {
 
     @GetMapping("/email-exists")
     public ResponseObject<Boolean> emailExists(@RequestParam @NotBlank @Email String email) {
-        boolean exists = userService.emailExists(email);
+        boolean exists = userService.isEmailExists(email);
         return new ResponseObject<>(HttpStatus.OK, exists);
     }
 
     @GetMapping("/nickname-exists")
     public ResponseObject<Boolean> nicknameExists(@RequestParam @NotBlank @Size(min = 2, max = 50) String nickname) {
-        boolean exists = userService.nicknameExists(nickname);
+        boolean exists = userService.isNicknameExists(nickname);
         return new ResponseObject<>(HttpStatus.OK, exists);
     }
 

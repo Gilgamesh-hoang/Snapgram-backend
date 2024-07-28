@@ -56,6 +56,9 @@ public class User {
     @Column(name = "is_active", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean isActive = false;
 
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    private Boolean isDeleted = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Gender gender;
