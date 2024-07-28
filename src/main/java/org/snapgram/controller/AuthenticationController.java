@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthenticationController {
     IUserService userService;
     @PostMapping("/verification-email")
-    public ResponseObject<Boolean> emailExists(@RequestBody @Valid VerificationRequest request) {
+    public ResponseObject<Boolean> verifyEmail(@RequestBody @Valid VerificationRequest request) {
         boolean isVerified = userService.verifyEmail(request.getEmail(), request.getCode());
         if (isVerified) {
             return new ResponseObject<>(HttpStatus.OK, "Email verified successfully", isVerified);

@@ -28,7 +28,7 @@ public class UserController {
     IEmailService emailService;
 
     @PostMapping("/forgot-password")
-    public ResponseObject<Void> verifyEmail(@RequestBody @Valid EmailRequest request) {
+    public ResponseObject<Void> forgotPass(@RequestBody @Valid EmailRequest request) {
         boolean isExists = userService.isEmailExists(request.getEmail());
         if (!isExists) {
             throw new ResourceNotFoundException("Email not found");

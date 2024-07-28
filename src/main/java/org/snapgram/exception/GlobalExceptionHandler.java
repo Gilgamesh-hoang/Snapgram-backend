@@ -53,25 +53,18 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .path(getPath(request))
                 .build();
-//        String message = e.getMessage();
-        String message = "";
+        StringBuilder message = new StringBuilder();
 
         for (ObjectError error : bindingResult.getAllErrors()) {
-            message += error.getDefaultMessage() + ", ";
+            message.append(error.getDefaultMessage()).append(", ");
         }
 
         if (e instanceof MethodArgumentNotValidException) {
-//            int start = message.lastIndexOf("[") + 1;
-//            int end = message.lastIndexOf("]") - 1;
-//            message = message.substring(start, end);
             errorResponse.setError("Invalid Payload");
-            errorResponse.setMessage(message);
+            errorResponse.setMessage(message.toString());
         } else if (e instanceof MissingServletRequestParameterException) {
             errorResponse.setError("Invalid Parameter");
-            errorResponse.setMessage(message);
-        } else {
-            errorResponse.setError("Invalid Data");
-            errorResponse.setMessage(message);
+            errorResponse.setMessage(message.toString());
         }
         return new ResponseObject<>(HttpStatus.BAD_REQUEST, errorResponse);
     }
