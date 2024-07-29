@@ -4,12 +4,18 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.snapgram.model.request.VerificationRequest;
-import org.snapgram.model.response.ResponseObject;
+import org.snapgram.dto.request.AuthenticationRequest;
+import org.snapgram.dto.request.VerificationRequest;
+import org.snapgram.dto.response.JwtResponse;
+import org.snapgram.dto.response.ResponseObject;
+import org.snapgram.service.authentication.IAuthenticationService;
 import org.snapgram.service.user.IUserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 
 @RestController
@@ -19,6 +25,20 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class AuthenticationController {
     IUserService userService;
+    IAuthenticationService authenticationService;
+
+    @PostMapping("/login")
+    public ResponseObject<JwtResponse> authenticate(@RequestBody @Valid AuthenticationRequest request) {
+        JwtResponse jwtObj = authenticationService.login(request);
+        return new ResponseObject<>(HttpStatus.OK, "Login successfully", jwtObj);
+    }
+
+//    @PostMapping("/logout")
+//    public ResponseEntity<Void> logout(@RequestBody @Valid LogoutRequest request){
+//        authenticationService.logout(request);
+//        return ResponseEntity.noContent().build();
+//    }
+
     @PostMapping("/verification-email")
     public ResponseObject<Boolean> verifyEmail(@RequestBody @Valid VerificationRequest request) {
         boolean isVerified = userService.verifyEmail(request.getEmail(), request.getCode());

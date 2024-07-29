@@ -3,7 +3,7 @@ package org.snapgram.annotation.password_matches;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import org.snapgram.model.request.SignupRequest;
+import org.snapgram.dto.request.SignupRequest;
 
 public class PasswordMatchesValidator implements ConstraintValidator<PasswordMatches, SignupRequest> {
 

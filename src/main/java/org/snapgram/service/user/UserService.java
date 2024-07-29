@@ -6,10 +6,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.entity.User;
 import org.snapgram.exception.ResourceNotFoundException;
+import org.snapgram.exception.UserNotFoundException;
 import org.snapgram.mapper.UserMapper;
-import org.snapgram.model.request.SignupRequest;
-import org.snapgram.model.response.UserDTO;
-import org.snapgram.repository.UserRepository;
+import org.snapgram.dto.request.SignupRequest;
+import org.snapgram.dto.response.UserDTO;
+import org.snapgram.repository.IUserRepository;
 import org.springframework.data.domain.Example;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService implements IUserService {
-    UserRepository userRepository;
+    IUserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
 
@@ -33,13 +34,13 @@ public class UserService implements IUserService {
         User userEntity = null;
         if (user.getId() != null) {
             userEntity = userRepository.findById(user.getId()).orElseThrow(()
-                    -> new ResourceNotFoundException("User not found"));
+                    -> new UserNotFoundException("User not found with id: " + user.getId()));
         } else if (user.getEmail() != null) {
             userEntity = userRepository.findByEmail(user.getEmail()).orElseThrow(()
-                    -> new ResourceNotFoundException("User not found"));
+                    -> new UserNotFoundException("User not found with email: " + user.getEmail()));
         } else if (user.getNickname() != null) {
             userEntity = userRepository.findByNickname(user.getNickname()).orElseThrow(()
-                    -> new ResourceNotFoundException("User not found"));
+                    -> new UserNotFoundException("User not found with nickname: " + user.getNickname()));
         }
 
         if (userEntity != null) {
@@ -143,7 +144,7 @@ public class UserService implements IUserService {
     @Override
     public String generateForgotPasswordCode(String email) {
         Example<User> example = Example.of(User.builder().email(email).isActive(true).isDeleted(false).build());
-        User user = userRepository.findOne(example).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findOne(example).orElseThrow(UserNotFoundException::new);
         String newPassword = Generators.randomBasedGenerator().generate().toString()
                 .replace("-", "").substring(0, 10);
         user.setPassword(passwordEncoder.encode(newPassword));

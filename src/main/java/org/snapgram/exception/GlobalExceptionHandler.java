@@ -1,10 +1,12 @@
 package org.snapgram.exception;
 
 import jakarta.validation.ConstraintViolationException;
-import org.snapgram.model.response.ErrorResponse;
-import org.snapgram.model.response.ResponseObject;
+import lombok.extern.slf4j.Slf4j;
+import org.snapgram.dto.response.ErrorResponse;
+import org.snapgram.dto.response.ResponseObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -18,11 +20,22 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import java.nio.file.AccessDeniedException;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
     private String getPath(WebRequest request) {
         return request.getDescription(false).replace("uri=", "");
     }
 
+    @ExceptionHandler(AuthenticationException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseObject<ErrorResponse> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("Unauthorized")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.UNAUTHORIZED, error);
+    }
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseObject<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex, WebRequest request) {
@@ -32,6 +45,16 @@ public class GlobalExceptionHandler {
                 .message(ex.getMessage())
                 .build();
         return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
+    }
+    @ExceptionHandler(UserNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseObject<ErrorResponse> handleUsernameNotFoundException(UserNotFoundException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("User Not Found")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.NOT_FOUND, error);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -77,6 +100,7 @@ public class GlobalExceptionHandler {
                 .path(getPath(request))
                 .message(ex.getMessage())
                 .build();
+        log.error("Invalid Data", ex);
         return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
     }
 
@@ -117,7 +141,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseObject<ErrorResponse> handleException(Exception ex) {
-        ex.printStackTrace();
+        log.error("Internal Server Error", ex);
         ErrorResponse error = ErrorResponse.builder()
                 .error("Internal Server Error")
                 .message(ex.getMessage())

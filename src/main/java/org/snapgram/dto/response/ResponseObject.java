@@ -1,4 +1,4 @@
-package org.snapgram.model.response;
+package org.snapgram.dto.response;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

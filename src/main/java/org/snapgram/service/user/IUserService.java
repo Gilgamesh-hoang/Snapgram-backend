@@ -1,7 +1,7 @@
 package org.snapgram.service.user;
 
-import org.snapgram.model.request.SignupRequest;
-import org.snapgram.model.response.UserDTO;
+import org.snapgram.dto.request.SignupRequest;
+import org.snapgram.dto.response.UserDTO;
 
 /**
  * Interface for User Service.
