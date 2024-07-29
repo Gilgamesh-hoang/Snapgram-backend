@@ -1,11 +1,13 @@
 package org.snapgram.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.response.ErrorResponse;
 import org.snapgram.dto.response.ResponseObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
@@ -26,6 +28,17 @@ public class GlobalExceptionHandler {
         return request.getDescription(false).replace("uri=", "");
     }
 
+    @ExceptionHandler(BadCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ResponseObject<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("Unauthorized")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.UNAUTHORIZED, error);
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public ResponseObject<ErrorResponse> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
@@ -36,6 +49,7 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseObject<>(HttpStatus.UNAUTHORIZED, error);
     }
+
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseObject<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex, WebRequest request) {
@@ -46,6 +60,7 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
     }
+
     @ExceptionHandler(UserNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseObject<ErrorResponse> handleUsernameNotFoundException(UserNotFoundException ex, WebRequest request) {

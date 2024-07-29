@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.request.AuthenticationRequest;
+import org.snapgram.dto.request.LogoutRequest;
 import org.snapgram.dto.request.VerificationRequest;
 import org.snapgram.dto.response.JwtResponse;
 import org.snapgram.dto.response.ResponseObject;
@@ -33,11 +34,11 @@ public class AuthenticationController {
         return new ResponseObject<>(HttpStatus.OK, "Login successfully", jwtObj);
     }
 
-//    @PostMapping("/logout")
-//    public ResponseEntity<Void> logout(@RequestBody @Valid LogoutRequest request){
-//        authenticationService.logout(request);
-//        return ResponseEntity.noContent().build();
-//    }
+    @PostMapping("/logout")
+    public ResponseObject<Void> logout(@RequestBody @Valid LogoutRequest request){
+        authenticationService.logout(request);
+        return  new ResponseObject<>(HttpStatus.OK, "Logout successfully", null);
+    }
 
     @PostMapping("/verification-email")
     public ResponseObject<Boolean> verifyEmail(@RequestBody @Valid VerificationRequest request) {

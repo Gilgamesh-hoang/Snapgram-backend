@@ -49,6 +49,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 email = jwtTokenUtil.extractEmail(jwtToken);
             } catch (IllegalArgumentException e) {
                 log.warn("Unable to get JWT Token");
+                throw new IllegalArgumentException("Unable to get JWT Token");
             } catch (ExpiredJwtException e) {
                 log.warn("JWT Token has expired");
             }

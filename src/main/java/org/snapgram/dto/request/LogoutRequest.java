@@ -10,6 +10,6 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LogoutRequest {
-    @NotBlank(message = "PARAMETER_MISSING")
+    @NotBlank(message = "Token is required")
     String token;
 }

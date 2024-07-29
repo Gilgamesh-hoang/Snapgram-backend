@@ -29,9 +29,9 @@ It makes use of the io.jsonwebtoken.Jwt for achieving this.
 @Component
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @RequiredArgsConstructor
-public class JwtTokenUtil implements Serializable {
+public class JwtTokenUtil {
     final ITokenRepository tokenRepository;
-    public static final long JWT_TOKEN_VALIDITY = (long) 5 * 60 * 60 * 1000;
+    public static final long ACCESS_TOKEN_LIFETIME = (long) 5 * 24 * 60 * 60 * 1000;
     @Value("${jwt.secret-key}")
     String SECRET_KEY;
 
@@ -58,7 +58,7 @@ public class JwtTokenUtil implements Serializable {
         return Jwts.builder().setHeaderParam("type", "JWT")
                 .setClaims(claims).setSubject(email)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + JWT_TOKEN_VALIDITY))
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_LIFETIME))
                 .signWith(getSigningKey(SECRET_KEY), SignatureAlgorithm.HS256).compact();
     }
 

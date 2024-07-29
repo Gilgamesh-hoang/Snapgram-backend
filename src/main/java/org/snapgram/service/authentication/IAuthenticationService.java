@@ -8,5 +8,5 @@ import org.snapgram.dto.response.JwtResponse;
 public interface IAuthenticationService {
     JwtResponse login(AuthenticationRequest request);
 
-//    void logout(LogoutRequest request);
+    void logout(LogoutRequest request);
 }
