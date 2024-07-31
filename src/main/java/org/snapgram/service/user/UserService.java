@@ -4,19 +4,21 @@ import com.fasterxml.uuid.Generators;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.dto.request.SignupRequest;
+import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.User;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.exception.UserNotFoundException;
 import org.snapgram.mapper.UserMapper;
-import org.snapgram.dto.request.SignupRequest;
-import org.snapgram.dto.response.UserDTO;
 import org.snapgram.repository.IUserRepository;
 import org.springframework.data.domain.Example;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,20 +29,54 @@ public class UserService implements IUserService {
     PasswordEncoder passwordEncoder;
 
     @Override
+    public UserDTO findByEmail(String email) {
+        return userMapper.toDTO(findUserEntityByEmail(email));
+    }
+
+    private User findUserEntityByEmail(String email) {
+        Example<User> example = Example.of(User.builder().email(email).isDeleted(false).isActive(true).build());
+        return userRepository.findOne(example).orElseThrow(()
+                -> new UserNotFoundException("User not found with email: " + email)
+        );
+    }
+
+    @Override
+    public UserDTO findById(UUID id) {
+        return userMapper.toDTO(findUserEntityById(id));
+    }
+
+    private User findUserEntityById(UUID id) {
+        Example<User> example = Example.of(User.builder().id(id).isDeleted(false).isActive(true).build());
+        return userRepository.findOne(example).orElseThrow(()
+                -> new UserNotFoundException("User not found with id: " + id.toString())
+        );
+    }
+
+    @Override
+    public UserDTO findByNickname(String nickname) {
+        return userMapper.toDTO(findUserEntityByNickname(nickname));
+    }
+
+    private User findUserEntityByNickname(String nickname) {
+        Example<User> example = Example.of(User.builder().nickname(nickname).isDeleted(false).isActive(true).build());
+        return userRepository.findOne(example).orElseThrow(()
+                -> new UserNotFoundException("User not found with nickname: " + nickname)
+        );
+    }
+
+    @Override
+    @Transactional
     public UserDTO deleteUser(UserDTO user) {
         if (user == null)
             return null;
 
         User userEntity = null;
         if (user.getId() != null) {
-            userEntity = userRepository.findById(user.getId()).orElseThrow(()
-                    -> new UserNotFoundException("User not found with id: " + user.getId()));
+            userEntity = findUserEntityById(user.getId());
         } else if (user.getEmail() != null) {
-            userEntity = userRepository.findByEmail(user.getEmail()).orElseThrow(()
-                    -> new UserNotFoundException("User not found with email: " + user.getEmail()));
+            userEntity = findUserEntityByEmail(user.getEmail());
         } else if (user.getNickname() != null) {
-            userEntity = userRepository.findByNickname(user.getNickname()).orElseThrow(()
-                    -> new UserNotFoundException("User not found with nickname: " + user.getNickname()));
+            userEntity = findUserEntityByNickname(user.getNickname());
         }
 
         if (userEntity != null) {
@@ -53,6 +89,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @Transactional
     public UserDTO createUser(SignupRequest request) {
         if (isEmailExists(request.getEmail())) {
             throw new IllegalArgumentException("User with email already exists");
@@ -108,7 +145,6 @@ public class UserService implements IUserService {
         // If the user is active or the user's creation time plus 3 days is not before the current time, return true
         return true;
     }
-
     private boolean isVerificationExpired(int numDays, Timestamp timestamp) {
         LocalDateTime userCreationTime = timestamp.toLocalDateTime();
         LocalDateTime currentTime = new Timestamp(System.currentTimeMillis()).toLocalDateTime();
@@ -119,6 +155,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @Transactional
     public boolean verifyEmail(String email, String code) {
         Example<User> example = Example.of(User.builder().email(email).isDeleted(false).activeCode(code).build());
         User user = userRepository.findOne(example).orElse(null);
@@ -142,6 +179,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @Transactional
     public String generateForgotPasswordCode(String email) {
         Example<User> example = Example.of(User.builder().email(email).isActive(true).isDeleted(false).build());
         User user = userRepository.findOne(example).orElseThrow(UserNotFoundException::new);

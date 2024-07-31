@@ -1,6 +1,5 @@
 package org.snapgram.exception;
 
-import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.response.ErrorResponse;

@@ -50,13 +50,15 @@ public class User {
     @Column(length = 600)
     private String bio;
 
-    @Column(name = "active_code",length = 50)
+    @Column(name = "active_code", length = 50)
     private String activeCode;
 
     @Column(name = "is_active", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Builder.Default
     private Boolean isActive = false;
 
     @Column(name = "is_deleted", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Builder.Default
     private Boolean isDeleted = false;
 
     @Enumerated(EnumType.STRING)

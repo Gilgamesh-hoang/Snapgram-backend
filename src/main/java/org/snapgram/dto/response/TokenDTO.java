@@ -6,12 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Date;
 
-@Data
 @Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class JwtResponse implements Serializable {
-    private String token;
-    private String refreshToken;
+public class TokenDTO implements Serializable {
+    private String jid;
+    private Date expiredDate;
+
 }

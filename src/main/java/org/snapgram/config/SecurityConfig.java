@@ -5,10 +5,12 @@ import lombok.experimental.FieldDefaults;
 import org.snapgram.jwt.JwtAuthenticationEntryPoint;
 import org.snapgram.jwt.JwtRequestFilter;
 import org.snapgram.service.user.UserDetailServiceImpl;
+import org.snapgram.util.EndPoint;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -30,32 +32,30 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-//@EnableMethodSecurity
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class SecurityConfig {
     @Value("${application.frontend.url}")
     String frontendUrl;
-    @Value("${API_PREFIX}")
-    String apiPrefix;
+//    @Value("${API_PREFIX}")
+//    String apiPrefix;
 
+    final EndPoint endPoint;
     final UserDetailServiceImpl userDetails;
     final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
     final JwtRequestFilter jwtRequestFilter;
 
-    public String[] publicEndpoints() {
-        return new String[]{
-                apiPrefix + "/auth/**",
-                apiPrefix + "/user/**",
-                "/swagger-ui/**",
-                "/api-docs/**"
-        };
-    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
-        httpSecurity.authorizeHttpRequests(config -> config.requestMatchers(publicEndpoints()).permitAll().anyRequest().authenticated());
+//        httpSecurity.authorizeHttpRequests(config -> config.requestMatchers(publicEndpoints()).permitAll().anyRequest().authenticated());
+
+        httpSecurity.authorizeHttpRequests(config ->
+                config.requestMatchers(HttpMethod.GET, endPoint.publicGetEndpoints()).permitAll()
+                        .requestMatchers(HttpMethod.POST, endPoint.publicPostEndpoints()).permitAll()
+                        .anyRequest().authenticated());
+
         httpSecurity.exceptionHandling(exp -> exp.authenticationEntryPoint(jwtAuthenticationEntryPoint));
         httpSecurity.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         httpSecurity.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

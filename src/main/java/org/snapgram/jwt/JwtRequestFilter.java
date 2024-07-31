@@ -31,7 +31,8 @@ class gets executed. It checks if the request has a valid JWT token. If it has a
 public class JwtRequestFilter extends OncePerRequestFilter {
 
     UserDetailServiceImpl userDetailService;
-    JwtTokenUtil jwtTokenUtil;
+    JwtService jwtService;
+    JwtHelper jwtHelper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -46,7 +47,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             jwtToken = requestTokenHeader.substring("Bearer ".length());
             try {
-                email = jwtTokenUtil.extractEmail(jwtToken);
+                email = jwtHelper.extractEmail(jwtToken);
             } catch (IllegalArgumentException e) {
                 log.warn("Unable to get JWT Token");
                 throw new IllegalArgumentException("Unable to get JWT Token");
@@ -64,7 +65,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             // if token is valid configure Spring Security to manually set
             // authentication
-            if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
+            if (jwtService.validateToken(jwtToken, userDetails)) {
 
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());

@@ -2,9 +2,10 @@ package org.snapgram.service.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.entity.User;
 import org.snapgram.exception.UserNotFoundException;
 import org.snapgram.repository.IUserRepository;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.data.domain.Example;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,11 +22,12 @@ public class UserDetailServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        org.snapgram.entity.User user = userRepo.findByEmail(username).orElse(null);
+        Example<User> example = Example.of(User.builder().email(username).isDeleted(false).isActive(true).build());
+        User user = userRepo.findOne(example).orElse(null);
         if (user == null) {
             throw new UserNotFoundException("User not found with email: " + username);
         }
-        return new User(user.getEmail(), user.getPassword(), new ArrayList<>());
+        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
     }
 
 }

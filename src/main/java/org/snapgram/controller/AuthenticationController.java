@@ -4,6 +4,8 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snapgram.dto.request.AuthenticationRequest;
 import org.snapgram.dto.request.LogoutRequest;
 import org.snapgram.dto.request.VerificationRequest;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("${API_PREFIX}/auth")
 @Validated
 public class AuthenticationController {
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationController.class);
     IUserService userService;
     IAuthenticationService authenticationService;
 

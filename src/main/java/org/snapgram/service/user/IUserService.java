@@ -3,11 +3,17 @@ package org.snapgram.service.user;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.UserDTO;
 
+import java.util.UUID;
+
 /**
  * Interface for User Service.
  * This interface provides methods for user management.
  */
 public interface IUserService {
+    UserDTO findByEmail(String email);
+    UserDTO findById(UUID id);
+    UserDTO findByNickname(String nickname);
+
 
     /**
      * Deletes a user.
@@ -57,4 +63,5 @@ public interface IUserService {
      * @return the generated forgot password code
      */
     String generateForgotPasswordCode(String email);
+
 }
