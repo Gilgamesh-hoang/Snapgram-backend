@@ -6,7 +6,7 @@ public interface ITokenService {
 
     void delete(String token);
 
-    void save(String token);
+    void saveAll(String accessToken,String refreshToken);
 
     TokenDTO findToken(String token);
 }

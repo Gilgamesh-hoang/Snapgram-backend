@@ -10,6 +10,8 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LogoutRequest {
-    @NotBlank(message = "Token is required")
-    String token;
+    @NotBlank(message = "accessToken is required")
+    String accessToken;
+    @NotBlank(message = "refreshToken is required")
+    String refreshToken;
 }

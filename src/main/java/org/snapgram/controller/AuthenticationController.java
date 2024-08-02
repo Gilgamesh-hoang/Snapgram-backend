@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snapgram.dto.request.AuthenticationRequest;
 import org.snapgram.dto.request.LogoutRequest;
+import org.snapgram.dto.request.TokenRequest;
 import org.snapgram.dto.request.VerificationRequest;
 import org.snapgram.dto.response.JwtResponse;
 import org.snapgram.dto.response.ResponseObject;
@@ -35,6 +36,12 @@ public class AuthenticationController {
     public ResponseObject<JwtResponse> authenticate(@RequestBody @Valid AuthenticationRequest request) {
         JwtResponse jwtObj = authenticationService.login(request);
         return new ResponseObject<>(HttpStatus.OK, "Login successfully", jwtObj);
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseObject<JwtResponse> refreshToken(@RequestBody @Valid TokenRequest request) {
+        JwtResponse jwtObj = authenticationService.refreshToken(request.getToken());
+        return new ResponseObject<>(HttpStatus.OK, "Refresh token successfully", jwtObj);
     }
 
     @PostMapping("/logout")

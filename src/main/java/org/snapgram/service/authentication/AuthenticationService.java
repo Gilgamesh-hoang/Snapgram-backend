@@ -7,7 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.request.AuthenticationRequest;
 import org.snapgram.dto.request.LogoutRequest;
 import org.snapgram.dto.response.JwtResponse;
-import org.snapgram.jwt.JwtService;
+import org.snapgram.service.jwt.JwtHelper;
+import org.snapgram.service.jwt.JwtService;
 import org.snapgram.service.token.ITokenService;
 import org.snapgram.service.user.UserDetailServiceImpl;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,6 +27,7 @@ public class AuthenticationService implements IAuthenticationService {
     final AuthenticationManager authenticationManager;
     final ITokenService tokenService;
     final JwtService jwtService;
+    final JwtHelper jwtHelper;
     final UserDetailServiceImpl userDetailsService;
 
     @Override
@@ -51,8 +53,19 @@ public class AuthenticationService implements IAuthenticationService {
 
     @Override
     public void logout(LogoutRequest request) {
-        tokenService.save(request.getToken());
+        tokenService.saveAll(request.getAccessToken(), request.getRefreshToken());
         SecurityContextHolder.clearContext();
+    }
+
+    @Override
+    public JwtResponse refreshToken(String token) {
+        boolean isValid = jwtService.validateRefreshToken(token);
+        if (!isValid) {
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+        String email = jwtHelper.extractEmailFromRefreshToken(token);
+        String accessToken = jwtService.generateAccessToken(email);
+        return new JwtResponse(accessToken, token);
     }
 
 }

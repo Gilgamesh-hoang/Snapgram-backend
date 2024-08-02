@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.response.TokenDTO;
-import org.snapgram.jwt.JwtHelper;
+import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.SystemConstant;
 import org.springframework.stereotype.Service;
@@ -23,18 +23,23 @@ public class TokenService implements ITokenService {
     }
 
     @Override
-    public void save(String token) {
-        TokenDTO tokenDTO = TokenDTO.builder()
-                .expiredDate(jwtHelper.extractExpiration(token))
+    public void saveAll(String accessToken,String refreshToken) {
+
+        TokenDTO accessObj = TokenDTO.builder()
+                .expiredDate(jwtHelper.extractExpirationFromToken(accessToken))
                 .build();
-        String jid = jwtHelper.getJidFromToken(token);
-        redisService.addElementToMap(SystemConstant.BLACKLIST_TOKEN, jid, tokenDTO);
-        redisService.getMap(SystemConstant.BLACKLIST_TOKEN).forEach((k, v) -> log.info("key: " + k + " value: " + v));
+        TokenDTO refreshObj = TokenDTO.builder()
+                .expiredDate(jwtHelper.extractExpirationFromRefreshToken(refreshToken))
+                .build();
+        String accessId = jwtHelper.getJidFromToken(accessToken);
+        String refreshId = jwtHelper.getJidFromRefreshToken(refreshToken);
+        redisService.addElementToMap(SystemConstant.BLACKLIST_TOKEN, accessId, accessObj);
+        redisService.addElementToMap(SystemConstant.BLACKLIST_TOKEN, refreshId, refreshObj);
     }
 
     @Override
     public TokenDTO findToken(String token) {
-        String jid = jwtHelper.getJidFromToken(token);
+        String jid = jwtHelper.getJidFromRefreshToken(token);
         return redisService.getElementFromMap(SystemConstant.BLACKLIST_TOKEN, jid, TokenDTO.class);
     }
 
