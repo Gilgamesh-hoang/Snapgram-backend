@@ -1,4 +1,4 @@
-package org.snapgram.jwt;
+package org.snapgram.service.jwt;
 
 
 import com.fasterxml.uuid.Generators;
@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.response.TokenDTO;
 import org.snapgram.service.token.ITokenService;
+import org.snapgram.service.user.UserDetailServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ It makes use of the io.jsonwebtoken.Jwt for achieving this.
 public class JwtService {
     final ITokenService tokenService;
     final JwtHelper jwtHelper;
+    final UserDetailServiceImpl userDetailService;
     @Value("${jwt.access_token.duration}")
     long ACCESS_TOKEN_LIFETIME;
     @Value("${jwt.access_token.secret_key}")
@@ -38,10 +40,6 @@ public class JwtService {
     @Value("${jwt.refresh_token.secret_key}")
     String REFRESH_TOKEN_KEY;
 
-//    @Autowired
-//    public void setTokenService(ITokenService tokenService) {
-//        this.tokenService = tokenService;
-//    }
 
     public String generateAccessToken(String email) {
         if (email == null)
@@ -55,7 +53,9 @@ public class JwtService {
     public String generateRefreshToken(String email) {
         if (email == null)
             return null;
-        return createToken(new HashMap<>(), email, true);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("jid", Generators.randomBasedGenerator().generate().toString());
+        return createToken(claims, email, true);
     }
 
 
@@ -89,7 +89,11 @@ public class JwtService {
      * @return true if the token is expired, false otherwise.
      */
     private boolean isTokenExpired(String token) {
-        return jwtHelper.extractExpiration(token).before(new Timestamp(System.currentTimeMillis()));
+        return jwtHelper.extractExpirationFromToken(token).before(new Timestamp(System.currentTimeMillis()));
+    }
+
+    private boolean isRefreshTokenExpired(String token) {
+        return jwtHelper.extractExpirationFromRefreshToken(token).before(new Timestamp(System.currentTimeMillis()));
     }
 
 
@@ -99,9 +103,15 @@ public class JwtService {
     }
 
 
-    public boolean validateToken(String token, UserDetails userDetails) {
-        final String email = jwtHelper.extractEmail(token);
-        return email.equals(userDetails.getUsername()) && !isTokenExpired(token) && !isExistsInBlacklist(token);
+    public boolean validateToken(String token, String email) {
+        final String emailEx = jwtHelper.extractEmailFromToken(token);
+        return emailEx.equals(email) && !isTokenExpired(token) && !isExistsInBlacklist(token);
     }
 
+    public boolean validateRefreshToken(String token) {
+        final String emailEx = jwtHelper.extractEmailFromRefreshToken(token);
+        UserDetails userDetails = userDetailService.loadUserByUsername(emailEx);
+        return userDetails != null && !isRefreshTokenExpired(token) && !isExistsInBlacklist(token);
+
+    }
 }

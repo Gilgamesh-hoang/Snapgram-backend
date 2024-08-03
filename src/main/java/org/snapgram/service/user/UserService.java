@@ -27,6 +27,8 @@ public class UserService implements IUserService {
     IUserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
+    TransactionalUserService transactionalUserService;
+
 
     @Override
     public UserDTO findByEmail(String email) {
@@ -65,7 +67,6 @@ public class UserService implements IUserService {
     }
 
     @Override
-    @Transactional
     public UserDTO deleteUser(UserDTO user) {
         if (user == null)
             return null;
@@ -80,9 +81,7 @@ public class UserService implements IUserService {
         }
 
         if (userEntity != null) {
-            userEntity.setIsDeleted(true);
-            userRepository.save(userEntity);
-            return userMapper.toDTO(userEntity);
+            return transactionalUserService.deleteUserTransactional(userEntity);
         } else {
             return null;
         }
@@ -145,6 +144,7 @@ public class UserService implements IUserService {
         // If the user is active or the user's creation time plus 3 days is not before the current time, return true
         return true;
     }
+
     private boolean isVerificationExpired(int numDays, Timestamp timestamp) {
         LocalDateTime userCreationTime = timestamp.toLocalDateTime();
         LocalDateTime currentTime = new Timestamp(System.currentTimeMillis()).toLocalDateTime();

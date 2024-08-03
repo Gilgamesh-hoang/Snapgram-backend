@@ -1,4 +1,4 @@
-package org.snapgram.jwt;
+package org.snapgram.filter;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.snapgram.service.jwt.JwtHelper;
+import org.snapgram.service.jwt.JwtService;
 import org.snapgram.service.user.UserDetailServiceImpl;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,7 +49,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             jwtToken = requestTokenHeader.substring("Bearer ".length());
             try {
-                email = jwtHelper.extractEmail(jwtToken);
+                email = jwtHelper.extractEmailFromToken(jwtToken);
             } catch (IllegalArgumentException e) {
                 log.warn("Unable to get JWT Token");
                 throw new IllegalArgumentException("Unable to get JWT Token");
@@ -65,7 +67,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             // if token is valid configure Spring Security to manually set
             // authentication
-            if (jwtService.validateToken(jwtToken, userDetails)) {
+            if (jwtService.validateToken(jwtToken, userDetails.getUsername())) {
 
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());

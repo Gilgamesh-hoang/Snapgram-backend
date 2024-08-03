@@ -1,5 +1,6 @@
 package org.snapgram.service.redis;
 
+import java.util.List;
 import java.util.Map;
 
 public interface IRedisService {
@@ -10,6 +11,7 @@ public interface IRedisService {
     Map<Object, Object> getMap(String key);
 
     void saveMap(String key, Map<String, Object> map);
-    void addElementToMap(String key, String field, Object value);
+    void addElementsToMap(String key,Map<String, Object> map) ;
+    void deleteElementsFromMap(String key, List<Object> fields);
     <T> T getElementFromMap(String key, String field, Class<T> clazz);
 }

@@ -1,4 +1,4 @@
-package org.snapgram.jwt;
+package org.snapgram.service.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -16,10 +16,8 @@ public class JwtHelper {
 
     @Value("${jwt.access_token.secret_key}")
     private String ACCESS_TOKEN_KEY;
-
-    public String getJidFromToken(String token) {
-        return extractClaims(token, claims -> claims.get("jid", String.class));
-    }
+    @Value("${jwt.refresh_token.secret_key}")
+    String REFRESH_TOKEN_KEY;
 
     /**
      * This method is used to get the signing key from a provided string key.
@@ -40,8 +38,8 @@ public class JwtHelper {
      * @param token The JWT token to extract claims from.
      * @return The extracted claims.
      */
-    private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder().setSigningKey(getSigningKey(ACCESS_TOKEN_KEY)).build().parseClaimsJws(token).getBody();
+    private Claims extractAllClaims(String token, Key key) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
 
     /**
@@ -52,30 +50,32 @@ public class JwtHelper {
      * @param claimsFunction The Function to determine which claim to extract.
      * @return The extracted claim.
      */
-    private <T> T extractClaims(String token, Function<Claims, T> claimsFunction) {
-        final Claims claims = extractAllClaims(token);
+    private <T> T extractClaims(String token, Function<Claims, T> claimsFunction, Key key) {
+        final Claims claims = extractAllClaims(token, key);
         return claimsFunction.apply(claims);
     }
 
-    /**
-     * This method is used to extract the email (subject) from a provided JWT token.
-     *
-     * @param email The JWT token to extract the email from.
-     * @return The extracted email.
-     */
-    public String extractEmail(String email) {
-        return extractClaims(email, Claims::getSubject);
+    public String extractEmailFromToken(String token) {
+        return extractClaims(token, Claims::getSubject, getSigningKey(ACCESS_TOKEN_KEY));
     }
 
-    /**
-     * This method is used to extract the expiration date from a provided JWT token.
-     *
-     * @param token The JWT token to extract the expiration date from.
-     * @return The extracted expiration date.
-     */
-    public Date extractExpiration(String token) {
-        return extractClaims(token, Claims::getExpiration);
+    public Date extractExpirationFromToken(String token) {
+        return extractClaims(token, Claims::getExpiration, getSigningKey(ACCESS_TOKEN_KEY));
     }
 
+    public String getJidFromToken(String token) {
+        return extractClaims(token, claims -> claims.get("jid", String.class), getSigningKey(ACCESS_TOKEN_KEY));
+    }
+    public String getJidFromRefreshToken(String token) {
+        return extractClaims(token, claims -> claims.get("jid", String.class), getSigningKey(REFRESH_TOKEN_KEY));
+    }
+
+    public String extractEmailFromRefreshToken(String token) {
+        return extractClaims(token, Claims::getSubject, getSigningKey(REFRESH_TOKEN_KEY));
+    }
+
+    public Date extractExpirationFromRefreshToken(String token) {
+        return extractClaims(token, Claims::getExpiration, getSigningKey(REFRESH_TOKEN_KEY));
+    }
 
 }

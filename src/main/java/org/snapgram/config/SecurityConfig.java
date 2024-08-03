@@ -2,8 +2,8 @@ package org.snapgram.config;
 
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.snapgram.jwt.JwtAuthenticationEntryPoint;
-import org.snapgram.jwt.JwtRequestFilter;
+import org.snapgram.exception.JwtAuthenticationEntryPoint;
+import org.snapgram.filter.JwtRequestFilter;
 import org.snapgram.service.user.UserDetailServiceImpl;
 import org.snapgram.util.EndPoint;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,8 +37,6 @@ import java.util.List;
 public class SecurityConfig {
     @Value("${application.frontend.url}")
     String frontendUrl;
-//    @Value("${API_PREFIX}")
-//    String apiPrefix;
 
     final EndPoint endPoint;
     final UserDetailServiceImpl userDetails;
@@ -49,7 +47,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
-//        httpSecurity.authorizeHttpRequests(config -> config.requestMatchers(publicEndpoints()).permitAll().anyRequest().authenticated());
 
         httpSecurity.authorizeHttpRequests(config ->
                 config.requestMatchers(HttpMethod.GET, endPoint.publicGetEndpoints()).permitAll()
