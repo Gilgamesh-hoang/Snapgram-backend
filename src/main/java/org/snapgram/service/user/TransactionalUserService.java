@@ -12,12 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
-public class TransactionalUserService {
+class TransactionalUserService {
     private IUserRepository userRepository;
     private UserMapper userMapper;
 
     @Transactional
-    protected UserDTO deleteUserTransactional(User userEntity) {
+    public UserDTO deleteUserTransactional(User userEntity) {
         userEntity.setIsDeleted(true);
         userRepository.save(userEntity);
         return userMapper.toDTO(userEntity);

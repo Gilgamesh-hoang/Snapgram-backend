@@ -20,7 +20,7 @@ public class EndPoint {
                 "/api/v1/auth/verification-email",
                 "/api/v1/auth/refresh-token",
                 "/api/v1/users/forgot-password",
-                "/api/v1/users",
+                "/api/v1/users/signup",
         };
     }
 }

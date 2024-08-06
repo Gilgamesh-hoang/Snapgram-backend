@@ -55,7 +55,7 @@ public class UserController {
         return new ResponseObject<>(HttpStatus.OK, exists);
     }
 
-    @PostMapping
+    @PostMapping("/signup")
     public ResponseObject<Void> signup(@Valid @RequestBody SignupRequest request) {
         UserDTO user = userService.createUser(request);
         if (user == null) {

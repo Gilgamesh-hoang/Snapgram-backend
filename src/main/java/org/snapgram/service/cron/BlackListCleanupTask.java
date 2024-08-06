@@ -12,9 +12,9 @@ import org.springframework.stereotype.Service;
 public class BlackListCleanupTask {
     private final ITokenService tokenService;
 
-        @Scheduled(cron = "0 0 0 */2 * ?")
+    @Scheduled(cron = "0 0 0 */2 * ?")
 //    @Scheduled(fixedRate = 2000)
-    public void deleteExpiredTokens() {
+    private void deleteExpiredTokens() {
         log.info("Running token cleanup task...");
         tokenService.deleteExpiredTokens();
     }

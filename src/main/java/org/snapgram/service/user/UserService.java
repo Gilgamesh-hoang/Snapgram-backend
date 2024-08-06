@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -36,7 +38,7 @@ public class UserService implements IUserService {
     }
 
     private User findUserEntityByEmail(String email) {
-        Example<User> example = Example.of(User.builder().email(email).isDeleted(false).isActive(true).build());
+        Example<User> example = Example.of(User.builder().email(email).isDeleted(false).build());
         return userRepository.findOne(example).orElseThrow(()
                 -> new UserNotFoundException("User not found with email: " + email)
         );
@@ -59,8 +61,31 @@ public class UserService implements IUserService {
         return userMapper.toDTO(findUserEntityByNickname(nickname));
     }
 
+    @Override
+    @Transactional
+    public void deleteInactiveUsers(int days) {
+        Example<User> example = Example.of(User.builder().isDeleted(false).isActive(false).build());
+        List<User> inactiveUsers = new ArrayList<>();
+        userRepository.findAll(example).forEach(user -> {
+            if (isVerificationExpired(days, user.getCreatedAt())) {
+                user.setIsDeleted(true);
+                inactiveUsers.add(user);
+            }
+        });
+        userRepository.saveAll(inactiveUsers);
+    }
+
+    private boolean isVerificationExpired(int numDays, Timestamp timestamp) {
+        LocalDateTime userCreationTime = timestamp.toLocalDateTime();
+        LocalDateTime currentTime = new Timestamp(System.currentTimeMillis()).toLocalDateTime();
+
+        // If the user's creation time plus days is before the current time, return false
+        // it means the user's email verification has expired
+        return userCreationTime.plusDays(numDays).isBefore(currentTime);
+    }
+
     private User findUserEntityByNickname(String nickname) {
-        Example<User> example = Example.of(User.builder().nickname(nickname).isDeleted(false).isActive(true).build());
+        Example<User> example = Example.of(User.builder().nickname(nickname).isDeleted(false).build());
         return userRepository.findOne(example).orElseThrow(()
                 -> new UserNotFoundException("User not found with nickname: " + nickname)
         );
@@ -101,6 +126,8 @@ public class UserService implements IUserService {
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setActiveCode(Generators.randomBasedGenerator().generate().toString());
+        user.setIsActive(false);
+        user.setIsDeleted(false);
         // Save the User entity to the database
         user = userRepository.save(user);
 
@@ -111,48 +138,23 @@ public class UserService implements IUserService {
     @Override
     public boolean isEmailExists(String email) {
         // Find the user in the database with the provided email
-        Example<User> example = Example.of(User.builder().email(email).isDeleted(false).build());
+        Example<User> example = Example.of(User.builder().email(email).build());
         User user = userRepository.findOne(example).orElse(null);
 
         // If no user is found, return false
-        if (user == null)
-            return false;
-
-        if (Boolean.TRUE.equals(!user.getIsActive()) && isVerificationExpired(3, user.getCreatedAt())) {
-            deleteUser(UserDTO.builder().email(email).build());
-            return false;
-        }
-
-        // If the user is active or the user's creation time plus 3 days is not before the current time, return true
-        return true;
+        return user != null;
     }
 
     @Override
     public boolean isNicknameExists(String nickname) {
         // Find the user in the database with the provided nickname
-        Example<User> example = Example.of(User.builder().nickname(nickname).isDeleted(false).build());
+        Example<User> example = Example.of(User.builder().nickname(nickname).build());
         User user = userRepository.findOne(example).orElse(null);
 
         // If no user is found, return false
-        if (user == null)
-            return false;
-
-        if (Boolean.TRUE.equals(!user.getIsActive()) && isVerificationExpired(3, user.getCreatedAt())) {
-            deleteUser(UserDTO.builder().nickname(nickname).build());
-            return false;
-        }
-        // If the user is active or the user's creation time plus 3 days is not before the current time, return true
-        return true;
+        return user != null;
     }
 
-    private boolean isVerificationExpired(int numDays, Timestamp timestamp) {
-        LocalDateTime userCreationTime = timestamp.toLocalDateTime();
-        LocalDateTime currentTime = new Timestamp(System.currentTimeMillis()).toLocalDateTime();
-
-        // If the user's creation time plus days is before the current time, return false
-        // it means the user's email verification has expired
-        return userCreationTime.plusDays(numDays).isBefore(currentTime);
-    }
 
     @Override
     @Transactional

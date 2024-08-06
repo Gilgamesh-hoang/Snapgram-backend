@@ -13,7 +13,7 @@ public interface IUserService {
     UserDTO findByEmail(String email);
     UserDTO findById(UUID id);
     UserDTO findByNickname(String nickname);
-
+    void deleteInactiveUsers(int days);
 
     /**
      * Deletes a user.
@@ -63,5 +63,6 @@ public interface IUserService {
      * @return the generated forgot password code
      */
     String generateForgotPasswordCode(String email);
+
 
 }
