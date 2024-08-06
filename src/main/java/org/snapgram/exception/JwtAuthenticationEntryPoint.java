@@ -30,14 +30,14 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.getWriter().write(jsonObject.toString());
     }
          /*
-         {
-        "data":{
-        "message":"Full authentication is required to access this resource",
-        "error":"Unauthorized",
-        "timestamp":"2024-07-29 14:31:11.002"
-        },
-        "status":401
-        }
+{
+    "data": {
+        "message": "Full authentication is required to access this resource",
+        "error": "Unauthorized",
+        "timestamp": "2024-08-05 15:32:26.258"
+    },
+    "status": 401
+}
         */
 }
 

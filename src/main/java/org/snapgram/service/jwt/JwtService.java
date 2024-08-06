@@ -97,21 +97,21 @@ public class JwtService {
     }
 
 
-    private boolean isExistsInBlacklist(String token) {
-        TokenDTO t = tokenService.findToken(token);
+    private boolean isExistsInBlacklist(String token, boolean isRefreshToken) {
+        TokenDTO t = tokenService.findToken(token,isRefreshToken);
         return t != null;
     }
 
 
     public boolean validateToken(String token, String email) {
         final String emailEx = jwtHelper.extractEmailFromToken(token);
-        return emailEx.equals(email) && !isTokenExpired(token) && !isExistsInBlacklist(token);
+        return emailEx.equals(email) && !isTokenExpired(token) && !isExistsInBlacklist(token, false);
     }
 
     public boolean validateRefreshToken(String token) {
         final String emailEx = jwtHelper.extractEmailFromRefreshToken(token);
         UserDetails userDetails = userDetailService.loadUserByUsername(emailEx);
-        return userDetails != null && !isRefreshTokenExpired(token) && !isExistsInBlacklist(token);
+        return userDetails != null && !isRefreshTokenExpired(token) && !isExistsInBlacklist(token, true);
 
     }
 }

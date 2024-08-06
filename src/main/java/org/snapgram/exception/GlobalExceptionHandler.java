@@ -1,9 +1,11 @@
 package org.snapgram.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.response.ErrorResponse;
 import org.snapgram.dto.response.ResponseObject;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -25,6 +27,27 @@ import java.nio.file.AccessDeniedException;
 public class GlobalExceptionHandler {
     private String getPath(WebRequest request) {
         return request.getDescription(false).replace("uri=", "");
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseObject<ErrorResponse> handleExpiredJwtException(ExpiredJwtException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("JWT Token Expired")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
+    }
+    @ExceptionHandler(RedisConnectionFailureException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseObject<ErrorResponse> handleRedisConnectionFailureException(RedisConnectionFailureException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("Redis Connection Failure.")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.INTERNAL_SERVER_ERROR, error);
     }
 
     @ExceptionHandler(BadCredentialsException.class)

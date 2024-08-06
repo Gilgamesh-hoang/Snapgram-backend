@@ -111,14 +111,14 @@ public class UserService implements IUserService {
     @Override
     public boolean isEmailExists(String email) {
         // Find the user in the database with the provided email
-        Example<User> example = Example.of(User.builder().email(email).isDeleted(false).isActive(false).build());
+        Example<User> example = Example.of(User.builder().email(email).isDeleted(false).build());
         User user = userRepository.findOne(example).orElse(null);
 
         // If no user is found, return false
         if (user == null)
             return false;
 
-        if (isVerificationExpired(3, user.getCreatedAt())) {
+        if (Boolean.TRUE.equals(!user.getIsActive()) && isVerificationExpired(3, user.getCreatedAt())) {
             deleteUser(UserDTO.builder().email(email).build());
             return false;
         }
@@ -130,14 +130,14 @@ public class UserService implements IUserService {
     @Override
     public boolean isNicknameExists(String nickname) {
         // Find the user in the database with the provided nickname
-        Example<User> example = Example.of(User.builder().nickname(nickname).isDeleted(false).isActive(false).build());
+        Example<User> example = Example.of(User.builder().nickname(nickname).isDeleted(false).build());
         User user = userRepository.findOne(example).orElse(null);
 
         // If no user is found, return false
         if (user == null)
             return false;
 
-        if (isVerificationExpired(3, user.getCreatedAt())) {
+        if (Boolean.TRUE.equals(!user.getIsActive()) && isVerificationExpired(3, user.getCreatedAt())) {
             deleteUser(UserDTO.builder().nickname(nickname).build());
             return false;
         }

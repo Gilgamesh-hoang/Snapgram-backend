@@ -9,5 +9,5 @@ public interface ITokenService {
 
     void saveAll(String accessToken,String refreshToken);
 
-    TokenDTO findToken(String token);
+    TokenDTO findToken(String token, boolean isRefreshToken);
 }

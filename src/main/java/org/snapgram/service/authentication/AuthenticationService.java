@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.request.AuthenticationRequest;
-import org.snapgram.dto.request.LogoutRequest;
 import org.snapgram.dto.response.JwtResponse;
 import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.jwt.JwtService;
@@ -22,13 +21,13 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationService implements IAuthenticationService {
-    final AuthenticationManager authenticationManager;
-    final ITokenService tokenService;
-    final JwtService jwtService;
-    final JwtHelper jwtHelper;
-    final UserDetailServiceImpl userDetailsService;
+    AuthenticationManager authenticationManager;
+    ITokenService tokenService;
+    JwtService jwtService;
+    JwtHelper jwtHelper;
+    UserDetailServiceImpl userDetailsService;
 
     @Override
     public JwtResponse login(AuthenticationRequest request) {
@@ -52,8 +51,8 @@ public class AuthenticationService implements IAuthenticationService {
 
 
     @Override
-    public void logout(LogoutRequest request) {
-        tokenService.saveAll(request.getAccessToken(), request.getRefreshToken());
+    public void logout(String token,String refreshToken) {
+        tokenService.saveAll(token, refreshToken);
         SecurityContextHolder.clearContext();
     }
 

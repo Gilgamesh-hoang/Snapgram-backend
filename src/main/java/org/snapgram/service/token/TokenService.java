@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.response.TokenDTO;
 import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.redis.IRedisService;
-import org.snapgram.service.user.TransactionalUserService;
 import org.snapgram.util.SystemConstant;
 import org.springframework.stereotype.Service;
 
@@ -53,8 +52,13 @@ public class TokenService implements ITokenService {
     }
 
     @Override
-    public TokenDTO findToken(String token) {
-        String jid = jwtHelper.getJidFromRefreshToken(token);
+    public TokenDTO findToken(String token, boolean isRefreshToken) {
+        String jid;
+        if (isRefreshToken) {
+            jid = jwtHelper.getJidFromRefreshToken(token);
+        } else {
+            jid = jwtHelper.getJidFromToken(token);
+        }
         return redisService.getElementFromMap(SystemConstant.BLACKLIST_TOKEN, jid, TokenDTO.class);
     }
 

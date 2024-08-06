@@ -27,6 +27,11 @@ public class UserController {
     IUserService userService;
     IEmailService emailService;
 
+    @GetMapping
+    public ResponseObject<UserDTO> getUser() {
+        return new ResponseObject<>(HttpStatus.OK, UserDTO.builder().email("nwaeuibgfuiebf").build());
+    }
+
     @PostMapping("/forgot-password")
     public ResponseObject<Void> forgotPass(@RequestBody @Valid EmailRequest request) {
         boolean isExists = userService.isEmailExists(request.getEmail());

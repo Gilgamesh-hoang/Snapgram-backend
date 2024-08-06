@@ -4,6 +4,6 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class SystemConstant {
-
-   public static final String BLACKLIST_TOKEN = "jwt_blacklist";
+    public final String BLACKLIST_TOKEN = "jwt_blacklist";
+    public final String REFRESH_TOKEN = "refresh_token";
 }
