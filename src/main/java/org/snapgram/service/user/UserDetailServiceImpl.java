@@ -2,9 +2,9 @@ package org.snapgram.service.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.snapgram.entity.User;
+import org.snapgram.entity.database.User;
 import org.snapgram.exception.UserNotFoundException;
-import org.snapgram.repository.IUserRepository;
+import org.snapgram.repository.database.IUserRepository;
 import org.springframework.data.domain.Example;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

@@ -3,9 +3,9 @@ package org.snapgram.service.user;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.response.UserDTO;
-import org.snapgram.entity.User;
+import org.snapgram.entity.database.User;
 import org.snapgram.mapper.UserMapper;
-import org.snapgram.repository.IUserRepository;
+import org.snapgram.repository.database.IUserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

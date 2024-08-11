@@ -1,19 +1,18 @@
-package org.snapgram.entity;
+package org.snapgram.entity.database;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.snapgram.entity.generator.UUIDGenerator;
+import org.snapgram.entity.database.generator.UUIDGenerator;
 
 import java.util.UUID;
 
 @Data
-
 @Entity
-@Table(name = "participant")
-public class Participant {
+@Table(name = "follow")
+public class Follow {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -23,11 +22,10 @@ public class Participant {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "following_user_id", nullable = false)
+    private User followingUser;
 
     @ManyToOne
-    @JoinColumn(name = "conservation_id", nullable = false)
-    private Conservation conservation;
-
+    @JoinColumn(name = "followied_user_id", nullable = false)
+    private User followedUser;
 }

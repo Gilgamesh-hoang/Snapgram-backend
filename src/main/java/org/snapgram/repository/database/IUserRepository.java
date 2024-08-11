@@ -1,6 +1,6 @@
-package org.snapgram.repository;
+package org.snapgram.repository.database;
 
-import org.snapgram.entity.User;
+import org.snapgram.entity.database.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

@@ -1,11 +1,10 @@
-package org.snapgram.entity;
-
+package org.snapgram.entity.database;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.snapgram.entity.generator.UUIDGenerator;
+import org.snapgram.entity.database.generator.UUIDGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -14,9 +13,9 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "notification")
+@Table(name = "saved")
 @EntityListeners(AuditingEntityListener.class)
-public class Notification {
+public class Saved {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -26,27 +25,21 @@ public class Notification {
     private UUID id;
 
     @ManyToOne
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
+
+    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private NotificationType type;
-
-    @Column(name = "is_read", columnDefinition = "TINYINT(1) DEFAULT 0")
-    private Boolean isRead = false;
-
-    @Column(name = "created_at", updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "saved_at", updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreatedDate
     @Temporal(TemporalType.TIMESTAMP)
-    private Timestamp createdAt;
+    private Timestamp savedAt;
 
     @Column(name = "is_deleted", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean isDeleted = false;
 
-    public enum NotificationType {
-        LIKE, COMMENT, FOLLOW
-    }
-
+    // getters and setters
 }
 

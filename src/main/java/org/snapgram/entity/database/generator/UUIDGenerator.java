@@ -1,4 +1,4 @@
-package org.snapgram.entity.generator;
+package org.snapgram.entity.database.generator;
 
 import com.fasterxml.uuid.Generators;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

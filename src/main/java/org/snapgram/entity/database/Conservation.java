@@ -1,11 +1,11 @@
-package org.snapgram.entity;
+package org.snapgram.entity.database;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.snapgram.entity.generator.UUIDGenerator;
+import org.snapgram.entity.database.generator.UUIDGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
