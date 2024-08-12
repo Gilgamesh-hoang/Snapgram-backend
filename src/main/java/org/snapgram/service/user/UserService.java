@@ -4,18 +4,15 @@ import com.fasterxml.uuid.Generators;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.User;
-import org.snapgram.entity.elasticsearch.UserDocument;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.exception.UserNotFoundException;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.repository.database.IUserRepository;
-import org.snapgram.repository.elasticsearch.user.ICustomUserElasticRepo;
-import org.snapgram.repository.elasticsearch.user.UserElasticRepo;
 import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,20 +26,13 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class UserService implements IUserService {
     IUserRepository userRepository;
-    ICustomUserElasticRepo customUserElastic;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     TransactionalUserService transactionalUserService;
 
-
-    @Override
-    public List<UserDTO> findByKeyword(String keyword, Pageable page) {
-        List<UserDocument> userDocuments = customUserElastic.searchByKeyword(keyword,page);
-        return userMapper.toDTOs(userDocuments);
-//        return null;
-    }
 
     @Override
     public UserDTO findByEmail(String email) {

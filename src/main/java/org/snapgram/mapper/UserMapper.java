@@ -7,13 +7,14 @@ import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.User;
 import org.snapgram.entity.elasticsearch.UserDocument;
 
+import java.util.Collection;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     UserDTO toDTO(User user);
     UserDTO toDTO(UserDocument user);
-    List<UserDTO> toDTOs(List<UserDocument> users);
+    Collection<UserDTO> toDTOs(Collection<UserDocument> users);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "avatarUrl", ignore = true)

@@ -2,9 +2,7 @@ package org.snapgram.service.user;
 
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.UserDTO;
-import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -12,7 +10,7 @@ import java.util.UUID;
  * This interface provides methods for user management.
  */
 public interface IUserService {
-    List<UserDTO> findByKeyword(String keyword, Pageable page);
+
     UserDTO findByEmail(String email);
     UserDTO findById(UUID id);
     UserDTO findByNickname(String nickname);

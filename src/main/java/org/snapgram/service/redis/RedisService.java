@@ -7,8 +7,11 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -56,5 +59,29 @@ public class RedisService implements IRedisService {
         }
         // Convert data from JSON (String) to the desired type
         return clazz.cast(data);
+    }
+
+    @Override
+    public <T> Set<T> getSet(String key) {
+        Set<T> results = new HashSet<>();
+        Set<Object> members = redisTemplate.opsForSet().members(key);
+        if (members!= null && !members.isEmpty()) {
+            members.forEach(result -> {
+                HashSet<T> set = (HashSet<T>) result;
+                results.addAll(set);
+            });
+            return results;
+        }
+        return new HashSet<>();
+    }
+
+    @Override
+    public void setTimeout(String key,long timeout, TimeUnit timeUnit) {
+        redisTemplate.expire(key, timeout, timeUnit);
+    }
+
+    @Override
+    public void saveSet(String key, Set<Object> set) {
+        redisTemplate.opsForSet().add(key, set.toArray());
     }
 }

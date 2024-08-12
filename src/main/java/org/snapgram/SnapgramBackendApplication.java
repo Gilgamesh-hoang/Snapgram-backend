@@ -1,11 +1,14 @@
 package org.snapgram;
 
+import org.snapgram.repository.elasticsearch.user.ICustomUserElasticRepo;
 import org.snapgram.service.user.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
@@ -21,8 +24,8 @@ public class SnapgramBackendApplication {
     @Autowired
     IUserService userService;
 
-//    @Autowired
-//    ElasticsearchOperations elasticsearchOperations;
+    @Autowired
+    ICustomUserElasticRepo userElasticRepository;
 //    IUserRepository userRepository;
 
     @Bean
@@ -33,14 +36,7 @@ public class SnapgramBackendApplication {
 //                    list.add(UserDocument.builder().id(user.getId()).email(user.getEmail()).fullName(user.getFullName()).isActive(user.getIsActive()).isDeleted(user.getIsDeleted()).nickname(user.getNickname()).build()));
 //            userElasticRepository.saveAll(list);
 //            System.out.println("saved " + list.size() + " users to elastic search");
-//            userElasticRepository.searchByWildcard("uns").forEach(System.out::println);
-//            int pageNumber = 0; // start from first page
-//            int pageSize = 2; // size of each page
-//
-//            Pageable pageable = PageRequest.of(pageNumber, pageSize);
-//
-//            String searchTerm = "uns";
-//            userService.findByKeyword(searchTerm, pageable).forEach(System.out::println);
+            userElasticRepository.searchByKeyword("phi", PageRequest.of(0,10)).forEach(System.out::println);
         };
     }
 

@@ -183,7 +183,7 @@ public class GlobalExceptionHandler {
                 .error("Internal Server Error")
                 .message(ex.getMessage())
                 .build();
-        return new ResponseObject<>(HttpStatus.UNAUTHORIZED, error);
+        return new ResponseObject<>(HttpStatus.INTERNAL_SERVER_ERROR, error);
     }
 
 
