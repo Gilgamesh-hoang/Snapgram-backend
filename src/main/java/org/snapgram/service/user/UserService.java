@@ -5,9 +5,11 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.User;
+import org.snapgram.enums.Gender;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.exception.UserNotFoundException;
 import org.snapgram.mapper.UserMapper;
@@ -41,9 +43,7 @@ public class UserService implements IUserService {
 
     private User findUserEntityByEmail(String email) {
         Example<User> example = Example.of(User.builder().email(email).isDeleted(false).build());
-        return userRepository.findOne(example).orElseThrow(()
-                -> new UserNotFoundException("User not found with email: " + email)
-        );
+        return userRepository.findOne(example).orElse(null);
     }
 
     @Override
@@ -130,6 +130,27 @@ public class UserService implements IUserService {
         user.setActiveCode(Generators.randomBasedGenerator().generate().toString());
         user.setIsActive(false);
         user.setIsDeleted(false);
+        // Save the User entity to the database
+        user = userRepository.save(user);
+
+        // Return true if the user was created successfully, false otherwise
+        return userMapper.toDTO(user);
+    }
+    @Override
+    @Transactional
+    public UserDTO createUser(GooglePojo googlePojo) {
+        if (isEmailExists(googlePojo.getEmail())) {
+            throw new IllegalArgumentException("User with email already exists");
+        }
+
+        String generateNickname = "user_" + googlePojo.getSub().substring(0, 8);
+
+        User user = userMapper.toEntity(googlePojo);
+        user.setNickname(generateNickname);
+        user.setPassword(passwordEncoder.encode(Generators.randomBasedGenerator().toString()));
+        user.setIsActive(true);
+        user.setIsDeleted(false);
+        user.setGender(Gender.MALE);
         // Save the User entity to the database
         user = userRepository.save(user);
 

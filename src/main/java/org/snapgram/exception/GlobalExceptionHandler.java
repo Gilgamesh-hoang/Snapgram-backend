@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -29,6 +30,16 @@ public class GlobalExceptionHandler {
         return request.getDescription(false).replace("uri=", "");
     }
 
+    @ExceptionHandler(OAuth2AuthenticationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseObject<ErrorResponse> handleOAuth2AuthenticationException(OAuth2AuthenticationException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("Invalid Token")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
+    }
     @ExceptionHandler(ExpiredJwtException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseObject<ErrorResponse> handleExpiredJwtException(ExpiredJwtException ex, WebRequest request) {

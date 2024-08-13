@@ -34,10 +34,8 @@ import java.util.List;
 @FieldDefaults(level = lombok.AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class SecurityConfig {
-
     @Value("${application.frontend.url}")
     String frontendUrl;
-
     final EndPoint endPoint;
     final UserDetailServiceImpl userDetails;
     final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;

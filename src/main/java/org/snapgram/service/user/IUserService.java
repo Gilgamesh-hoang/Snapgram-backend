@@ -1,5 +1,6 @@
 package org.snapgram.service.user;
 
+import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.UserDTO;
 
@@ -31,7 +32,7 @@ public interface IUserService {
      * @return the created user as a UserDTO
      */
     UserDTO createUser(SignupRequest request);
-
+    UserDTO createUser(GooglePojo googlePojo);
     /**
      * Checks if an email already exists in the system.
      *
@@ -64,6 +65,7 @@ public interface IUserService {
      * @return the generated forgot password code
      */
     String generateForgotPasswordCode(String email);
+
 
 
 }

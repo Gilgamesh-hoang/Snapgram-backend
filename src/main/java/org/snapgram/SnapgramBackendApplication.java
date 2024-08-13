@@ -36,7 +36,7 @@ public class SnapgramBackendApplication {
 //                    list.add(UserDocument.builder().id(user.getId()).email(user.getEmail()).fullName(user.getFullName()).isActive(user.getIsActive()).isDeleted(user.getIsDeleted()).nickname(user.getNickname()).build()));
 //            userElasticRepository.saveAll(list);
 //            System.out.println("saved " + list.size() + " users to elastic search");
-            userElasticRepository.searchByKeyword("phi", PageRequest.of(0,10)).forEach(System.out::println);
+//            userElasticRepository.searchByKeyword("phi", PageRequest.of(0,10)).forEach(System.out::println);
         };
     }
 
