@@ -32,6 +32,7 @@ public class SearchController {
                                                 @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
                                                 @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
+        keyword = keyword.trim().toLowerCase();
         Set<UserDTO> users = searchService.searchByKeyword(keyword, pageable);
         return new ResponseObject<>(HttpStatus.OK, "Users found", users);
     }

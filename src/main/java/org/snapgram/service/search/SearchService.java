@@ -32,7 +32,6 @@ public class SearchService implements ISearchService {
 
     @Override
     public Set<UserDTO> searchByKeyword(String keyword, Pageable page) {
-        keyword = keyword.toLowerCase();
         String redisKey = RedisKeyUtil.getSearchUserKey(keyword, page.getPageNumber(), page.getPageSize());
         Set<UserDTO> results = new HashSet<>();
 
@@ -43,10 +42,13 @@ public class SearchService implements ISearchService {
 
         Set<UserDocument> elasticResults = customUserElastic.searchByKeyword(keyword, page);
         userRepository.findAllById(elasticResults.stream().map(UserDocument::getId).toList())
-                .forEach(user -> results.add(userMapper.toDTO(user)));
+                .forEach(user -> {
+                    user.setBio(null);
+                    results.add(userMapper.toDTO(user));
+                });
 
         CompletableFuture.runAsync(() -> {
-            redisService.saveSet(redisKey, Collections.singleton(results));
+            redisService.saveSet(redisKey, results);
             if (results.isEmpty())
                 redisService.setTimeout(redisKey, 5, TimeUnit.MINUTES);
             else

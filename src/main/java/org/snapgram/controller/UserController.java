@@ -23,7 +23,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -57,15 +59,15 @@ public class UserController {
         // Try to get the list of friend suggestions from Redis
         List<UserDTO> users = redisService.getList(RedisKeyUtil.getFriendSuggestKey(email), start, end);
 
-        if (users == null || users.isEmpty()) {
+        if (users == null ) {
             // Generate friend suggestions
             users = friendSuggestionService.recommendFriends(user.getId());
 
-            // Save the generated friend suggestions to Redis
-            redisService.saveList(RedisKeyUtil.getFriendSuggestKey(email), users);
-
-            // Set a timeout for the friend suggestions in Redis
-            redisService.setTimeout(RedisKeyUtil.getFriendSuggestKey(email), 5, TimeUnit.DAYS);
+            List<UserDTO> finalUsers = new ArrayList<>(users);
+            CompletableFuture.runAsync(() -> {
+                redisService.saveList(RedisKeyUtil.getFriendSuggestKey(email), finalUsers);
+                redisService.setTimeout(RedisKeyUtil.getFriendSuggestKey(email), 5, TimeUnit.DAYS);
+            });
 
             // Get the sublist of users based on the pagination parameters
             users = users.subList(start, Math.min(users.size(), end + 1));

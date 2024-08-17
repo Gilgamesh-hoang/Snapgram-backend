@@ -7,10 +7,7 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -41,7 +38,10 @@ public class RedisService implements IRedisService {
     @Override
     public <T> List<T> getList(String key, int start, int end) {
         long size = redisTemplate.opsForList().size(key);
-        if (start >= size) {
+        if (size == 0) {
+            return null;
+        }
+        if (start >= size ) {
             throw new IllegalArgumentException("Start index is greater than the size of the list");
         }
         if (end > size) {
@@ -89,6 +89,7 @@ public class RedisService implements IRedisService {
             return results;
         }
         return new HashSet<>();
+
     }
 
     @Override
@@ -97,7 +98,7 @@ public class RedisService implements IRedisService {
     }
 
     @Override
-    public void saveSet(String key, Set<Object> set) {
-        redisTemplate.opsForSet().add(key, set.toArray());
+    public <T> void saveSet(String key, Set<T> set) {
+        redisTemplate.opsForSet().add(key, set);
     }
 }

@@ -24,7 +24,7 @@ public interface IRedisService {
 
     <T> Set<T> getSet(String key);
 
-    void saveSet(String key, Set<Object> set);
+    <T> void saveSet(String key, Set<T> set);
 
     void setTimeout(String key, long timeout, TimeUnit timeUnit);
 }
