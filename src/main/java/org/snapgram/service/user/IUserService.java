@@ -4,6 +4,7 @@ import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.UserDTO;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -13,8 +14,11 @@ import java.util.UUID;
 public interface IUserService {
 
     UserDTO findByEmail(String email);
+
     UserDTO findById(UUID id);
+
     UserDTO findByNickname(String nickname);
+
     void deleteInactiveUsers(int days);
 
     /**
@@ -32,7 +36,9 @@ public interface IUserService {
      * @return the created user as a UserDTO
      */
     UserDTO createUser(SignupRequest request);
+
     UserDTO createUser(GooglePojo googlePojo);
+
     /**
      * Checks if an email already exists in the system.
      *
@@ -67,5 +73,7 @@ public interface IUserService {
     String generateForgotPasswordCode(String email);
 
 
+    List<UserDTO> findFriendsByUserId(UUID userId);
 
+    List<UserDTO> findRandomUsers(int number, List<UUID> exceptIds);
 }

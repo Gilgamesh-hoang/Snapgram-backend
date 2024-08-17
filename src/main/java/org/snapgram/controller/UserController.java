@@ -2,21 +2,29 @@ package org.snapgram.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.dto.request.EmailRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.dto.response.UserDTO;
+import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.service.mail.IEmailService;
+import org.snapgram.service.redis.IRedisService;
+import org.snapgram.service.suggestion.FriendSuggestionService;
 import org.snapgram.service.user.IUserService;
+import org.snapgram.util.RedisKeyUtil;
+import org.snapgram.util.UserSecurityHepler;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,12 +32,52 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("${API_PREFIX}/users")
 @Validated
 public class UserController {
+    IRedisService redisService;
     IUserService userService;
+    FriendSuggestionService friendSuggestionService;
     IEmailService emailService;
 
     @GetMapping
     public ResponseObject<UserDTO> getUser() {
         return new ResponseObject<>(HttpStatus.OK, UserDTO.builder().email("nwaeuibgfuiebf").build());
+    }
+
+    @GetMapping("/friend-suggestions")
+    public ResponseObject<List<UserDTO>> friendSuggestion(
+            @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = "15") @Min(0) Integer pageSize
+    ) {
+        String email = UserSecurityHepler.getCurrentUser().getUsername();
+        UserDTO user = userService.findByEmail(email);
+
+        // Calculate the start and end indices for pagination
+        int start = (pageNumber - 1) * pageSize;
+        int end = pageNumber * pageSize - 1;
+
+        // Try to get the list of friend suggestions from Redis
+        List<UserDTO> users = redisService.getList(RedisKeyUtil.getFriendSuggestKey(email), start, end);
+
+        if (users == null || users.isEmpty()) {
+            // Generate friend suggestions
+            users = friendSuggestionService.recommendFriends(user.getId());
+
+            // Save the generated friend suggestions to Redis
+            redisService.saveList(RedisKeyUtil.getFriendSuggestKey(email), users);
+
+            // Set a timeout for the friend suggestions in Redis
+            redisService.setTimeout(RedisKeyUtil.getFriendSuggestKey(email), 5, TimeUnit.DAYS);
+
+            // Get the sublist of users based on the pagination parameters
+            users = users.subList(start, Math.min(users.size(), end + 1));
+        }
+
+        return new ResponseObject<>(HttpStatus.OK, users);
+    }
+
+    @GetMapping("/me")
+    public ResponseObject<UserDTO> getCurrentUser() {
+        String email = UserSecurityHepler.getCurrentUser().getUsername();
+        return new ResponseObject<>(HttpStatus.OK, userService.findByEmail(email));
     }
 
     @PostMapping("/forgot-password")

@@ -9,11 +9,13 @@ import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.User;
+import org.snapgram.entity.elasticsearch.UserDocument;
 import org.snapgram.enums.Gender;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.exception.UserNotFoundException;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.repository.database.IUserRepository;
+import org.snapgram.repository.elasticsearch.user.ICustomUserElasticRepo;
 import org.springframework.data.domain.Example;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,15 +32,28 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class UserService implements IUserService {
+    ICustomUserElasticRepo userElastic;
     IUserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     TransactionalUserService transactionalUserService;
 
+    @Override
+    public List<UserDTO> findRandomUsers(int number, List<UUID> exceptIds) {
+        List<UUID> ids = userElastic.findRandomUsers(number, exceptIds).stream().map(UserDocument::getId).toList();
+        return userRepository.findAllById(ids).stream().map(user -> {
+            user.setBio(null);
+            return userMapper.toDTO(user);
+        }).toList();
+    }
 
     @Override
     public UserDTO findByEmail(String email) {
-        return userMapper.toDTO(findUserEntityByEmail(email));
+        User user = findUserEntityByEmail(email);
+        if (user == null)
+            return null;
+        user.setBio(null);
+        return userMapper.toDTO(user);
     }
 
     private User findUserEntityByEmail(String email) {
@@ -48,14 +63,16 @@ public class UserService implements IUserService {
 
     @Override
     public UserDTO findById(UUID id) {
-        return userMapper.toDTO(findUserEntityById(id));
+        User user = findUserEntityById(id);
+        if (user == null)
+            return null;
+        user.setBio(null);
+        return userMapper.toDTO(user);
     }
 
     private User findUserEntityById(UUID id) {
         Example<User> example = Example.of(User.builder().id(id).isDeleted(false).isActive(true).build());
-        return userRepository.findOne(example).orElseThrow(()
-                -> new UserNotFoundException("User not found with id: " + id.toString())
-        );
+        return userRepository.findOne(example).orElse(null);
     }
 
     @Override
@@ -136,6 +153,7 @@ public class UserService implements IUserService {
         // Return true if the user was created successfully, false otherwise
         return userMapper.toDTO(user);
     }
+
     @Override
     @Transactional
     public UserDTO createUser(GooglePojo googlePojo) {
@@ -214,4 +232,11 @@ public class UserService implements IUserService {
         userRepository.save(user);
         return newPassword;
     }
+
+    @Override
+    public List<UserDTO> findFriendsByUserId(UUID userId) {
+        return userRepository.findFollowers(userId).stream().map(userMapper::toDTO).toList();
+    }
+
+
 }

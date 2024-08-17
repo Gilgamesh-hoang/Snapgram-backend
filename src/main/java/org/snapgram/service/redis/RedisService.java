@@ -31,6 +31,25 @@ public class RedisService implements IRedisService {
         redisTemplate.opsForHash().putAll(key, map);
     }
 
+    @Override
+    public <T> void saveList(String key, List<T> list) {
+        for (T item : list) {
+            redisTemplate.opsForList().rightPush(key, item);
+        }
+    }
+
+    @Override
+    public <T> List<T> getList(String key, int start, int end) {
+        long size = redisTemplate.opsForList().size(key);
+        if (start >= size) {
+            throw new IllegalArgumentException("Start index is greater than the size of the list");
+        }
+        if (end > size) {
+            end = (int) size;
+        }
+        return (List<T>) redisTemplate.opsForList().range(key, start, end);
+    }
+
     public Map<Object, Object> getMap(String key) {
         return redisTemplate.opsForHash().entries(key);
     }
@@ -54,9 +73,6 @@ public class RedisService implements IRedisService {
     @Override
     public <T> T getElementFromMap(String key, String field, Class<T> clazz) {
         Object data = redisTemplate.opsForHash().get(key, field);
-        if (data == null) {
-            return null;
-        }
         // Convert data from JSON (String) to the desired type
         return clazz.cast(data);
     }
@@ -65,7 +81,7 @@ public class RedisService implements IRedisService {
     public <T> Set<T> getSet(String key) {
         Set<T> results = new HashSet<>();
         Set<Object> members = redisTemplate.opsForSet().members(key);
-        if (members!= null && !members.isEmpty()) {
+        if (members != null && !members.isEmpty()) {
             members.forEach(result -> {
                 HashSet<T> set = (HashSet<T>) result;
                 results.addAll(set);
@@ -76,7 +92,7 @@ public class RedisService implements IRedisService {
     }
 
     @Override
-    public void setTimeout(String key,long timeout, TimeUnit timeUnit) {
+    public void setTimeout(String key, long timeout, TimeUnit timeUnit) {
         redisTemplate.expire(key, timeout, timeUnit);
     }
 

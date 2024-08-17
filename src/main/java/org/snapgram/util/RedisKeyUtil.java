@@ -8,4 +8,7 @@ public class RedisKeyUtil {
     public String getSearchUserKey(String keyword, int page, int size) {
         return String.format("search:user:%s:page:%d:size:%d", keyword, page, size);
     }
+    public String getFriendSuggestKey(String email) {
+        return String.format("suggest-friends:%s", email);
+    }
 }

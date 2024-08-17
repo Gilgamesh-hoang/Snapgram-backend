@@ -1,10 +1,7 @@
 package org.snapgram.entity.database;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -20,6 +17,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(of = {"id", "email", "nickname"})
 @Entity
 @Table(name = "user")
 @EntityListeners(AuditingEntityListener.class)
@@ -32,7 +30,7 @@ public class User {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @Column(name = "nick_name", length = 50, nullable = false, unique = true)
+    @Column(name = "nickname", length = 50, nullable = false, unique = true)
     private String nickname;
 
     @Column(length = 100, nullable = false, unique = true)
@@ -69,5 +67,4 @@ public class User {
     @CreatedDate
     @Temporal(TemporalType.TIMESTAMP)
     private Timestamp createdAt;
-
 }
