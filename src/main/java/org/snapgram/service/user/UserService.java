@@ -14,7 +14,7 @@ import org.snapgram.enums.Gender;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.exception.UserNotFoundException;
 import org.snapgram.mapper.UserMapper;
-import org.snapgram.repository.database.IUserRepository;
+import org.snapgram.repository.database.UserRepository;
 import org.snapgram.repository.elasticsearch.user.ICustomUserElasticRepo;
 import org.springframework.data.domain.Example;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +33,7 @@ import java.util.UUID;
 @Slf4j
 public class UserService implements IUserService {
     ICustomUserElasticRepo userElastic;
-    IUserRepository userRepository;
+    UserRepository userRepository;
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     TransactionalUserService transactionalUserService;

@@ -7,14 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.elasticsearch.UserDocument;
 import org.snapgram.mapper.UserMapper;
-import org.snapgram.repository.database.IUserRepository;
+import org.snapgram.repository.database.UserRepository;
 import org.snapgram.repository.elasticsearch.user.ICustomUserElasticRepo;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.RedisKeyUtil;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -27,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class SearchService implements ISearchService {
     IRedisService redisService;
     ICustomUserElasticRepo customUserElastic;
-    IUserRepository userRepository;
+    UserRepository userRepository;
     UserMapper userMapper;
 
     @Override

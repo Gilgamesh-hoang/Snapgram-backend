@@ -5,7 +5,7 @@ import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.User;
 import org.snapgram.mapper.UserMapper;
-import org.snapgram.repository.database.IUserRepository;
+import org.snapgram.repository.database.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true)
 class TransactionalUserService {
-    private IUserRepository userRepository;
+    private UserRepository userRepository;
     private UserMapper userMapper;
 
     @Transactional

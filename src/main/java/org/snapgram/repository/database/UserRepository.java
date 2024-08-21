@@ -8,7 +8,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.UUID;
 
-public interface IUserRepository extends JpaRepository<User, UUID> {
+public interface UserRepository extends JpaRepository<User, UUID> {
 
     @Query(value = "SELECT u FROM User u WHERE u.id NOT IN :exceptIds " +
             "AND u.isActive = true AND u.isDeleted = false " +

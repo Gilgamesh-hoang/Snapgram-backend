@@ -30,10 +30,10 @@ public class User {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @Column(name = "nickname", length = 50, nullable = false, unique = true)
+    @Column(name = "nickname", length = 50, nullable = false)
     private String nickname;
 
-    @Column(length = 100, nullable = false, unique = true)
+    @Column(length = 100, nullable = false)
     private String email;
 
     @Column(length = 255, nullable = false)

@@ -1,8 +1,7 @@
 package org.snapgram;
 
-import org.snapgram.dto.response.UserDTO;
-import org.snapgram.repository.database.IFollowRepository;
-import org.snapgram.repository.database.IUserRepository;
+import org.snapgram.repository.database.FollowRepository;
+import org.snapgram.repository.database.UserRepository;
 import org.snapgram.repository.elasticsearch.user.CustomUserElasticRepo;
 import org.snapgram.service.suggestion.FriendSuggestionService;
 import org.snapgram.service.suggestion.HybridFriendSuggestionService;
@@ -12,15 +11,12 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 @SpringBootApplication
 @EnableScheduling
+@EnableAsync
 public class SnapgramBackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(SnapgramBackendApplication.class, args);
@@ -30,7 +26,7 @@ public class SnapgramBackendApplication {
     @Autowired
     IUserService userService;
     @Autowired
-    IFollowRepository followRepository;
+    FollowRepository followRepository;
     @Autowired
     HybridFriendSuggestionService hybridFriendSuggestionService;
     @Autowired
@@ -38,25 +34,20 @@ public class SnapgramBackendApplication {
     @Autowired
     CustomUserElasticRepo userElasticRepo;
     @Autowired
-    IUserRepository userRepository;
+    UserRepository userRepository;
 
-    public int countCommonFriends(UUID userId1, UUID userId2) {
-        List<UserDTO> friendsOfUser1 = userService.findFriendsByUserId(userId1);
-        List<UserDTO> friendsOfUser2 = userService.findFriendsByUserId(userId2);
 
-        // Convert the lists to sets for efficient intersection
-        Set<UserDTO> set1 = new HashSet<>(friendsOfUser1);
-        Set<UserDTO> set2 = new HashSet<>(friendsOfUser2);
 
-        // Find the intersection of the two sets
-        set1.retainAll(set2);
 
-        // The size of the intersection set is the number of common friends
-        return set1.size();
-    }
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
+//            ========================
+
+
+
+//            ========================
+
 //            UUID id = UUID.fromString("fe7abe91-b11e-3655-ae6c-93ff85a78579");
 //            friendSuggestionService.recommendFriends(id).forEach((user) -> {
 //                System.out.println(user.getNickname() + ": " + countCommonFriends(id, user.getId()));

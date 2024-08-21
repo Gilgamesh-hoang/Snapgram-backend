@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.nio.file.AccessDeniedException;
 
@@ -28,6 +29,28 @@ import java.nio.file.AccessDeniedException;
 public class GlobalExceptionHandler {
     private String getPath(WebRequest request) {
         return request.getDescription(false).replace("uri=", "");
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
+    public ResponseObject<ErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("File Size Limit Exceeded")
+                .path(getPath(request))
+                .message("The uploaded file size exceeds the maximum limit = " + ex.getMaxUploadSize() + " bytes")
+                .build();
+        return new ResponseObject<>(HttpStatus.PAYLOAD_TOO_LARGE, error);
+    }
+
+    @ExceptionHandler(UploadFileException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseObject<ErrorResponse> handleUploadFileException(UploadFileException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("Upload File Error")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.INTERNAL_SERVER_ERROR, error);
     }
 
     @ExceptionHandler(OAuth2AuthenticationException.class)
@@ -40,6 +63,7 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
     }
+
     @ExceptionHandler(ExpiredJwtException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseObject<ErrorResponse> handleExpiredJwtException(ExpiredJwtException ex, WebRequest request) {
@@ -50,6 +74,7 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseObject<>(HttpStatus.BAD_REQUEST, error);
     }
+
     @ExceptionHandler(RedisConnectionFailureException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseObject<ErrorResponse> handleRedisConnectionFailureException(RedisConnectionFailureException ex, WebRequest request) {

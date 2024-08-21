@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.entity.database.User;
 import org.snapgram.exception.UserNotFoundException;
-import org.snapgram.repository.database.IUserRepository;
+import org.snapgram.repository.database.UserRepository;
 import org.springframework.data.domain.Example;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,7 +18,7 @@ import java.util.ArrayList;
 @RequiredArgsConstructor
 public class UserDetailServiceImpl implements UserDetailsService {
 
-    IUserRepository userRepo;
+    UserRepository userRepo;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
