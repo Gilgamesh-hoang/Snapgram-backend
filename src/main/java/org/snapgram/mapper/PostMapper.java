@@ -12,8 +12,11 @@ import org.snapgram.entity.elasticsearch.UserDocument;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface PostMapper {
     PostDTO toDTO(Post post);
+
+    List<PostDTO> toDTOs(List<Post> posts);
 }

@@ -2,16 +2,16 @@ package org.snapgram.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.UUID;
 
 @Data
-@Builder
+@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDTO implements Serializable {
@@ -20,7 +20,9 @@ public class UserDTO implements Serializable {
     private String fullName;
     private String email;
     private String avatarUrl;
+    private String bio;
     @JsonIgnore
     private String activeCode;
+    @JsonIgnore
     private Timestamp createdAt;
 }

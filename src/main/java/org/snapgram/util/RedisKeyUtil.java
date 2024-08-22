@@ -11,4 +11,7 @@ public class RedisKeyUtil {
     public String getFriendSuggestKey(String email) {
         return String.format("suggest-friends:%s", email);
     }
+    public String getUserPostKey(String nickname, int page, int size) {
+        return String.format("user:%s:posts:page:%d:size:%d", nickname, page, size);
+    }
 }

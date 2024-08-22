@@ -13,8 +13,11 @@ public interface IRedisService {
     Map<Object, Object> getMap(String key);
 
     void saveMap(String key, Map<String, Object> map);
-    <T>  void saveList(String key, List<T> list);
-    <T>  List<T>  getList(String key, int start, int end);
+
+    <T> void saveList(String key, List<T> list);
+
+    <T> List<T> getList(String key, int start, int end);
+    <T> List<T> getList(String key);
 
     void addElementsToMap(String key, Map<String, Object> map);
 

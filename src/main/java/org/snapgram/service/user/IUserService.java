@@ -2,6 +2,7 @@ package org.snapgram.service.user;
 
 import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.SignupRequest;
+import org.snapgram.dto.response.ProfileDTO;
 import org.snapgram.dto.response.UserDTO;
 
 import java.util.List;
@@ -76,4 +77,5 @@ public interface IUserService {
     List<UserDTO> findFriendsByUserId(UUID userId);
 
     List<UserDTO> findRandomUsers(int number, List<UUID> exceptIds);
+
 }

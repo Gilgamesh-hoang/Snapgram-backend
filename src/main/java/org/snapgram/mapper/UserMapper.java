@@ -4,6 +4,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.SignupRequest;
+import org.snapgram.dto.response.ProfileDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.User;
 import org.snapgram.entity.elasticsearch.UserDocument;
@@ -14,6 +15,8 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
+
+    ProfileDTO toProfileDTO(UserDTO user);
     UserDTO toDTO(User user);
     UserDTO toDTO(UserDocument user);
     Collection<UserDTO> toDTOs(Collection<UserDocument> users);
@@ -55,4 +58,5 @@ public interface UserMapper {
     @Mapping(target = "isDeleted", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     User toEntity(SignupRequest request);
+
 }

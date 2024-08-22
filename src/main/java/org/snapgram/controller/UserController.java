@@ -10,12 +10,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.request.EmailRequest;
 import org.snapgram.dto.request.SignupRequest;
+import org.snapgram.dto.response.ProfileDTO;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.service.mail.IEmailService;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.suggestion.FriendSuggestionService;
+import org.snapgram.service.user.IProfileService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.util.RedisKeyUtil;
 import org.snapgram.util.UserSecurityHepler;
@@ -38,10 +40,12 @@ public class UserController {
     IUserService userService;
     FriendSuggestionService friendSuggestionService;
     IEmailService emailService;
+    IProfileService profileService;
 
     @GetMapping
-    public ResponseObject<UserDTO> getUser() {
-        return new ResponseObject<>(HttpStatus.OK, UserDTO.builder().email("nwaeuibgfuiebf").build());
+    public ResponseObject<ProfileDTO> getUserInfo(@RequestParam("nickname") @NotBlank String nickname) {
+        ProfileDTO profile = profileService.getProfile(nickname);
+        return new ResponseObject<>(HttpStatus.OK,profile);
     }
 
     @GetMapping("/friend-suggestions")
@@ -59,7 +63,7 @@ public class UserController {
         // Try to get the list of friend suggestions from Redis
         List<UserDTO> users = redisService.getList(RedisKeyUtil.getFriendSuggestKey(email), start, end);
 
-        if (users == null ) {
+        if (users == null) {
             // Generate friend suggestions
             users = friendSuggestionService.recommendFriends(user.getId());
 

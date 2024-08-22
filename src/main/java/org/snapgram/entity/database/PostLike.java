@@ -2,6 +2,7 @@ package org.snapgram.entity.database;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -14,6 +15,7 @@ import java.util.UUID;
 
 @Data
 @Entity
+@NoArgsConstructor
 @Table(name = "post_like")
 @EntityListeners(AuditingEntityListener.class)
 public class PostLike {
@@ -38,5 +40,9 @@ public class PostLike {
     @Temporal(TemporalType.TIMESTAMP)
     private Timestamp createdAt;
 
+    public PostLike(Post post, User user) {
+        this.post = post;
+        this.user = user;
+    }
     // getters and setters
 }

@@ -1,11 +1,6 @@
 package org.snapgram;
 
-import org.snapgram.repository.database.FollowRepository;
-import org.snapgram.repository.database.UserRepository;
-import org.snapgram.repository.elasticsearch.user.CustomUserElasticRepo;
-import org.snapgram.service.suggestion.FriendSuggestionService;
-import org.snapgram.service.suggestion.HybridFriendSuggestionService;
-import org.snapgram.service.user.IUserService;
+import org.snapgram.repository.database.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -24,95 +19,14 @@ public class SnapgramBackendApplication {
     }
 
     @Autowired
-    IUserService userService;
-    @Autowired
-    FollowRepository followRepository;
-    @Autowired
-    HybridFriendSuggestionService hybridFriendSuggestionService;
-    @Autowired
-    FriendSuggestionService friendSuggestionService;
-    @Autowired
-    CustomUserElasticRepo userElasticRepo;
-    @Autowired
-    UserRepository userRepository;
-
-
+    PostRepository postRepository;
 
 
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
 //            ========================
-
-
-
 //            ========================
-
-//            UUID id = UUID.fromString("fe7abe91-b11e-3655-ae6c-93ff85a78579");
-//            friendSuggestionService.recommendFriends(id).forEach((user) -> {
-//                System.out.println(user.getNickname() + ": " + countCommonFriends(id, user.getId()));
-//            });
-//            for (int i = 0; i < 3; i++) {
-//                userElasticRepo.findRandomUsers(5, List.of(
-//                                        UUID.fromString("e15695d4-1389-30bd-94da-37188c8813a3"),
-//                                        UUID.fromString("ec8609cb-1302-4abc-8609-cb13025abc3d"),
-//                                        UUID.fromString("1e0a3b53-7673-37d4-ad0a-0d9777b20fc1"),
-//                                        UUID.fromString("56f62d46-f217-3417-8947-dc68623267e7")
-//                                )
-//                        )
-//                        .forEach(System.out::println);
-//                System.out.println("====================================");
-//            }
-////
-//            long start = System.currentTimeMillis();
-//            List<UserDTO> a = hybridFriendSuggestionService.recommendFriends(id);
-//            System.out.println("Time1: " + (System.currentTimeMillis() - start));
-//
-//            a.forEach((user) -> {
-//                System.out.println(user.getNickname() + ": " + countCommonFriends(id, user.getId()));
-//            });
-//            System.out.println("size = " + a.size());
-
-//            System.out.println("====================================");
-//
-//            Map<UUID, Double> b = hybridFriendSuggestionService.recommendFriends2(id);
-//            b.forEach((uuid, dob) -> {
-//                System.out.println(uuid + ": " + dob);
-//            });
-//            System.out.println("size = " + b.size());
-
-//            hybridFriendSuggestionService.foafAlgorithm(UUID.fromString("fe7abe91-b11e-3655-ae6c-93ff85a78579")).forEach((uuid, integer) -> {
-//                System.out.println(uuid.toString() + " : " + integer);
-//            });
-
-//            hybridFriendSuggestionService.foafAlgorithm(UUID.fromString("fe7abe91-b11e-3655-ae6c-93ff85a78579"));
-//            hybridFriendSuggestionService.randomWalk(UUID.fromString("fe7abe91-b11e-3655-ae6c-93ff85a78579"))
-//                    .forEach((uuid, aDouble) -> {
-//                        System.out.println(uuid.toString() + " : " + aDouble);
-//                    });
-
-//            userRepository.findActiveFollowers(UUID.fromString("fe7abe91-b11e-3655-ae6c-93ff85a78579")).forEach(System.out::println);
-//            System.out.println("===========");
-//            userRepository.findAll().forEach(user -> {
-//                // random form 10 to 30
-//                int rand = new Random().nextInt(15) + 10;
-//                List<Follow> follows = new ArrayList<>();
-//                for (User us : userRepository.findRandomUsers(rand)) {
-//                    if (us.getId().equals(user.getId())) {
-//                        continue;
-//                    }
-//
-//                    Follow follow = new Follow();
-//                    follow.setFollowingUser(us);
-//                    follow.setFollowedUser(user);
-//                    follows.add(follow);
-//
-//
-//                }
-//                CompletableFuture.runAsync(() -> {
-//                    followRepository.saveAllAndFlush(follows);
-//                });
-//            });
         };
     }
 

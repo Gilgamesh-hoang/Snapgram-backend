@@ -49,6 +49,10 @@ public class RedisService implements IRedisService {
         }
         return (List<T>) redisTemplate.opsForList().range(key, start, end);
     }
+    @Override
+    public <T> List<T> getList(String key) {
+        return (List<T>) redisTemplate.opsForList().range(key, 0, -1);
+    }
 
     public Map<Object, Object> getMap(String key) {
         return redisTemplate.opsForHash().entries(key);

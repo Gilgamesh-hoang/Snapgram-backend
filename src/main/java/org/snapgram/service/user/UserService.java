@@ -7,15 +7,21 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.SignupRequest;
+import org.snapgram.dto.response.ProfileDTO;
 import org.snapgram.dto.response.UserDTO;
+import org.snapgram.entity.database.Follow;
 import org.snapgram.entity.database.User;
 import org.snapgram.entity.elasticsearch.UserDocument;
 import org.snapgram.enums.Gender;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.exception.UserNotFoundException;
 import org.snapgram.mapper.UserMapper;
+import org.snapgram.repository.database.FollowRepository;
 import org.snapgram.repository.database.UserRepository;
 import org.snapgram.repository.elasticsearch.user.ICustomUserElasticRepo;
+import org.snapgram.service.follow.IFollowService;
+import org.snapgram.service.post.IPostService;
+import org.snapgram.service.post.PostService;
 import org.springframework.data.domain.Example;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,6 +52,7 @@ public class UserService implements IUserService {
             return userMapper.toDTO(user);
         }).toList();
     }
+
 
     @Override
     public UserDTO findByEmail(String email) {
@@ -104,7 +111,7 @@ public class UserService implements IUserService {
     }
 
     private User findUserEntityByNickname(String nickname) {
-        Example<User> example = Example.of(User.builder().nickname(nickname).isDeleted(false).build());
+        Example<User> example = Example.of(User.builder().nickname(nickname).isActive(true).isDeleted(false).build());
         return userRepository.findOne(example).orElseThrow(()
                 -> new UserNotFoundException("User not found with nickname: " + nickname)
         );
