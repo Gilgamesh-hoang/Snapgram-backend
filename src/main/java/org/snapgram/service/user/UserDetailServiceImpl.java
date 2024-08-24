@@ -2,6 +2,7 @@ package org.snapgram.service.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.entity.database.User;
 import org.snapgram.exception.UserNotFoundException;
 import org.snapgram.repository.database.UserRepository;
@@ -27,7 +28,7 @@ public class UserDetailServiceImpl implements UserDetailsService {
         if (user == null) {
             throw new UserNotFoundException("User not found with email: " + username);
         }
-        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
+        return new CustomUserSecurity(user);
     }
 
 }

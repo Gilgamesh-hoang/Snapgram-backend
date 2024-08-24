@@ -32,7 +32,6 @@ public class PostController {
 
     @GetMapping("/user")
     public ResponseObject<List<PostDTO>> getPostsByUser(@RequestParam("nickname") @NotBlank String nickname,
-
                                                         @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
                                                         @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);

@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.EmailRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.ProfileDTO;
@@ -20,8 +21,8 @@ import org.snapgram.service.suggestion.FriendSuggestionService;
 import org.snapgram.service.user.IProfileService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.util.RedisKeyUtil;
-import org.snapgram.util.UserSecurityHepler;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,18 +51,19 @@ public class UserController {
 
     @GetMapping("/friend-suggestions")
     public ResponseObject<List<UserDTO>> friendSuggestion(
+            @AuthenticationPrincipal CustomUserSecurity user,
             @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
             @RequestParam(value = "pageSize", defaultValue = "15") @Min(0) Integer pageSize
     ) {
-        String email = UserSecurityHepler.getCurrentUser().getUsername();
-        UserDTO user = userService.findByEmail(email);
 
         // Calculate the start and end indices for pagination
         int start = (pageNumber - 1) * pageSize;
         int end = pageNumber * pageSize - 1;
 
+        String redisKey = RedisKeyUtil.getFriendSuggestKey(user.getEmail());
+
         // Try to get the list of friend suggestions from Redis
-        List<UserDTO> users = redisService.getList(RedisKeyUtil.getFriendSuggestKey(email), start, end);
+        List<UserDTO> users = redisService.getList(redisKey, start, end);
 
         if (users == null) {
             // Generate friend suggestions
@@ -69,8 +71,8 @@ public class UserController {
 
             List<UserDTO> finalUsers = new ArrayList<>(users);
             CompletableFuture.runAsync(() -> {
-                redisService.saveList(RedisKeyUtil.getFriendSuggestKey(email), finalUsers);
-                redisService.setTimeout(RedisKeyUtil.getFriendSuggestKey(email), 5, TimeUnit.DAYS);
+                redisService.saveList(RedisKeyUtil.getFriendSuggestKey(redisKey), finalUsers);
+                redisService.setTimeout(RedisKeyUtil.getFriendSuggestKey(redisKey), 5, TimeUnit.DAYS);
             });
 
             // Get the sublist of users based on the pagination parameters
@@ -81,9 +83,8 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public ResponseObject<UserDTO> getCurrentUser() {
-        String email = UserSecurityHepler.getCurrentUser().getUsername();
-        return new ResponseObject<>(HttpStatus.OK, userService.findByEmail(email));
+    public ResponseObject<UserDTO> getCurrentUser(@AuthenticationPrincipal CustomUserSecurity user) {
+        return new ResponseObject<>(HttpStatus.OK, userService.findByEmail(user.getEmail()));
     }
 
     @PostMapping("/forgot-password")

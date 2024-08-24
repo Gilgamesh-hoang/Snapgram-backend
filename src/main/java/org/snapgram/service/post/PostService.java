@@ -3,6 +3,7 @@ package org.snapgram.service.post;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.Post;
@@ -15,7 +16,7 @@ import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.tag.ITagService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.util.RedisKeyUtil;
-import org.snapgram.util.UserSecurityHepler;
+import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,8 +49,7 @@ public class PostService implements IPostService {
         caption = caption.trim();
         tags.replaceAll(s -> s.trim().toLowerCase());
 
-        String email = UserSecurityHepler.getCurrentUser().getUsername();
-        UserDTO user = userService.findByEmail(email);
+        CustomUserSecurity user = UserSecurityHelper.getCurrentUser();
 
         List<Tag> tagEntity = tagService.saveAll(tags);
         // save post to database
@@ -96,7 +96,7 @@ public class PostService implements IPostService {
         Page<Post> posts = postRepository.findAll(example, pageable);
         // save to redis
         results = postMapper.toDTOs(posts.getContent());
-        UserDTO user = userService.findByEmail(UserSecurityHepler.getCurrentUser().getUsername());
+        UserDTO user = userService.findByEmail(UserSecurityHelper.getCurrentUser().getUsername());
         results.forEach(postDTO -> {
             boolean isLiked = postLikeService.isPostLikedByUser(postDTO.getId(), user.getId());
             postDTO.setLiked(isLiked);
