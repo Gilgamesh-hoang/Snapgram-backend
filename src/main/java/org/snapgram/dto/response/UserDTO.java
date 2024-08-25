@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.snapgram.enums.Gender;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -21,6 +22,7 @@ public class UserDTO implements Serializable {
     private String email;
     private String avatarUrl;
     private String bio;
+    private Gender gender;
     @JsonIgnore
     private String activeCode;
     @JsonIgnore

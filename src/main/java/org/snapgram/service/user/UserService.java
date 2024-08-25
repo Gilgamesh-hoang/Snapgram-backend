@@ -6,27 +6,26 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.GooglePojo;
+import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
-import org.snapgram.dto.response.ProfileDTO;
 import org.snapgram.dto.response.UserDTO;
-import org.snapgram.entity.database.Follow;
 import org.snapgram.entity.database.User;
 import org.snapgram.entity.elasticsearch.UserDocument;
 import org.snapgram.enums.Gender;
 import org.snapgram.exception.ResourceNotFoundException;
+import org.snapgram.exception.UploadFileException;
 import org.snapgram.exception.UserNotFoundException;
 import org.snapgram.mapper.UserMapper;
-import org.snapgram.repository.database.FollowRepository;
 import org.snapgram.repository.database.UserRepository;
 import org.snapgram.repository.elasticsearch.user.ICustomUserElasticRepo;
-import org.snapgram.service.follow.IFollowService;
-import org.snapgram.service.post.IPostService;
-import org.snapgram.service.post.PostService;
+import org.snapgram.service.upload.MediaUploader;
 import org.springframework.data.domain.Example;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -43,6 +42,7 @@ public class UserService implements IUserService {
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     TransactionalUserService transactionalUserService;
+    MediaUploader uploader;
 
     @Override
     public List<UserDTO> findRandomUsers(int number, List<UUID> exceptIds) {
@@ -51,6 +51,28 @@ public class UserService implements IUserService {
             user.setBio(null);
             return userMapper.toDTO(user);
         }).toList();
+    }
+
+    @Override
+    public UserDTO editUserInfo(UUID id, ProfileRequest request, MultipartFile avatar) {
+        User user = findUserEntityById(id);
+        if (user == null)
+            throw new UserNotFoundException("User not found with id: " + id);
+
+        userMapper.updateUserFromProfile(request, user);
+
+        if (avatar != null) {
+            String url = null;
+            try {
+                url = uploader.uploadFile(avatar);
+            } catch (IOException e) {
+                throw new UploadFileException("Failed to upload file: " + avatar.getOriginalFilename(), e);
+            }
+            user.setAvatarUrl(url);
+        }
+
+        userRepository.save(user);
+        return userMapper.toDTO(user);
     }
 
 
@@ -186,7 +208,7 @@ public class UserService implements IUserService {
     @Override
     public boolean isEmailExists(String email) {
         // Find the user in the database with the provided email
-        Example<User> example = Example.of(User.builder().email(email).build());
+        Example<User> example = Example.of(User.builder().email(email).isActive(true).isDeleted(false).build());
         User user = userRepository.findOne(example).orElse(null);
 
         // If no user is found, return false
@@ -196,7 +218,7 @@ public class UserService implements IUserService {
     @Override
     public boolean isNicknameExists(String nickname) {
         // Find the user in the database with the provided nickname
-        Example<User> example = Example.of(User.builder().nickname(nickname).build());
+        Example<User> example = Example.of(User.builder().nickname(nickname).isActive(true).isDeleted(false).build());
         User user = userRepository.findOne(example).orElse(null);
 
         // If no user is found, return false

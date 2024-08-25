@@ -1,9 +1,10 @@
 package org.snapgram.service.user;
 
 import org.snapgram.dto.GooglePojo;
+import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
-import org.snapgram.dto.response.ProfileDTO;
 import org.snapgram.dto.response.UserDTO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -78,4 +79,5 @@ public interface IUserService {
 
     List<UserDTO> findRandomUsers(int number, List<UUID> exceptIds);
 
+    UserDTO editUserInfo(UUID id, ProfileRequest request, MultipartFile avatar);
 }

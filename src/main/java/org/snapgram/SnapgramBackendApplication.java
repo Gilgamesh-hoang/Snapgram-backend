@@ -1,5 +1,7 @@
 package org.snapgram;
 
+import org.snapgram.repository.database.CommentRepository;
+import org.snapgram.repository.database.PostLikeRepository;
 import org.snapgram.repository.database.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -20,6 +22,10 @@ public class SnapgramBackendApplication {
 
     @Autowired
     PostRepository postRepository;
+    @Autowired
+    CommentRepository commentRepository;
+    @Autowired
+    PostLikeRepository likeRepository;
 
 
     @Bean

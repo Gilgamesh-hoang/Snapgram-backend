@@ -89,7 +89,7 @@ public class PostService implements IPostService {
         //select in database
         Example<Post> example = Example.of(
                 Post.builder().user(
-                        User.builder().nickname(nickname).isDeleted(false).isActive(true).build()
+                        User.builder().id(userService.findByNickname(nickname).getId()).isDeleted(false).isActive(true).build()
                 ).isDeleted(false).build()
         );
 

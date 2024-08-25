@@ -12,7 +12,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @SuperBuilder
 public class ProfileDTO extends UserDTO implements Serializable {
-    private String bio;
     private int postNumber;
     private int followeeNumber;
     private int followerNumber;

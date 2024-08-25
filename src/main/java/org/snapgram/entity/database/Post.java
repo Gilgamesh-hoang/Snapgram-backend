@@ -47,7 +47,7 @@ public class Post {
     @Column(name = "like_count", columnDefinition = "INT(11) DEFAULT 0")
     private Integer likeCount = 0;
     @Column(name = "comment_count", columnDefinition = "INT(11) DEFAULT 0")
-    private int commentCount;
+    private Integer commentCount = 0;
 
     @Column(name = "created_at", insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreatedDate

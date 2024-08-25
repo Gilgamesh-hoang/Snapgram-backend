@@ -2,7 +2,9 @@ package org.snapgram.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 import org.snapgram.dto.GooglePojo;
+import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.ProfileDTO;
 import org.snapgram.dto.response.UserDTO;
@@ -11,7 +13,6 @@ import org.snapgram.entity.elasticsearch.UserDocument;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
@@ -58,5 +59,8 @@ public interface UserMapper {
     @Mapping(target = "isDeleted", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     User toEntity(SignupRequest request);
+
+    @Mapping(target = "id", ignore = true) // Ignore id if it's not supposed to be updated
+    void updateUserFromProfile(ProfileRequest request, @MappingTarget User user);
 
 }

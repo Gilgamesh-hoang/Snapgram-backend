@@ -1,5 +1,7 @@
 package org.snapgram.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
@@ -8,8 +10,10 @@ import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.annotation.media.ValidMedia;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.EmailRequest;
+import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.ProfileDTO;
 import org.snapgram.dto.response.ResponseObject;
@@ -25,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +51,17 @@ public class UserController {
     @GetMapping
     public ResponseObject<ProfileDTO> getUserInfo(@RequestParam("nickname") @NotBlank String nickname) {
         ProfileDTO profile = profileService.getProfile(nickname);
-        return new ResponseObject<>(HttpStatus.OK,profile);
+        return new ResponseObject<>(HttpStatus.OK, profile);
+    }
+
+    @PutMapping
+    public ResponseObject<ProfileDTO> updateProfile(
+            @RequestPart("profile") @Valid String profileJson,
+            @RequestPart(value = "avatar", required = false) @ValidMedia MultipartFile avatar) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ProfileRequest request = objectMapper.readValue(profileJson, ProfileRequest.class);
+        ProfileDTO response = profileService.updateProfile(request, avatar);
+        return new ResponseObject<>(HttpStatus.OK, "Profile updated successfully", response);
     }
 
     @GetMapping("/friend-suggestions")
