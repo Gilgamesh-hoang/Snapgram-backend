@@ -1,4 +1,4 @@
-package org.snapgram.annotation.tag;
+package org.snapgram.validation.tag;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;

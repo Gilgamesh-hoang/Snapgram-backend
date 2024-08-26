@@ -1,6 +1,7 @@
 package org.snapgram.service.user;
 
 import org.snapgram.dto.GooglePojo;
+import org.snapgram.dto.request.ChangePasswordRequest;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.UserDTO;
@@ -80,4 +81,6 @@ public interface IUserService {
     List<UserDTO> findRandomUsers(int number, List<UUID> exceptIds);
 
     UserDTO editUserInfo(UUID id, ProfileRequest request, MultipartFile avatar);
+
+    void changePassword(UUID id, ChangePasswordRequest request);
 }

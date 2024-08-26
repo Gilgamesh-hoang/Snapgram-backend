@@ -1,4 +1,4 @@
-package org.snapgram.annotation.media;
+package org.snapgram.validation.media;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

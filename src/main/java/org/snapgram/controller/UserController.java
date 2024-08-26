@@ -2,6 +2,8 @@ package org.snapgram.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
@@ -10,21 +12,27 @@ import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.snapgram.annotation.media.ValidMedia;
 import org.snapgram.dto.CustomUserSecurity;
+import org.snapgram.dto.request.ChangePasswordRequest;
 import org.snapgram.dto.request.EmailRequest;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
+import org.snapgram.dto.response.JwtResponse;
 import org.snapgram.dto.response.ProfileDTO;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.exception.ResourceNotFoundException;
+import org.snapgram.service.jwt.JwtService;
 import org.snapgram.service.mail.IEmailService;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.suggestion.FriendSuggestionService;
+import org.snapgram.service.token.ITokenService;
 import org.snapgram.service.user.IProfileService;
 import org.snapgram.service.user.IUserService;
+import org.snapgram.util.CookieUtil;
 import org.snapgram.util.RedisKeyUtil;
+import org.snapgram.util.SystemConstant;
+import org.snapgram.validation.media.ValidMedia;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -47,6 +55,36 @@ public class UserController {
     FriendSuggestionService friendSuggestionService;
     IEmailService emailService;
     IProfileService profileService;
+    ITokenService tokenService;
+    JwtService jwtService;
+
+    @PostMapping("/change-password")
+    public ResponseObject<JwtResponse> changePass(
+            @RequestBody @Valid ChangePasswordRequest request,
+            @RequestHeader("Authorization") String authHeader,
+            @AuthenticationPrincipal CustomUserSecurity user,
+            @CookieValue(SystemConstant.REFRESH_TOKEN) @NotBlank String refreshTokenCookie,
+            HttpServletResponse response
+    ) {
+        // Call the service to change the password of the user
+        userService.changePassword(user.getId(), request);
+
+        // Extract the JWT token from the Authorization header
+        String jwtToken = authHeader.substring("Bearer ".length());
+        tokenService.saveAll(jwtToken, refreshTokenCookie);
+
+        // Generate a new JWT token for the user
+        String accessToken = jwtService.generateAccessToken(user.getUsername());
+        String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+
+        // Create a new cookie for the refresh token
+        Cookie cookie = CookieUtil.createCookie(SystemConstant.REFRESH_TOKEN, refreshToken,
+                "localhost", 604800, true, false);
+        response.addCookie(cookie);
+
+        return new ResponseObject<>(HttpStatus.CREATED, "Set new password successfully",
+                JwtResponse.builder().token(accessToken).build());
+    }
 
     @GetMapping
     public ResponseObject<ProfileDTO> getUserInfo(@RequestParam("nickname") @NotBlank String nickname) {
@@ -101,6 +139,7 @@ public class UserController {
     public ResponseObject<UserDTO> getCurrentUser(@AuthenticationPrincipal CustomUserSecurity user) {
         return new ResponseObject<>(HttpStatus.OK, userService.findByEmail(user.getEmail()));
     }
+
 
     @PostMapping("/forgot-password")
     public ResponseObject<Void> forgotPass(@RequestBody @Valid EmailRequest request) {

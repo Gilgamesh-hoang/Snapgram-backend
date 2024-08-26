@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.GooglePojo;
+import org.snapgram.dto.request.ChangePasswordRequest;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.UserDTO;
@@ -73,6 +74,20 @@ public class UserService implements IUserService {
 
         userRepository.save(user);
         return userMapper.toDTO(user);
+    }
+
+    @Override
+    public void changePassword(UUID id, ChangePasswordRequest request) {
+        User user = findUserEntityById(id);
+        if (user == null)
+            throw new UserNotFoundException("User not found with id: " + id);
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Old password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 
 
