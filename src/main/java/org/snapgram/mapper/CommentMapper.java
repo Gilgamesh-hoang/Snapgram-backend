@@ -2,15 +2,17 @@ package org.snapgram.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.snapgram.dto.response.PostDTO;
-import org.snapgram.entity.database.Post;
+import org.snapgram.dto.response.CommentDTO;
+import org.snapgram.entity.database.Comment;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring", uses = UserMapper.class)
-public interface PostMapper {
-    @Mapping(source = "user", target = "creator")
-    PostDTO toDTO(Post post);
+public interface CommentMapper {
 
-    List<PostDTO> toDTOs(List<Post> posts);
+    @Mapping(source = "user", target = "creator")
+    CommentDTO toDTO(Comment comment);
+
+    List<CommentDTO> toDTOs(List<Comment> comments);
 }
+

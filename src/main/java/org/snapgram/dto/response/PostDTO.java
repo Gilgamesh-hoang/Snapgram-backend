@@ -1,8 +1,11 @@
 package org.snapgram.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -11,8 +14,11 @@ import java.util.UUID;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PostDTO implements Serializable {
-
+    private CreatorDTO creator;
     private UUID id;
     private String caption;
     private List<PostMediaDTO> media;
@@ -22,4 +28,5 @@ public class PostDTO implements Serializable {
     @JsonProperty("isLiked")
     private boolean isLiked;
     private Timestamp createdAt;
+
 }

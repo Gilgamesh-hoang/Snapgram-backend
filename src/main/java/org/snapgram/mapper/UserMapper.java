@@ -6,6 +6,7 @@ import org.mapstruct.MappingTarget;
 import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
+import org.snapgram.dto.response.CreatorDTO;
 import org.snapgram.dto.response.ProfileDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.User;
@@ -43,12 +44,12 @@ public interface UserMapper {
 
     @Mapping(source = "attributes.sub", target = "sub")
     @Mapping(source = "attributes.name", target = "name")
-    @Mapping(source = "attributes.given_name", target = "given_name")
-    @Mapping(source = "attributes.family_name", target = "family_name")
+    @Mapping(source = "attributes.given_name", target = "givenName")
+    @Mapping(source = "attributes.family_name", target = "familyName")
     @Mapping(source = "attributes.email", target = "email")
     @Mapping(source = "attributes.picture", target = "picture")
     @Mapping(source = "attributes.hd", target = "hd")
-    @Mapping(source = "attributes.email_verified", target = "email_verified")
+    @Mapping(source = "attributes.email_verified", target = "emailVerified")
     GooglePojo toGooglePojo(OAuth2User user);
 
     @Mapping(target = "id", ignore = true)
@@ -63,4 +64,5 @@ public interface UserMapper {
     @Mapping(target = "id", ignore = true) // Ignore id if it's not supposed to be updated
     void updateUserFromProfile(ProfileRequest request, @MappingTarget User user);
 
+    CreatorDTO toCreatorDTO(User user);
 }

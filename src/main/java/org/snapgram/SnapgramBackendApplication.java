@@ -13,7 +13,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class SnapgramBackendApplication {
     public static void main(String[] args) {
         SpringApplication.run(SnapgramBackendApplication.class, args);
-
     }
 
     @Bean
