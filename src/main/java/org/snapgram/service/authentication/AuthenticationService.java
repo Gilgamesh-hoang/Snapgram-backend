@@ -35,7 +35,7 @@ public class AuthenticationService implements IAuthenticationService {
 
     @Override
     public JwtResponse oauth2GoogleLogin(GooglePojo googlePojo) {
-        if (!googlePojo.isEmail_verified())
+        if (!googlePojo.isEmailVerified())
             throw new BadCredentialsException("Email is not verified");
         UserDTO user = userService.findByEmail(googlePojo.getEmail());
         if (user == null) {

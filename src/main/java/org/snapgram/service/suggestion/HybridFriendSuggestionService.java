@@ -8,6 +8,7 @@ import org.snapgram.exception.MultiThreadException;
 import org.snapgram.service.user.IUserService;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -121,9 +122,7 @@ public class HybridFriendSuggestionService implements FriendSuggestionService {
         Map<UUID, Double> walkScores = new HashMap<>();
         Map<UUID, List<UserDTO>> cache = new HashMap<>();
         walkScores.put(userId, 1.0); // Initial score at the starting node is 1
-
-        Random random = new Random();
-
+        SecureRandom random = new SecureRandom();
         UUID currentNode = userId;
         for (int i = 0; i < NUM_ITERATIONS; i++) {
             if (random.nextDouble() < RESET_PROBABILITY) {

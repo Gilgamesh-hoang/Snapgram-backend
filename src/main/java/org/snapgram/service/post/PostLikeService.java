@@ -22,9 +22,6 @@ public class PostLikeService implements IPostLikeService {
         User user = User.builder().id(userId).build();
         Post post = Post.builder().id(postId).build();
         Example<PostLike> example = Example.of(new PostLike(post, user));
-        if (postLikeRepository.exists(example)) {
-            return true;
-        }
-        return false;
+        return postLikeRepository.exists(example);
     }
 }

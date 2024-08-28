@@ -55,7 +55,7 @@ public class ProfileService implements IProfileService {
         String contentType = avatar.getContentType();
 
         // Check if the content type of the avatar file is not an image
-        if (!contentType.startsWith("image")) {
+        if (contentType == null || !contentType.startsWith("image")) {
             throw new IllegalArgumentException("Avatar must be an image");
         }
 

@@ -1,17 +1,21 @@
 package org.snapgram.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 public class GooglePojo {
     private String sub;
     private String name;
-    private String given_name;
-    private String family_name;
+    @JsonProperty("given_name")
+    private String givenName;
+    @JsonProperty("family_name")
+    private String familyName;
     private String email;
     private String picture;
     private String hd;
-    private boolean email_verified;
+    @JsonProperty("email_verified")
+    private boolean emailVerified;
 
 //sub = 109214574255572637115
 //name = Võ Phi Hoàng

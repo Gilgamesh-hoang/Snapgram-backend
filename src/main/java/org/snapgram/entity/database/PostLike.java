@@ -44,7 +44,4 @@ public class PostLike {
         this.post = post;
         this.user = user;
     }
-    public PostLike(Post post) {
-        this.post = post;
-    }
 }
