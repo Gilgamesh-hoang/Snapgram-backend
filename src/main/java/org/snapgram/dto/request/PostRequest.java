@@ -1,12 +1,18 @@
 package org.snapgram.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
+import org.hibernate.validator.constraints.Length;
+import org.snapgram.validation.tag.ValidTags;
+
+import java.util.List;
+import java.util.UUID;
 
 @Data
 public class PostRequest {
-    @NotBlank(message = "caption is mandatory")
+    private UUID id;
+    @Length(max = 2200)
     private String caption;
-    private MultipartFile[] images;
+    @ValidTags
+    private List<String> tags;
+    private List<UUID> removeMedia;
 }

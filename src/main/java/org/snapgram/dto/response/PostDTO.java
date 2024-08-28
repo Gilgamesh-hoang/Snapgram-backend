@@ -1,16 +1,16 @@
 package org.snapgram.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Data;
-import org.snapgram.entity.database.Tag;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Data
+@Builder
 public class PostDTO implements Serializable {
 
     private UUID id;

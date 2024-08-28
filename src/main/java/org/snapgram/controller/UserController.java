@@ -57,6 +57,7 @@ public class UserController {
     IProfileService profileService;
     ITokenService tokenService;
     JwtService jwtService;
+    ObjectMapper objectMapper;
 
     @PostMapping("/change-password")
     public ResponseObject<JwtResponse> changePass(
@@ -96,7 +97,6 @@ public class UserController {
     public ResponseObject<ProfileDTO> updateProfile(
             @RequestPart("profile") @Valid String profileJson,
             @RequestPart(value = "avatar", required = false) @ValidMedia MultipartFile avatar) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
         ProfileRequest request = objectMapper.readValue(profileJson, ProfileRequest.class);
         ProfileDTO response = profileService.updateProfile(request, avatar);
         return new ResponseObject<>(HttpStatus.OK, "Profile updated successfully", response);

@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.CustomUserSecurity;
+import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.Post;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -45,17 +47,17 @@ public class PostService implements IPostService {
     @Override
     @Transactional
     @Async
-    public CompletableFuture<PostDTO> createPost(String caption, MultipartFile[] media, List<String> tags) {
-        caption = caption.trim();
-        tags.replaceAll(s -> s.trim().toLowerCase());
+    public CompletableFuture<PostDTO> createPost(PostRequest request, MultipartFile[] media) {
+        request.setCaption(request.getCaption().trim());
+        request.getTags().replaceAll(String::trim);
 
         CustomUserSecurity user = UserSecurityHelper.getCurrentUser();
 
-        List<Tag> tagEntity = tagService.saveAll(tags);
+        List<Tag> tagEntity = tagService.saveAll(request.getTags());
         // save post to database
         Post post = Post.builder()
                 .user(User.builder().id(user.getId()).build())
-                .caption(caption)
+                .caption(request.getCaption())
                 .isDeleted(false)
                 .likeCount(0)
                 .commentCount(0)
@@ -63,10 +65,51 @@ public class PostService implements IPostService {
                 .build();
         postRepository.save(post);
         if (media != null) {
-            List<PostMedia> postMediaList = postMediaService.savePostMedia(media, post);
+            List<PostMedia> postMediaList = postMediaService.savePostMedia(media, post.getId());
             post.setMedia(postMediaList);
         }
         return CompletableFuture.completedFuture(postMapper.toDTO(post));
+    }
+
+    @Override
+    public PostDTO updatePost(PostRequest request, MultipartFile[] media) {
+        Post postEntity = postRepository.findById(request.getId()).orElse(null);
+        CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
+
+        if (postEntity == null) {
+            throw new IllegalArgumentException("Post not found");
+        }
+
+        // If the current user is not the owner of the post, throw an exception
+        if (!postEntity.getUser().getId().equals(currentUser.getId())) {
+            throw new IllegalArgumentException("You are not the owner of this post");
+        }
+
+        // Create a new list to hold the tags
+        List<Tag> tagEntities = new ArrayList<>();
+        List<String> tags = request.getTags();
+        if (tags != null) {
+            tags.replaceAll(String::trim);
+            // Save all the tags to the database and add them to the list
+            tagEntities = tagService.saveAll(tags);
+        }
+        postEntity.setTags(tagEntities);
+        postEntity.setCaption(request.getCaption());
+
+        // If there are any media to remove, remove them asynchronously
+        if (request.getRemoveMedia() != null && !request.getRemoveMedia().isEmpty()) {
+            CompletableFuture.runAsync(() -> postMediaService.removeMedia(request.getRemoveMedia()));
+        }
+
+        // If there are any media to add, add them
+        if (media != null) {
+            List<PostMedia> postMediaList = postMediaService.savePostMedia(media, postEntity.getId());
+            postEntity.setMedia(postMediaList);
+        }
+
+        // Save the updated post entity to the database
+        postRepository.save(postEntity);
+        return postMapper.toDTO(postEntity);
     }
 
     @Override
@@ -108,4 +151,15 @@ public class PostService implements IPostService {
         }
         return results;
     }
+
+    @Override
+    public PostDTO getPostById(UUID id) {
+        Post post = postRepository.findById(id).orElse(null);
+        if (post == null) {
+            return null;
+        }
+        return postMapper.toDTO(post);
+    }
+
+
 }

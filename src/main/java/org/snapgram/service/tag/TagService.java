@@ -32,7 +32,8 @@ public class TagService implements ITagService {
             }
         }
         // save tags to database
-        tagRepository.saveAllAndFlush(tagEntities).addAll(tagExists);
-        return tagEntities;
+        List<Tag> savedTags = tagRepository.saveAllAndFlush(tagEntities);
+        savedTags.addAll(tagExists);
+        return savedTags;
     }
 }

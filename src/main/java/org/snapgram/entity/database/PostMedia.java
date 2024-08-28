@@ -32,6 +32,9 @@ public class PostMedia {
     @Column(length = 255, nullable = false)
     private String url;
 
+    @Column(name = "cloudinary_public_id",length = 255)
+    private String cloudinaryPublicId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MediaType type;

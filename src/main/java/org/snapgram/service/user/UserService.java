@@ -65,7 +65,7 @@ public class UserService implements IUserService {
         if (avatar != null) {
             String url = null;
             try {
-                url = uploader.uploadFile(avatar);
+                url = uploader.uploadFile(avatar).getSecureUrl();
             } catch (IOException e) {
                 throw new UploadFileException("Failed to upload file: " + avatar.getOriginalFilename(), e);
             }
