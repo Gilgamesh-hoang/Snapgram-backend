@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.response.PostDTO;
-import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.Post;
 import org.snapgram.entity.database.PostMedia;
 import org.snapgram.entity.database.Tag;
@@ -43,6 +42,7 @@ public class PostService implements IPostService {
     PostMediaService postMediaService;
     IRedisService redisService;
     IPostLikeService postLikeService;
+    IPostSaveService postSaveService;
 
     @Override
     @Transactional
@@ -72,6 +72,7 @@ public class PostService implements IPostService {
     }
 
     @Override
+    @Transactional
     public PostDTO updatePost(PostRequest request, MultipartFile[] media) {
         Post postEntity = postRepository.findById(request.getId()).orElse(null);
         CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
@@ -113,6 +114,15 @@ public class PostService implements IPostService {
     }
 
     @Override
+    public void savePost(UUID postId, Boolean isSaved) {
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) {
+            throw new IllegalArgumentException("Post not found");
+        }
+        postSaveService.savePost(postId, isSaved);
+    }
+
+    @Override
     public int countByUser(UUID userId) {
         Example<Post> example = Example.of(
                 Post.builder().user(User.builder().id(userId).build())
@@ -139,10 +149,12 @@ public class PostService implements IPostService {
         Page<Post> posts = postRepository.findAll(example, pageable);
         // save to redis
         results = postMapper.toDTOs(posts.getContent());
-        UserDTO user = userService.findByEmail(UserSecurityHelper.getCurrentUser().getUsername());
+        CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
         results.forEach(postDTO -> {
-            boolean isLiked = postLikeService.isPostLikedByUser(postDTO.getId(), user.getId());
+            boolean isLiked = postLikeService.isPostLikedByUser(postDTO.getId(), currentUser.getId());
             postDTO.setLiked(isLiked);
+//            boolean isSaved = postSaveService.isPostSaveByUser(postDTO.getId(), currentUser.getId());
+//            postDTO.setSaved(isSaved);
         });
 
         if (!results.isEmpty()) {
@@ -154,11 +166,25 @@ public class PostService implements IPostService {
 
     @Override
     public PostDTO getPostById(UUID id) {
+//        String redisKey = RedisKeyUtil.getPostKey(id);
+        PostDTO result ;
+//        PostDTO result = redisService.getValue(redisKey, PostDTO.class);
+//        if (result != null) {
+//            return result;
+//        }
         Post post = postRepository.findById(id).orElse(null);
         if (post == null) {
             return null;
         }
-        return postMapper.toDTO(post);
+        CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
+        boolean isLiked = postLikeService.isPostLikedByUser(post.getId(), currentUser.getId());
+        boolean isSaved = postSaveService.isPostSaveByUser(post.getId(), currentUser.getId());
+        result = postMapper.toDTO(post);
+        result.setLiked(isLiked);
+        result.setSaved(isSaved);
+//        redisService.saveValue(redisKey, result);
+//        redisService.setTimeout(redisKey, 30, TimeUnit.SECONDS);
+        return result;
     }
 
 

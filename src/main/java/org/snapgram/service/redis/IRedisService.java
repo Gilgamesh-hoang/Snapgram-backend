@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public interface IRedisService {
-    Object getValue(String key);
+    <T> T getValue(String key, Class<T> clazz);
 
     void saveValue(String key, Object value);
 
@@ -17,6 +17,7 @@ public interface IRedisService {
     <T> void saveList(String key, List<T> list);
 
     <T> List<T> getList(String key, int start, int end);
+
     <T> List<T> getList(String key);
 
     void addElementsToMap(String key, Map<String, Object> map);

@@ -20,4 +20,6 @@ public interface IPostService {
 
 
     PostDTO updatePost(PostRequest request, MultipartFile[] media);
+
+    void savePost(UUID postId, Boolean isSaved);
 }

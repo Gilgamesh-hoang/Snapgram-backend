@@ -27,6 +27,8 @@ public class PostDTO implements Serializable {
     private Integer commentCount = 0;
     @JsonProperty("isLiked")
     private boolean isLiked;
+    @JsonProperty("isSaved")
+    private boolean isSaved;
     private Timestamp createdAt;
 
 }

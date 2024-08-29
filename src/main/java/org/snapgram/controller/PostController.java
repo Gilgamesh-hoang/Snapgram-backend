@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
 import org.snapgram.dto.request.PostRequest;
+import org.snapgram.dto.request.SavePostRequest;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.service.post.IPostService;
@@ -33,6 +34,11 @@ import java.util.UUID;
 public class PostController {
     IPostService postService;
     ObjectMapper objectMapper;
+    @PutMapping("/save")
+    public ResponseObject<Void> savePost(@RequestBody @Valid SavePostRequest request) {
+        postService.savePost(request.getPostId(), request.getIsSaved());
+        return new ResponseObject<>(HttpStatus.OK);
+    }
 
     @GetMapping("/{id}")
     public ResponseObject<PostDTO> getPostsById(@PathVariable("id") @NotNull UUID id) {
@@ -66,11 +72,10 @@ public class PostController {
     @PutMapping
     public ResponseObject<PostDTO> updatePost(
             @RequestPart("post") @NotBlank String postJson,
-            @RequestPart(value = "media",required = false) @Valid @ValidMedia MultipartFile[] media) throws JsonProcessingException
-    {
+            @RequestPart(value = "media", required = false) @Valid @ValidMedia MultipartFile[] media) throws JsonProcessingException {
 
         PostRequest request = objectMapper.readValue(postJson, PostRequest.class);
-        if(request.getId() == null) {
+        if (request.getId() == null) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Post id must be provided");
         }
         PostDTO response = postService.updatePost(request, media);

@@ -16,14 +16,18 @@ import java.util.concurrent.TimeUnit;
 public class RedisService implements IRedisService {
     private final RedisTemplate<String, Object> redisTemplate;
 
+
+    @Override
     public void saveValue(String key, Object value) {
         redisTemplate.opsForValue().set(key, value);
     }
-
-    public Object getValue(String key) {
-        return redisTemplate.opsForValue().get(key);
+    @Override
+    public <T> T getValue(String key, Class<T> clazz) {
+        Object data = redisTemplate.opsForValue().get(key);
+        // Convert data from JSON (String) to the desired type
+        return clazz.cast(data);
     }
-
+    @Override
     public void saveMap(String key, Map<String, Object> map) {
         redisTemplate.opsForHash().putAll(key, map);
     }
@@ -57,7 +61,7 @@ public class RedisService implements IRedisService {
     public Map<Object, Object> getMap(String key) {
         return redisTemplate.opsForHash().entries(key);
     }
-
+    @Override
     public void addElementsToMap(String key, Map<String, Object> map) {
         redisTemplate.opsForHash().putAll(key, map);
     }
