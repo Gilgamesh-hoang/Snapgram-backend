@@ -7,6 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 public interface IProfileService {
     ProfileDTO getProfile(String nickname);
 
-    ProfileDTO updateProfile(ProfileRequest request, MultipartFile avatar);
+    ProfileDTO updateProfile(ProfileRequest request, MultipartFile avatar, String refreshToken);
 }
 

@@ -98,7 +98,7 @@ public class JwtService {
 
 
     private boolean isExistsInBlacklist(String token, boolean isRefreshToken) {
-        TokenDTO t = tokenService.findToken(token,isRefreshToken);
+        TokenDTO t = tokenService.findTokenInBlacklist(token,isRefreshToken);
         return t != null;
     }
 

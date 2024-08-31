@@ -10,15 +10,19 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
+import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.request.SavePostRequest;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.ResponseObject;
+import org.snapgram.service.post.IPostSaveService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.validation.media.ValidMedia;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,7 +38,21 @@ import java.util.UUID;
 public class PostController {
     IPostService postService;
     ObjectMapper objectMapper;
-    @PutMapping("/save")
+    IPostSaveService postSaveService;
+
+    @GetMapping("/saved")
+    public ResponseObject<List<PostDTO>> getSavedPostsByUser(
+            @AuthenticationPrincipal CustomUserSecurity user,
+            @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) Integer pageSize
+    ) {
+        Sort sort = Sort.by(Sort.Order.desc("savedAt"));
+        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize).withSort(sort);
+        List<PostDTO> response = postSaveService.getSavedPostsByUser(user.getId(), pageable);
+        return new ResponseObject<>(HttpStatus.OK, response);
+    }
+
+    @PutMapping("/saved")
     public ResponseObject<Void> savePost(@RequestBody @Valid SavePostRequest request) {
         postService.savePost(request.getPostId(), request.getIsSaved());
         return new ResponseObject<>(HttpStatus.OK);

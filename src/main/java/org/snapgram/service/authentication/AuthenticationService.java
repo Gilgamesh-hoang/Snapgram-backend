@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.AuthenticationRequest;
 import org.snapgram.dto.response.JwtResponse;
@@ -18,7 +19,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -39,17 +39,18 @@ public class AuthenticationService implements IAuthenticationService {
             throw new BadCredentialsException("Email is not verified");
         UserDTO user = userService.findByEmail(googlePojo.getEmail());
         if (user == null) {
-            userService.createUser(googlePojo);
+            user = userService.createUser(googlePojo);
         }
         String accessToken = jwtService.generateAccessToken(googlePojo.getEmail());
         String refreshToken = jwtService.generateRefreshToken(googlePojo.getEmail());
+        tokenService.saveRTInDB(refreshToken, user.getId());
         // Return a JwtResponse with the generated token and its expiration time
         return new JwtResponse(accessToken, refreshToken);
     }
 
     @Override
     public JwtResponse login(AuthenticationRequest request) {
-        UserDetails user = userDetailsService.loadUserByUsername(request.getEmail());
+        CustomUserSecurity user = (CustomUserSecurity) userDetailsService.loadUserByUsername(request.getEmail());
 
         // Authenticate the user using the provided email and password
         Authentication authentication = authenticationManager.authenticate(
@@ -59,6 +60,8 @@ public class AuthenticationService implements IAuthenticationService {
             // Generate a JWT token for the user
             String accessToken = jwtService.generateAccessToken(user.getUsername());
             String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+
+            tokenService.saveRTInDB(refreshToken, user.getId());
 
             // Return a JwtResponse with the generated token and its expiration time
             return new JwtResponse(accessToken, refreshToken);
@@ -70,19 +73,30 @@ public class AuthenticationService implements IAuthenticationService {
 
     @Override
     public void logout(String token, String refreshToken) {
-        tokenService.saveAll(token, refreshToken);
+        tokenService.saveAllInBlacklist(token, refreshToken);
+        tokenService.deleteRefreshTokenInDB(refreshToken);
         SecurityContextHolder.clearContext();
     }
 
     @Override
     public JwtResponse refreshToken(String token) {
+        // Validate the provided refresh token
         boolean isValid = jwtService.validateRefreshToken(token);
         if (!isValid) {
             throw new BadCredentialsException("Invalid refresh token");
         }
         String email = jwtHelper.extractEmailFromRefreshToken(token);
+
+        // Generate a new access token using the extracted email
         String accessToken = jwtService.generateAccessToken(email);
-        return new JwtResponse(accessToken, token);
+        String refreshToken = jwtService.generateRefreshToken(email);
+
+        // Save the new refresh token in the database
+        tokenService.saveRTInDB(token, refreshToken);
+
+        // Add the old refresh token to the blacklist
+        tokenService.saveRTInBlacklist(token);
+        return new JwtResponse(accessToken, refreshToken);
     }
 
 

@@ -16,6 +16,6 @@ public class BlackListCleanupTask {
 //    @Scheduled(fixedRate = 2000)
     private void deleteExpiredTokens() {
         log.info("Running token cleanup task...");
-        tokenService.deleteExpiredTokens();
+        tokenService.deleteExpiredTokensFromBlacklist();
     }
 }

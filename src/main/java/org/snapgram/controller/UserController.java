@@ -64,19 +64,26 @@ public class UserController {
             @RequestBody @Valid ChangePasswordRequest request,
             @RequestHeader("Authorization") String authHeader,
             @AuthenticationPrincipal CustomUserSecurity user,
-            @CookieValue(SystemConstant.REFRESH_TOKEN) @NotBlank String refreshTokenCookie,
             HttpServletResponse response
     ) {
         // Call the service to change the password of the user
         userService.changePassword(user.getId(), request);
 
-        // Extract the JWT token from the Authorization header
+        // Extract the JWT token from the Authorization header by removing the "Bearer " prefix
         String jwtToken = authHeader.substring("Bearer ".length());
-        tokenService.saveAll(jwtToken, refreshTokenCookie);
 
-        // Generate a new JWT token for the user
+        // Add the JWT token to the blacklist, meaning it can no longer be used
+        tokenService.saveATInBlacklist(jwtToken);
+
+        // Add all refresh tokens associated with the user to the blacklist
+        tokenService.saveAllRTInBlacklist(user.getId());
+
+        // Generate a new JWT access token for the user
         String accessToken = jwtService.generateAccessToken(user.getUsername());
         String refreshToken = jwtService.generateRefreshToken(user.getUsername());
+
+        // Save the new refresh token in the database, associated with the user
+        tokenService.saveRTInDB(refreshToken, user.getId());
 
         // Create a new cookie for the refresh token
         Cookie cookie = CookieUtil.createCookie(SystemConstant.REFRESH_TOKEN, refreshToken,
@@ -95,10 +102,11 @@ public class UserController {
 
     @PutMapping
     public ResponseObject<ProfileDTO> updateProfile(
+            @CookieValue(SystemConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
             @RequestPart("profile") @Valid String profileJson,
             @RequestPart(value = "avatar", required = false) @ValidMedia MultipartFile avatar) throws JsonProcessingException {
         ProfileRequest request = objectMapper.readValue(profileJson, ProfileRequest.class);
-        ProfileDTO response = profileService.updateProfile(request, avatar);
+        ProfileDTO response = profileService.updateProfile(request, avatar,refreshToken);
         return new ResponseObject<>(HttpStatus.OK, "Profile updated successfully", response);
     }
 

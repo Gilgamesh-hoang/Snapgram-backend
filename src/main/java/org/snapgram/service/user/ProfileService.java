@@ -10,6 +10,7 @@ import org.snapgram.dto.response.UserDTO;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.service.follow.IFollowService;
 import org.snapgram.service.post.IPostService;
+import org.snapgram.service.token.ITokenService;
 import org.snapgram.util.UserSecurityHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,7 +23,7 @@ public class ProfileService implements IProfileService {
     IPostService postService;
     IFollowService followService;
     UserMapper userMapper;
-
+    ITokenService tokenService;
     @Override
     public ProfileDTO getProfile(String nickname) {
         UserDTO user = userService.findByNickname(nickname);
@@ -36,14 +37,18 @@ public class ProfileService implements IProfileService {
     }
 
     @Override
-    public ProfileDTO updateProfile(ProfileRequest request, MultipartFile avatar) {
+    public ProfileDTO updateProfile(ProfileRequest request, MultipartFile avatar, String refreshToken) {
         // Get the current logged-in user's details
         CustomUserSecurity userContext = UserSecurityHelper.getCurrentUser();
 
         // Check if the email provided in the request is different from the current user's email
         // //and if it already exists in the system
-        if (!request.getEmail().equals(userContext.getEmail()) && userService.isEmailExists(request.getEmail())) {
-            throw new IllegalArgumentException("Email already exists");
+        if (!request.getEmail().equals(userContext.getEmail()) ) {
+            if (userService.isEmailExists(request.getEmail())) {
+                throw new IllegalArgumentException("Email already exists");
+            }else  {
+                tokenService.saveAllRTInBlacklist(userContext.getId(), refreshToken);
+            }
         }
 
         // Check if the nickname provided in the request is different from the current user's nickname
