@@ -47,7 +47,7 @@ public class ProfileService implements IProfileService {
             if (userService.isEmailExists(request.getEmail())) {
                 throw new IllegalArgumentException("Email already exists");
             }else  {
-                tokenService.saveAllRTInBlacklist(userContext.getId(), refreshToken);
+                tokenService.blacklistAllUserTokens(userContext.getId(), refreshToken);
             }
         }
 

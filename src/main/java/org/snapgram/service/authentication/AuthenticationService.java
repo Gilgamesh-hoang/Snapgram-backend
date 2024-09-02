@@ -6,11 +6,13 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.GooglePojo;
+import org.snapgram.dto.KeyPair;
 import org.snapgram.dto.request.AuthenticationRequest;
 import org.snapgram.dto.response.JwtResponse;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.jwt.JwtService;
+import org.snapgram.service.key.IKeyService;
 import org.snapgram.service.token.ITokenService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.service.user.UserDetailServiceImpl;
@@ -20,6 +22,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +37,15 @@ public class AuthenticationService implements IAuthenticationService {
     JwtHelper jwtHelper;
     UserDetailServiceImpl userDetailsService;
     IUserService userService;
+    IKeyService keyService;
+
+    // Method to handle common logic for generating JWT response
+    private JwtResponse generateJwtResponse(String email, KeyPair keyPair) throws InterruptedException, ExecutionException {
+        CompletableFuture<String> accessToken = jwtService.generateAccessToken(email, keyPair.getPrivateKeyAT());
+        CompletableFuture<String> refreshToken = jwtService.generateRefreshToken(email, keyPair.getPrivateKeyRT());
+        CompletableFuture.allOf(accessToken, refreshToken).join();
+        return new JwtResponse(accessToken.get(), refreshToken.get());
+    }
 
     @Override
     public JwtResponse oauth2GoogleLogin(GooglePojo googlePojo) {
@@ -41,30 +55,32 @@ public class AuthenticationService implements IAuthenticationService {
         if (user == null) {
             user = userService.createUser(googlePojo);
         }
-        String accessToken = jwtService.generateAccessToken(googlePojo.getEmail());
-        String refreshToken = jwtService.generateRefreshToken(googlePojo.getEmail());
-        tokenService.saveRTInDB(refreshToken, user.getId());
-        // Return a JwtResponse with the generated token and its expiration time
-        return new JwtResponse(accessToken, refreshToken);
+        KeyPair keyPair = keyService.getKeyPairByUser(user.getId());
+        try {
+            JwtResponse jwtResponse = generateJwtResponse(googlePojo.getEmail(), keyPair);
+            tokenService.storeRefreshToken(jwtResponse.getRefreshToken(), user.getId());
+            return jwtResponse;
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new BadCredentialsException("Error while generating token");
+        }
     }
 
     @Override
     public JwtResponse login(AuthenticationRequest request) {
         CustomUserSecurity user = (CustomUserSecurity) userDetailsService.loadUserByUsername(request.getEmail());
-
-        // Authenticate the user using the provided email and password
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        // If the user is authenticated
         if (authentication.isAuthenticated()) {
-            // Generate a JWT token for the user
-            String accessToken = jwtService.generateAccessToken(user.getUsername());
-            String refreshToken = jwtService.generateRefreshToken(user.getUsername());
-
-            tokenService.saveRTInDB(refreshToken, user.getId());
-
-            // Return a JwtResponse with the generated token and its expiration time
-            return new JwtResponse(accessToken, refreshToken);
+            KeyPair keyPair = keyService.getKeyPairByUser(user.getId());
+            try {
+                JwtResponse jwtResponse = generateJwtResponse(user.getEmail(), keyPair);
+                tokenService.storeRefreshToken(jwtResponse.getRefreshToken(), user.getId());
+                return jwtResponse;
+            } catch (InterruptedException | ExecutionException e) {
+                Thread.currentThread().interrupt();
+                throw new BadCredentialsException("Error while generating token");
+            }
         } else {
             throw new BadCredentialsException("Invalid email or password");
         }
@@ -73,31 +89,31 @@ public class AuthenticationService implements IAuthenticationService {
 
     @Override
     public void logout(String token, String refreshToken) {
-        tokenService.saveAllInBlacklist(token, refreshToken);
-        tokenService.deleteRefreshTokenInDB(refreshToken);
+        tokenService.blacklistTokens(token, refreshToken);
+        tokenService.removeRefreshToken(refreshToken);
         SecurityContextHolder.clearContext();
     }
 
     @Override
     public JwtResponse refreshToken(String token) {
-        // Validate the provided refresh token
-        boolean isValid = jwtService.validateRefreshToken(token);
+        String email = jwtHelper.getEmailFromRefreshToken(token);
+        if (email == null) {
+            throw new BadCredentialsException("Invalid refresh token");
+        }
+        CustomUserSecurity user = (CustomUserSecurity) userDetailsService.loadUserByUsername(email);
+        KeyPair keyPair = keyService.getKeyPairByUser(user.getId());
+        boolean isValid = jwtService.validateRefreshToken(token, keyPair.getPublicKeyRT());
         if (!isValid) {
             throw new BadCredentialsException("Invalid refresh token");
         }
-        String email = jwtHelper.extractEmailFromRefreshToken(token);
-
-        // Generate a new access token using the extracted email
-        String accessToken = jwtService.generateAccessToken(email);
-        String refreshToken = jwtService.generateRefreshToken(email);
-
-        // Save the new refresh token in the database
-        tokenService.saveRTInDB(token, refreshToken);
-
-        // Add the old refresh token to the blacklist
-        tokenService.saveRTInBlacklist(token);
-        return new JwtResponse(accessToken, refreshToken);
+        try {
+            JwtResponse jwtResponse = generateJwtResponse(user.getEmail(), keyPair);
+            tokenService.storeRefreshToken(token, jwtResponse.getRefreshToken());
+            tokenService.blacklistRefreshToken(token);
+            return jwtResponse;
+        } catch (InterruptedException | ExecutionException e) {
+            throw new BadCredentialsException("Error while generating token");
+        }
     }
-
 
 }

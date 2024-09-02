@@ -72,11 +72,12 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    public ResponseObject<Void> logout(@RequestBody @Valid TokenRequest request,
+    public ResponseObject<Void> logout(@RequestHeader("Authorization") String authHeader,
                                        @CookieValue(SystemConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
                                        HttpServletResponse response
     ) {
-        authenticationService.logout(request.getToken(), refreshToken);
+        String jwtToken = authHeader.substring("Bearer ".length());
+        authenticationService.logout(jwtToken, refreshToken);
         // clear refresh token cookie
         Cookie refreshTokenCookie = CookieUtil.createCookie(SystemConstant.REFRESH_TOKEN, null, "localhost",
                 0, true, false);

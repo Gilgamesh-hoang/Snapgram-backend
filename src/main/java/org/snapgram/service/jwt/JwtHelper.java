@@ -1,35 +1,34 @@
 package org.snapgram.service.jwt;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.snapgram.dto.CustomUserSecurity;
+import org.snapgram.exception.ResourceNotFoundException;
+import org.snapgram.service.key.IKeyService;
+import org.snapgram.service.user.UserDetailServiceImpl;
+import org.snapgram.util.UserSecurityHelper;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 import java.util.Date;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Component
+@RequiredArgsConstructor
+@FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
 public class JwtHelper {
-
-    @Value("${jwt.access_token.secret_key}")
-    private String ACCESS_TOKEN_KEY;
-    @Value("${jwt.refresh_token.secret_key}")
-    String REFRESH_TOKEN_KEY;
-
-    /**
-     * This method is used to get the signing key from a provided string key.
-     * The string key is first decoded from BASE64 and then used to generate a HMAC SHA key.
-     *
-     * @param key The string key to be used for generating the signing key.
-     * @return The generated signing key.
-     */
-    public Key getSigningKey(String key) {
-        byte[] keyBytes = Decoders.BASE64.decode(key);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
+    ObjectMapper objectMapper;
+    IKeyService keyService;
+    UserDetailServiceImpl detailService;
 
     /**
      * This method is used to extract all claims from a provided JWT token.
@@ -55,27 +54,106 @@ public class JwtHelper {
         return claimsFunction.apply(claims);
     }
 
-    public String extractEmailFromToken(String token) {
-        return extractClaims(token, Claims::getSubject, getSigningKey(ACCESS_TOKEN_KEY));
+    public String extractEmailFromPayload(String token, boolean isRefreshToken) {
+        String payload = decodeJwtPayload(token);
+        try {
+            JsonNode jsonNode = objectMapper.readTree(payload);
+            String email = jsonNode.get("sub").asText();
+            if (email == null) {
+                throw new ResourceNotFoundException("Email not found in token");
+            }
+            if (isRefreshToken) {
+                return getEmailFromToken(token, getRefreshTokenPublicKeyByUser(email));
+            } else
+                return getEmailFromToken(token, getAccessTokenPublicKeyByUser(email));
+        } catch (Exception e) {
+            throw new ResourceNotFoundException("Failed to parse payload");
+        }
     }
 
-    public Date extractExpirationFromToken(String token) {
-        return extractClaims(token, Claims::getExpiration, getSigningKey(ACCESS_TOKEN_KEY));
+    public String getEmailFromToken(String token, Key key) {
+        return extractClaims(token, Claims::getSubject, key);
     }
 
-    public String getJidFromToken(String token) {
-        return extractClaims(token, claims -> claims.get("jid", String.class), getSigningKey(ACCESS_TOKEN_KEY));
+    public Date getExpiryFromAccessToken(String jwt) {
+        String email = extractEmailFromPayload(jwt, false);
+        return getExpiryFromAccessToken(jwt, getAccessTokenPublicKeyByUser(email));
     }
+
+    public Date getExpiryFromAccessToken(String token, PublicKey key) {
+        return extractClaims(token, Claims::getExpiration, key);
+    }
+    public Date getExpiryFromRefreshToken(String token, PublicKey key) {
+        return extractClaims(token, Claims::getExpiration, key);
+    }
+
+    private PublicKey getUserPublicKey(String email, Function<UUID, String> getPublicKeyFunction) {
+        CustomUserSecurity userDetails;
+        try {
+            userDetails = UserSecurityHelper.getCurrentUser();
+        } catch (Exception e) {
+            userDetails = (CustomUserSecurity) detailService.loadUserByUsername(email);
+        }
+
+        try {
+            String publicKey = getPublicKeyFunction.apply(userDetails.getId());
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKey));
+            return keyFactory.generatePublic(publicKeySpec);
+        } catch (Exception e) {
+            throw new ResourceNotFoundException("Failed to get public key");
+        }
+    }
+
+    private PublicKey getAccessTokenPublicKeyByUser(String email) {
+        return getUserPublicKey(email, keyService::getUserPublicATKey);
+    }
+
+    private PublicKey getRefreshTokenPublicKeyByUser(String email) {
+        return getUserPublicKey(email, keyService::getUserPublicRTKey);
+    }
+
+    private String decodeJwtPayload(String jwt) {
+        String[] parts = jwt.split("\\.");
+        if (parts.length != 3) {
+            throw new IllegalArgumentException("Invalid JWT token format.");
+        }
+
+        String payload = parts[1];
+        byte[] decodedBytes = Base64.getUrlDecoder().decode(payload);
+        return new String(decodedBytes);
+    }
+
+    public String getJidFromAccessToken(String token, Key key) {
+        return extractClaims(token, claims -> claims.get("jid", String.class), key);
+    }
+
+    public String getJidFromAccessToken(String token) {
+        String email = extractEmailFromPayload(token, false);
+        return getJidFromAccessToken(token, getAccessTokenPublicKeyByUser(email));
+    }
+
     public String getJidFromRefreshToken(String token) {
-        return extractClaims(token, claims -> claims.get("jid", String.class), getSigningKey(REFRESH_TOKEN_KEY));
+        String email = extractEmailFromPayload(token, true);
+        return getJidFromRefreshToken(token, getRefreshTokenPublicKeyByUser(email));
     }
 
-    public String extractEmailFromRefreshToken(String token) {
-        return extractClaims(token, Claims::getSubject, getSigningKey(REFRESH_TOKEN_KEY));
+    public String getJidFromRefreshToken(String token, Key key) {
+        return extractClaims(token, claims -> claims.get("jid", String.class), key);
     }
 
-    public Date extractExpirationFromRefreshToken(String token) {
-        return extractClaims(token, Claims::getExpiration, getSigningKey(REFRESH_TOKEN_KEY));
+    public String getEmailFromRefreshToken(String token) {
+        String email = extractEmailFromPayload(token, true);
+        return getEmailFromRefreshToken(token, getRefreshTokenPublicKeyByUser(email));
+    }
+
+    public String getEmailFromRefreshToken(String token, Key key) {
+        return extractClaims(token, Claims::getSubject, key);
+    }
+
+    public Date getRefreshTokenExpiry(String token) {
+        String email = extractEmailFromPayload(token, true);
+        return extractClaims(token, Claims::getExpiration, getRefreshTokenPublicKeyByUser(email));
     }
 
 }

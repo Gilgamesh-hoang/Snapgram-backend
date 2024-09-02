@@ -3,24 +3,27 @@ package org.snapgram.service.token;
 import org.snapgram.dto.response.TokenDTO;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public interface ITokenService {
 
-    void deleteExpiredTokensFromBlacklist();
+    void removeExpiredTokens();
 
 
-    void saveATInBlacklist(String accessToken);
-    void saveAllInBlacklist(String accessToken, String refreshToken);
+    CompletableFuture<Void> blacklistAccessToken(String accessToken);
+    void blacklistTokens(String accessToken, String refreshToken);
 
-    TokenDTO findTokenInBlacklist(String token, boolean isRefreshToken);
+    TokenDTO getTokenFromBlacklist(String token, boolean isRefreshToken);
+    TokenDTO getTokenFromBlacklist(String jid);
 
-    void saveRTInDB(String refreshToken, UUID userId);
-    void saveRTInDB(String oldRT, String newRT);
+    CompletableFuture<Void> storeRefreshToken(String refreshToken, UUID userId);
+    CompletableFuture<Void> storeRefreshToken(String oldRT, String newRT);
 
-    void deleteRefreshTokenInDB(String refreshToken);
+    void removeRefreshToken(String refreshToken);
 
-    void saveRTInBlacklist(String refreshToken);
+    CompletableFuture<Void> blacklistRefreshToken(String refreshToken);
 
-    void saveAllRTInBlacklist(UUID userId);
-    void saveAllRTInBlacklist(UUID userId, String ...exceptToken);
+    CompletableFuture<Void> blacklistAllUserTokens(UUID userId);
+    void blacklistAllUserTokens(UUID userId, String ...exceptToken);
+
 }

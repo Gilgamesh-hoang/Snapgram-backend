@@ -8,20 +8,18 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.snapgram.exception.UserNotFoundException;
+import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.jwt.JwtService;
+import org.snapgram.service.key.IKeyService;
 import org.snapgram.service.user.UserDetailServiceImpl;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 /*
 The JwtRequestFilter extends the Spring Web Filter OncePerRequestFilter class. For any incoming request this Filter
@@ -34,7 +32,7 @@ class gets executed. It checks if the request has a valid JWT token. If it has a
 @RequiredArgsConstructor
 @Slf4j
 public class JwtRequestFilter extends OncePerRequestFilter {
-
+    IKeyService keyService;
     UserDetailServiceImpl userDetailService;
     JwtService jwtService;
     JwtHelper jwtHelper;
@@ -51,7 +49,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             jwtToken = requestTokenHeader.substring("Bearer ".length());
             try {
-                email = jwtHelper.extractEmailFromToken(jwtToken);
+                email = jwtHelper.extractEmailFromPayload(jwtToken, false);
             } catch (IllegalArgumentException e) {
                 log.warn("Unable to get JWT Token");
                 throw new IllegalArgumentException("Unable to get JWT Token");
@@ -65,12 +63,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // Once we get the token validate it.
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            UserDetails userDetails = userDetailService.loadUserByUsername(email);
-
+            CustomUserSecurity userDetails = (CustomUserSecurity) userDetailService.loadUserByUsername(email);
+            String publicKey = keyService.getUserPublicATKey(userDetails.getId());
             // if token is valid configure Spring Security to manually set
             // authentication
-            if (jwtService.validateToken(jwtToken, userDetails.getUsername())) {
-
+            if (jwtService.validateAccessToken(jwtToken, publicKey)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

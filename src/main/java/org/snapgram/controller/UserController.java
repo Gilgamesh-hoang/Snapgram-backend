@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.CustomUserSecurity;
+import org.snapgram.dto.KeyPair;
 import org.snapgram.dto.request.ChangePasswordRequest;
 import org.snapgram.dto.request.EmailRequest;
 import org.snapgram.dto.request.ProfileRequest;
@@ -23,6 +24,7 @@ import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.service.jwt.JwtService;
+import org.snapgram.service.key.IKeyService;
 import org.snapgram.service.mail.IEmailService;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.suggestion.FriendSuggestionService;
@@ -42,6 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @RestController
@@ -58,6 +61,7 @@ public class UserController {
     ITokenService tokenService;
     JwtService jwtService;
     ObjectMapper objectMapper;
+    IKeyService keyService;
 
     @PostMapping("/change-password")
     public ResponseObject<JwtResponse> changePass(
@@ -65,7 +69,7 @@ public class UserController {
             @RequestHeader("Authorization") String authHeader,
             @AuthenticationPrincipal CustomUserSecurity user,
             HttpServletResponse response
-    ) {
+    ) throws ExecutionException, InterruptedException {
         // Call the service to change the password of the user
         userService.changePassword(user.getId(), request);
 
@@ -73,17 +77,20 @@ public class UserController {
         String jwtToken = authHeader.substring("Bearer ".length());
 
         // Add the JWT token to the blacklist, meaning it can no longer be used
-        tokenService.saveATInBlacklist(jwtToken);
+        tokenService.blacklistAccessToken(jwtToken);
 
         // Add all refresh tokens associated with the user to the blacklist
-        tokenService.saveAllRTInBlacklist(user.getId());
+        tokenService.blacklistAllUserTokens(user.getId());
 
         // Generate a new JWT access token for the user
-        String accessToken = jwtService.generateAccessToken(user.getUsername());
-        String refreshToken = jwtService.generateRefreshToken(user.getUsername());
-
+        KeyPair keyPair = keyService.generateKeyPair();
+        CompletableFuture<String> accessTokenFuture = jwtService.generateAccessToken(user.getUsername(), keyPair.getPrivateKeyAT());
+        CompletableFuture<String> refreshTokenFuture = jwtService.generateRefreshToken(user.getUsername(), keyPair.getPrivateKeyRT());
+        CompletableFuture.allOf(accessTokenFuture, refreshTokenFuture).join();
         // Save the new refresh token in the database, associated with the user
-        tokenService.saveRTInDB(refreshToken, user.getId());
+        CompletableFuture.runAsync(()-> keyService.deleteAndSave(keyPair, user.getId()));
+        String refreshToken = refreshTokenFuture.get();
+        tokenService.storeRefreshToken(refreshToken, user.getId());
 
         // Create a new cookie for the refresh token
         Cookie cookie = CookieUtil.createCookie(SystemConstant.REFRESH_TOKEN, refreshToken,
@@ -91,7 +98,7 @@ public class UserController {
         response.addCookie(cookie);
 
         return new ResponseObject<>(HttpStatus.CREATED, "Set new password successfully",
-                JwtResponse.builder().token(accessToken).build());
+                JwtResponse.builder().token(accessTokenFuture.get()).build());
     }
 
     @GetMapping
@@ -106,7 +113,7 @@ public class UserController {
             @RequestPart("profile") @Valid String profileJson,
             @RequestPart(value = "avatar", required = false) @ValidMedia MultipartFile avatar) throws JsonProcessingException {
         ProfileRequest request = objectMapper.readValue(profileJson, ProfileRequest.class);
-        ProfileDTO response = profileService.updateProfile(request, avatar,refreshToken);
+        ProfileDTO response = profileService.updateProfile(request, avatar, refreshToken);
         return new ResponseObject<>(HttpStatus.OK, "Profile updated successfully", response);
     }
 

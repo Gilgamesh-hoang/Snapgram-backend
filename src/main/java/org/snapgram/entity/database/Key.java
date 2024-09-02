@@ -11,7 +11,6 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.snapgram.entity.database.generator.UUIDGenerator;
 
-import java.util.Date;
 import java.util.UUID;
 
 @Data
@@ -19,8 +18,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "token")
-public class Token {
+@Table(name = "user_key")
+public class Key {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", type = UUIDGenerator.class)
@@ -28,14 +27,21 @@ public class Token {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @Column(columnDefinition = "char(36)")
-    @JdbcTypeCode(SqlTypes.CHAR)
-    private UUID refreshTokenId;
-
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column(name = "expire_rt")
-    private Date expireRT;
+    @Column(name = "public_key_at", length = 500)
+    private String publicKeyAT;
+
+    @Column(name = "private_key_at", length = 3000)
+    private String privateKeyAT;
+
+    @Column(name = "public_key_rt", length = 500)
+    private String publicKeyRT;
+
+    @Column(name = "private_key_rt", length = 3000)
+    private String privateKeyRT;
+
+
 }
