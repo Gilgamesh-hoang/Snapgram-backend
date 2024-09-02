@@ -31,6 +31,16 @@ public class GlobalExceptionHandler {
         return request.getDescription(false).replace("uri=", "");
     }
 
+    @ExceptionHandler(KeyGenerationException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ResponseObject<ErrorResponse> handleKeyPairGenerationException(KeyGenerationException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("Key Generation Error")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.INTERNAL_SERVER_ERROR, error);
+    }
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
     public ResponseObject<ErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex, WebRequest request) {

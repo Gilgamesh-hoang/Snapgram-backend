@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.entity.database.User;
+import org.snapgram.exception.KeyGenerationException;
 import org.snapgram.repository.database.KeyRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class AsyncKeyService {
                 keyPairGenerator = KeyPairGenerator.getInstance("RSA");
                 keyPairGenerator.initialize(2048);
             } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
+                throw new KeyGenerationException("Failed to generate key pair", e);
             }
             java.security.KeyPair keyPair = keyPairGenerator.generateKeyPair();
             return Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()) + ";" +

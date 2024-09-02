@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.KeyPair;
 import org.snapgram.entity.database.Key;
 import org.snapgram.entity.database.User;
+import org.snapgram.exception.KeyGenerationException;
 import org.snapgram.mapper.KeyMapper;
 import org.snapgram.repository.database.KeyRepository;
 import org.snapgram.util.TripleDESEncoder;
@@ -52,7 +53,7 @@ public class KeyService implements IKeyService {
 
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Error generating key pairs", e);
+            throw new KeyGenerationException("Error generating key pairs", e);
         }
     }
 
@@ -61,15 +62,17 @@ public class KeyService implements IKeyService {
         User user = User.builder().id(userId).build();
         Example<Key> example = Example.of(Key.builder().user(user).build());
         Key key = keyRepository.findOne(example).orElse(null);
+
         if (key != null) {
             key.setPrivateKeyAT(encoder.decode(key.getPrivateKeyAT()));
             key.setPrivateKeyRT(encoder.decode(key.getPrivateKeyRT()));
             return keyMapper.toDto(key);
+        } else {
+            // Save the key synchronously before returning it
+            KeyPair keyPair = generateKeyPair();
+            save(keyPair, userId);
+            return keyPair;
         }
-
-        KeyPair keyPair = generateKeyPair();
-        CompletableFuture.runAsync(() -> save(generateKeyPair(), userId));
-        return keyPair;
     }
 
     @Override
@@ -95,9 +98,9 @@ public class KeyService implements IKeyService {
 
     @Override
     public void save(KeyPair keyPair, UUID userId) {
-        keyPair.setPrivateKeyAT(encoder.encode(keyPair.getPrivateKeyAT()));
-        keyPair.setPrivateKeyRT(encoder.encode(keyPair.getPrivateKeyRT()));
         Key key = keyMapper.toEntity(keyPair);
+        key.setPrivateKeyAT(encoder.encode(keyPair.getPrivateKeyAT()));
+        key.setPrivateKeyRT(encoder.encode(keyPair.getPrivateKeyRT()));
         key.setUser(User.builder().id(userId).build());
         keyRepository.save(key);
     }
@@ -107,5 +110,10 @@ public class KeyService implements IKeyService {
     public void deleteAndSave(KeyPair keyPair, UUID userId) {
         asyncKeyService.delete(userId);
         save(keyPair, userId);
+    }
+
+    @Override
+    public void deleteUserKey(UUID userId) {
+        asyncKeyService.delete(userId);
     }
 }

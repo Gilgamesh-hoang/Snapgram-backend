@@ -11,6 +11,6 @@ import java.util.UUID;
 public interface TokenRepository extends JpaRepository<Token, UUID> {
     List<Token> findByUser(User user);
     Optional<Token> findByRefreshTokenId(UUID refreshTokenId);
-    void deleteAllByRefreshTokenIdIn(List<UUID> refreshTokenIds);
+    int deleteAllByRefreshTokenIdIn(List<UUID> refreshTokenIds);
     void deleteByRefreshTokenId(UUID refreshTokenIds);
 }

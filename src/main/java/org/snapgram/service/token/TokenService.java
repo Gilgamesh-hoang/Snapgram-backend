@@ -3,6 +3,7 @@ package org.snapgram.service.token;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.response.TokenDTO;
 import org.snapgram.entity.database.Token;
@@ -11,6 +12,7 @@ import org.snapgram.repository.database.TokenRepository;
 import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.SystemConstant;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,10 +25,14 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TokenService implements ITokenService {
+    @Value("${jwt.refresh_token.duration}")
+    @NonFinal
+    long REFRESH_TOKEN_LIFETIME;
     TokenRepository tokenRepository;
     JwtHelper jwtHelper;
     IRedisService redisService;
     AsyncTokenService asyncTokenService;
+
     @Override
     public void removeExpiredTokens() {
         List<Object> tokenExpired = new ArrayList<>();
@@ -48,6 +54,7 @@ public class TokenService implements ITokenService {
 
     @Override
     @Async
+    @Transactional
     public CompletableFuture<Void> blacklistAllUserTokens(UUID userId) {
         List<Token> tokens = tokenRepository.findByUser(User.builder().id(userId).build());
         HashMap<String, Object> tokenMap = new HashMap<>();
@@ -55,13 +62,13 @@ public class TokenService implements ITokenService {
             // check if token is expired
             if (!token.getExpireRT().before(new Date())) {
                 TokenDTO refreshObj = TokenDTO.builder()
-                        .expiredDate(token.getExpireRT())
+                        .expiredDate(new Date(token.getExpireRT().getTime() + REFRESH_TOKEN_LIFETIME))
                         .build();
                 tokenMap.put(token.getRefreshTokenId().toString(), refreshObj);
             }
         });
         redisService.addElementsToMap(SystemConstant.BLACKLIST_TOKEN, tokenMap);
-        tokenRepository.deleteAllById(tokens.stream().map(Token::getRefreshTokenId).toList());
+        tokenRepository.deleteAllByRefreshTokenIdIn(tokens.stream().map(Token::getRefreshTokenId).toList());
         return CompletableFuture.completedFuture(null);
     }
 
@@ -77,7 +84,7 @@ public class TokenService implements ITokenService {
             // check if token is expired
             if (!token.getExpireRT().before(new Date()) && !exceptArr.contains(token.getRefreshTokenId())) {
                 TokenDTO refreshObj = TokenDTO.builder()
-                        .expiredDate(token.getExpireRT())
+                        .expiredDate(new Date(token.getExpireRT().getTime() + REFRESH_TOKEN_LIFETIME))
                         .build();
                 tokenMap.put(token.getRefreshTokenId().toString(), refreshObj);
                 temp.add(token);

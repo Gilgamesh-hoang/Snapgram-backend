@@ -19,4 +19,5 @@ public interface IKeyService {
     void save(KeyPair keyPair, UUID userId);
     void deleteAndSave(KeyPair keyPair,UUID userId);
 
+    void deleteUserKey(UUID userId);
 }

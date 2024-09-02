@@ -23,6 +23,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -55,10 +56,14 @@ public class AuthenticationService implements IAuthenticationService {
         if (user == null) {
             user = userService.createUser(googlePojo);
         }
-        KeyPair keyPair = keyService.getKeyPairByUser(user.getId());
+        return createResponse(user.getEmail(), user.getId());
+    }
+
+    private JwtResponse createResponse(String email, UUID userId) {
+        KeyPair keyPair = keyService.getKeyPairByUser(userId);
         try {
-            JwtResponse jwtResponse = generateJwtResponse(googlePojo.getEmail(), keyPair);
-            tokenService.storeRefreshToken(jwtResponse.getRefreshToken(), user.getId());
+            JwtResponse jwtResponse = generateJwtResponse(email, keyPair);
+            tokenService.storeRefreshToken(jwtResponse.getRefreshToken(), userId);
             return jwtResponse;
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();
@@ -72,15 +77,7 @@ public class AuthenticationService implements IAuthenticationService {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         if (authentication.isAuthenticated()) {
-            KeyPair keyPair = keyService.getKeyPairByUser(user.getId());
-            try {
-                JwtResponse jwtResponse = generateJwtResponse(user.getEmail(), keyPair);
-                tokenService.storeRefreshToken(jwtResponse.getRefreshToken(), user.getId());
-                return jwtResponse;
-            } catch (InterruptedException | ExecutionException e) {
-                Thread.currentThread().interrupt();
-                throw new BadCredentialsException("Error while generating token");
-            }
+            return createResponse(request.getEmail(), user.getId());
         } else {
             throw new BadCredentialsException("Invalid email or password");
         }
@@ -112,6 +109,7 @@ public class AuthenticationService implements IAuthenticationService {
             tokenService.blacklistRefreshToken(token);
             return jwtResponse;
         } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
             throw new BadCredentialsException("Error while generating token");
         }
     }

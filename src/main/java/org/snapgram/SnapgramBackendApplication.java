@@ -1,7 +1,6 @@
 package org.snapgram;
 
-import org.snapgram.service.jwt.JwtService;
-import org.snapgram.service.key.IKeyService;
+import org.snapgram.service.token.ITokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -20,12 +19,12 @@ public class SnapgramBackendApplication {
     }
 
     @Autowired
-    IKeyService keyService;
-    @Autowired
-    JwtService jwtService;
+    ITokenService tokenService;
+
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
+//            tokenService.blacklistAllUserTokens(UUID.fromString("f4aea8f0-967c-4700-aea8-f0967c8700b8"));
 //            KeyPair keyPair = keyService.generateKeyPair();
 //            System.out.println("public key AT: " + keyPair.getPublicKeyAT());
 //            System.out.println("private key AT: " + keyPair.getPrivateKeyAT());
@@ -58,7 +57,7 @@ public class SnapgramBackendApplication {
  *v (x) khi đổi email sẽ đưa tất cả RT của user vào blacklist
  * Thuật toán bất đối xứng
  * mỗi lần login user có 1 cặp key cho access token và refresh token
- * 2 cap key nay luu trong db, tuy nhien private key sẽ được mã hóa aes trc khi luu
+ * 2 cap key nay luu trong db, tuy nhien private key sẽ được mã hóa trc khi luu
  *
  * */
 // ./gradlew sonar -D sonar.projectKey=Snapgram-backend -D sonar.host.url=http://localhost:8998 -D sonar.login=sqp_846a015e770ec5b9ec749641e0359e14434386e4

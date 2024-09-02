@@ -7,7 +7,10 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.response.TokenDTO;
+import org.snapgram.exception.KeyGenerationException;
+import org.snapgram.service.key.KeyService;
 import org.snapgram.service.token.ITokenService;
 import org.snapgram.service.user.UserDetailServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,6 +39,7 @@ public class JwtService {
     final ITokenService tokenService;
     final JwtHelper jwtHelper;
     final UserDetailServiceImpl userDetailService;
+    private final KeyService keyService;
     @Value("${jwt.access_token.duration}")
     long ACCESS_TOKEN_LIFETIME;
     @Value("${jwt.refresh_token.duration}")
@@ -60,7 +64,6 @@ public class JwtService {
             Map<String, Object> claims = new HashMap<>();
             claims.put("jid", Generators.randomBasedGenerator().generate().toString());
             return createToken(claims, email, privateKey, REFRESH_TOKEN_LIFETIME);
-
         });
     }
 
@@ -77,7 +80,7 @@ public class JwtService {
                     .signWith(key, SignatureAlgorithm.RS256);
             return jwt.compact();
         } catch (Exception e) {
-            throw new RuntimeException("Error while creating token", e);
+            throw new KeyGenerationException("Error while creating token", e);
         }
     }
 
@@ -87,7 +90,7 @@ public class JwtService {
             X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKey));
             return keyFactory.generatePublic(publicKeySpec);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            throw new RuntimeException("Error while generating public key", e);
+            throw new KeyGenerationException("Error while generating public key", e);
         }
     }
 
@@ -104,20 +107,25 @@ public class JwtService {
     }
 
     public boolean validateRefreshToken(String token, String publicKey) {
-        try {
-            PublicKey key = getPublicKeyFromBase64String(publicKey);
-            final String emailEx = jwtHelper.getEmailFromToken(token, key);
-            userDetailService.loadUserByUsername(emailEx);
-            String jid = jwtHelper.getJidFromRefreshToken(token, key);
-            return !isRefreshTokenExpired(token, key) && !isExistsInBlacklist(jid);
-        } catch (Exception e) {
+        PublicKey key = getPublicKeyFromBase64String(publicKey);
+        String jid = jwtHelper.getJidFromRefreshToken(token, key);
+        if(jid == null) {
             return false;
         }
+        final String emailEx = jwtHelper.getEmailFromToken(token, key);
+        CustomUserSecurity user = (CustomUserSecurity) userDetailService.loadUserByUsername(emailEx);
+        if (isExistsInBlacklist(jid)) {
+            keyService.deleteUserKey(user.getId());
+            tokenService.blacklistAllUserTokens(user.getId());
+            return false;
+        }
+        return !isRefreshTokenExpired(token, key);
     }
 
     private boolean isAccessTokenExpired(String token, PublicKey key) {
         return jwtHelper.getExpiryFromAccessToken(token, key).before(new Timestamp(System.currentTimeMillis()));
     }
+
     private boolean isRefreshTokenExpired(String token, PublicKey key) {
         return jwtHelper.getExpiryFromRefreshToken(token, key).before(new Timestamp(System.currentTimeMillis()));
     }
