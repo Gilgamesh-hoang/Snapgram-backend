@@ -1,7 +1,5 @@
 package org.snapgram;
 
-import org.snapgram.service.token.ITokenService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,30 +16,10 @@ public class SnapgramBackendApplication {
         SpringApplication.run(SnapgramBackendApplication.class, args);
     }
 
-    @Autowired
-    ITokenService tokenService;
 
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
-//            tokenService.blacklistAllUserTokens(UUID.fromString("f4aea8f0-967c-4700-aea8-f0967c8700b8"));
-//            KeyPair keyPair = keyService.generateKeyPair();
-//            System.out.println("public key AT: " + keyPair.getPublicKeyAT());
-//            System.out.println("private key AT: " + keyPair.getPrivateKeyAT());
-//            System.out.println("public key RT: " + keyPair.getPublicKeyRT());
-//            System.out.println("private key RT: " + keyPair.getPrivateKeyRT());
-//            System.out.println("====================================");
-//
-//            String at = jwtService.generateAccessToken("at", keyPair.getPrivateKeyAT());
-//            System.out.println(at);
-//            System.out.println("verify at=true: " + jwtService.validateToken2(at, keyPair.getPublicKeyAT()));
-//            System.out.println("verify at=false: " + jwtService.validateToken2(at, keyPair.getPrivateKeyAT()));
-//            System.out.println("====================================");
-//            String rt = jwtService.generateRefreshToken("rt", keyPair.getPrivateKeyRT());
-//            System.out.println(rt);
-//            System.out.println("verify rt=true: " + jwtService.validateToken2(rt, keyPair.getPublicKeyRT()));
-//            System.out.println("verify rt=false: " + jwtService.validateToken2(rt, keyPair.getPrivateKeyRT()));
-//            System.out.println("====================================");
 
         };
     }

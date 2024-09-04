@@ -15,6 +15,7 @@ import org.snapgram.dto.request.LikePostRequest;
 import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.request.SavePostRequest;
 import org.snapgram.dto.response.PostDTO;
+import org.snapgram.dto.response.PostMetricDTO;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.service.post.IPostLikeService;
 import org.snapgram.service.post.IPostSaveService;
@@ -42,10 +43,10 @@ public class PostController {
     ObjectMapper objectMapper;
     IPostSaveService postSaveService;
 
-    @PutMapping("/like")
-    public ResponseObject<Void> likePost(@RequestBody @Valid LikePostRequest request) {
-        postService.likePost(request.getPostId(), request.getIsLiked());
-        return new ResponseObject<>(HttpStatus.OK);
+    @PutMapping("/liked")
+    public ResponseObject<PostMetricDTO> likePost(@RequestBody @Valid LikePostRequest request) {
+        PostMetricDTO response = postService.likePost(request.getPostId(), request.getIsLiked());
+        return new ResponseObject<>(HttpStatus.OK,response);
     }
 
 

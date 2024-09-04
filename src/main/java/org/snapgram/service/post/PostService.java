@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.response.PostDTO;
+import org.snapgram.dto.response.PostMetricDTO;
 import org.snapgram.entity.database.Post;
 import org.snapgram.entity.database.PostMedia;
 import org.snapgram.entity.database.Tag;
@@ -124,7 +125,7 @@ public class PostService implements IPostService {
     }
 
     @Override
-    public void likePost(UUID postId, boolean isLiked) {
+    public PostMetricDTO likePost(UUID postId, boolean isLiked) {
         Post post = postRepository.findById(postId).orElse(null);
         if (post == null) {
             throw new ResourceNotFoundException("Post not found");
@@ -133,6 +134,9 @@ public class PostService implements IPostService {
             post.setLikeCount(post.getLikeCount() + (isLiked ? 1 : -1));
             postRepository.save(post);
         }
+        return PostMetricDTO.builder().likeCount(post.getLikeCount())
+                .commentCount(post.getCommentCount())
+                .build();
     }
 
     @Override
@@ -146,13 +150,14 @@ public class PostService implements IPostService {
 
     @Override
     public List<PostDTO> getPostsByUser(String nickname, Pageable pageable) {
-        String redisKey = RedisKeyUtil.getUserPostKey(nickname, pageable.getPageNumber(), pageable.getPageSize());
-        List<PostDTO> results = redisService.getList(redisKey);
+//        String redisKey = RedisKeyUtil.getUserPostKey(nickname, pageable.getPageNumber(), pageable.getPageSize());
+//        List<PostDTO> results = redisService.getList(redisKey);
 
-        if (results != null && !results.isEmpty()) {
-            return results;
-        }
+//        if (results != null && !results.isEmpty()) {
+//            return results;
+//        }
         //select in database
+        List<PostDTO> results;
         Example<Post> example = Example.of(
                 Post.builder().user(
                         User.builder().id(userService.findByNickname(nickname).getId()).isDeleted(false).isActive(true).build()
@@ -166,21 +171,21 @@ public class PostService implements IPostService {
         results.forEach(postDTO -> {
             boolean isLiked = postLikeService.isPostLikedByUser(postDTO.getId(), currentUser.getId());
             postDTO.setLiked(isLiked);
-//            boolean isSaved = postSaveService.isPostSaveByUser(postDTO.getId(), currentUser.getId());
-//            postDTO.setSaved(isSaved);
+            boolean isSaved = postSaveService.isPostSaveByUser(postDTO.getId(), currentUser.getId());
+            postDTO.setSaved(isSaved);
         });
 
-        if (!results.isEmpty()) {
-            redisService.saveList(redisKey, results);
-            redisService.setTimeout(redisKey, 5, TimeUnit.DAYS);
-        }
+//        if (!results.isEmpty()) {
+//            redisService.saveList(redisKey, results);
+//            redisService.setTimeout(redisKey, 5, TimeUnit.DAYS);
+//        }
         return results;
     }
 
     @Override
     public PostDTO getPostById(UUID id) {
 //        String redisKey = RedisKeyUtil.getPostKey(id);
-        PostDTO result ;
+        PostDTO result;
 //        PostDTO result = redisService.getValue(redisKey, PostDTO.class);
 //        if (result != null) {
 //            return result;
