@@ -10,6 +10,7 @@ import org.snapgram.entity.database.Post;
 import org.snapgram.entity.database.PostMedia;
 import org.snapgram.entity.database.Tag;
 import org.snapgram.entity.database.User;
+import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.mapper.PostMapper;
 import org.snapgram.repository.database.PostRepository;
 import org.snapgram.service.redis.IRedisService;
@@ -120,6 +121,18 @@ public class PostService implements IPostService {
             throw new IllegalArgumentException("Post not found");
         }
         postSaveService.savePost(postId, isSaved);
+    }
+
+    @Override
+    public void likePost(UUID postId, boolean isLiked) {
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) {
+            throw new ResourceNotFoundException("Post not found");
+        }
+        if (postLikeService.likePost(postId, isLiked)) {
+            post.setLikeCount(post.getLikeCount() + (isLiked ? 1 : -1));
+            postRepository.save(post);
+        }
     }
 
     @Override

@@ -11,10 +11,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
 import org.snapgram.dto.CustomUserSecurity;
+import org.snapgram.dto.request.LikePostRequest;
 import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.request.SavePostRequest;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.ResponseObject;
+import org.snapgram.service.post.IPostLikeService;
 import org.snapgram.service.post.IPostSaveService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.validation.media.ValidMedia;
@@ -39,6 +41,13 @@ public class PostController {
     IPostService postService;
     ObjectMapper objectMapper;
     IPostSaveService postSaveService;
+
+    @PutMapping("/like")
+    public ResponseObject<Void> likePost(@RequestBody @Valid LikePostRequest request) {
+        postService.likePost(request.getPostId(), request.getIsLiked());
+        return new ResponseObject<>(HttpStatus.OK);
+    }
+
 
     @GetMapping("/saved")
     public ResponseObject<List<PostDTO>> getSavedPostsByUser(
