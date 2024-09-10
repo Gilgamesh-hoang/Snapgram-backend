@@ -52,11 +52,9 @@ public class User {
     private String activeCode;
 
     @Column(name = "is_active", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
-//    @Builder.Default
     private Boolean isActive;
 
     @Column(name = "is_deleted", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
-//    @Builder.Default
     private Boolean isDeleted;
 
     @Enumerated(EnumType.STRING)

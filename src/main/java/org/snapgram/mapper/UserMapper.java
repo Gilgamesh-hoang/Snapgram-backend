@@ -14,12 +14,14 @@ import org.snapgram.entity.elasticsearch.UserDocument;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
     ProfileDTO toProfileDTO(UserDTO user);
     UserDTO toDTO(User user);
+    List<UserDTO> toDTOs(List<User> users);
     UserDTO toDTO(UserDocument user);
     Collection<UserDTO> toDTOs(Collection<UserDocument> users);
 
@@ -65,4 +67,5 @@ public interface UserMapper {
     void updateUserFromProfile(ProfileRequest request, @MappingTarget User user);
 
     CreatorDTO toCreatorDTO(User user);
+
 }

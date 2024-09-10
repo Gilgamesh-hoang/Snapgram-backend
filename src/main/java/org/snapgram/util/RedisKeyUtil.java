@@ -16,6 +16,12 @@ public class RedisKeyUtil {
     public String getUserPostKey(String nickname, int page, int size) {
         return String.format("user:%s:posts:page:%d:size:%d", nickname, page, size);
     }
+    public String getUserFollowersKey(UUID userId, int page, int size) {
+        return String.format("followers:user:%s:page:%d:size:%d", userId.toString(), page, size);
+    }
+    public String getUserFollowingKey(UUID userId, int page, int size) {
+        return String.format("following:user:%s:page:%d:size:%d", userId.toString(), page, size);
+    }
 
     public static String getPostKey(UUID id) {
         return String.format("post:%s", id.toString());
