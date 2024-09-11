@@ -1,12 +1,12 @@
 package org.snapgram.service.user;
 
 import org.snapgram.dto.request.ProfileRequest;
-import org.snapgram.dto.response.ProfileDTO;
+import org.snapgram.dto.response.UserInfoDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface IProfileService {
-    ProfileDTO getProfile(String nickname);
+    UserInfoDTO getProfile(String nickname);
 
-    ProfileDTO updateProfile(ProfileRequest request, MultipartFile avatar, String refreshToken);
+    UserInfoDTO updateProfile(ProfileRequest request, MultipartFile avatar, String refreshToken);
 }
 

@@ -41,10 +41,7 @@ public class SearchService implements ISearchService {
 
         Set<UserDocument> elasticResults = customUserElastic.searchByKeyword(keyword, page);
         userRepository.findAllById(elasticResults.stream().map(UserDocument::getId).toList())
-                .forEach(user -> {
-                    user.setBio(null);
-                    results.add(userMapper.toDTO(user));
-                });
+                .forEach(user -> results.add(userMapper.toDTO(user)));
 
         CompletableFuture.runAsync(() -> {
             redisService.saveSet(redisKey, results);

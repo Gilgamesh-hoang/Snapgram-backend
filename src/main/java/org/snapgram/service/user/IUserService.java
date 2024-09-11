@@ -5,6 +5,7 @@ import org.snapgram.dto.request.ChangePasswordRequest;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.UserDTO;
+import org.snapgram.dto.response.UserInfoDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -38,7 +39,7 @@ public interface IUserService {
      * @param request the signup request containing user details
      * @return the created user as a UserDTO
      */
-    UserDTO createUser(SignupRequest request);
+    UserInfoDTO createUser(SignupRequest request);
 
     UserDTO createUser(GooglePojo googlePojo);
 
@@ -80,7 +81,9 @@ public interface IUserService {
 
     List<UserDTO> findRandomUsers(int number, List<UUID> exceptIds);
 
-    UserDTO editUserInfo(UUID id, ProfileRequest request, MultipartFile avatar);
+    UserInfoDTO editUserInfo(UUID id, ProfileRequest request, MultipartFile avatar);
 
     void changePassword(UUID id, ChangePasswordRequest request);
+
+    UserInfoDTO getUserInfo(String nickname);
 }

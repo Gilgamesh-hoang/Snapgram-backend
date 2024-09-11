@@ -4,7 +4,7 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import org.snapgram.dto.response.UserDTO;
+import org.snapgram.dto.response.UserInfoDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -31,7 +31,7 @@ public class EmailService implements IEmailService {
     private String frontendUrl;
 
     @Override
-    public void sendVerificationEmail(UserDTO user) {
+    public void sendVerificationEmail(UserInfoDTO user) {
         LocalDateTime datePlusDays = user.getCreatedAt().toLocalDateTime().plusDays(3);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String formattedString = datePlusDays.format(formatter);

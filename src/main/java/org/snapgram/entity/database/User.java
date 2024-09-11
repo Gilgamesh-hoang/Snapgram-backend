@@ -17,7 +17,7 @@ import java.util.UUID;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"id", "email", "nickname"})
+@EqualsAndHashCode(of = {"id", "nickname"})
 @Entity
 @Table(name = "user")
 @EntityListeners(AuditingEntityListener.class)
@@ -45,11 +45,6 @@ public class User {
     @Column(name = "avatar_url", length = 255)
     private String avatarUrl;
 
-    @Column(length = 600)
-    private String bio;
-
-    @Column(name = "active_code", length = 50)
-    private String activeCode;
 
     @Column(name = "is_active", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean isActive;
@@ -57,12 +52,7 @@ public class User {
     @Column(name = "is_deleted", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean isDeleted;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Gender gender;
-
-    @Column(name = "created_at", updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    @CreatedDate
-    @Temporal(TemporalType.TIMESTAMP)
-    private Timestamp createdAt;
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
+    private UserInfo userInfo = new UserInfo();
 }

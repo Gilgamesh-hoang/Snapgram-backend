@@ -1,13 +1,11 @@
 package org.snapgram.mapper;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
 import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.CreatorDTO;
-import org.snapgram.dto.response.ProfileDTO;
+import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.User;
 import org.snapgram.entity.elasticsearch.UserDocument;
@@ -19,8 +17,14 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    ProfileDTO toProfileDTO(UserDTO user);
+    @Mapping(source = "userInfo.gender", target = "gender")
+    @Mapping(source = "userInfo.bio", target = "bio")
+    UserInfoDTO toUserInfoDTO(User user);
+
+    @Named("userToUserDTO")
     UserDTO toDTO(User user);
+
+    @IterableMapping(qualifiedByName = "userToUserDTO")
     List<UserDTO> toDTOs(List<User> users);
     UserDTO toDTO(UserDocument user);
     Collection<UserDTO> toDTOs(Collection<UserDocument> users);
@@ -31,12 +35,12 @@ public interface UserMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "nickname", ignore = true)
     @Mapping(target = "password", ignore = true)
-    @Mapping(target = "bio", ignore = true)
-    @Mapping(target = "gender", ignore = true)
-    @Mapping(target = "activeCode", ignore = true)
+//    @Mapping(target = "userInfo.bio", ignore = true)
+//    @Mapping(target = "userInfo.gender", ignore = true)
+//    @Mapping(target = "userInfo.activeCode", ignore = true)
     @Mapping(target = "isActive", ignore = true)
     @Mapping(target = "isDeleted", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
+//    @Mapping(target = "createdAt", ignore = true)
     User toEntity(GooglePojo googlePojo);
 
 
@@ -56,14 +60,16 @@ public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "avatarUrl", ignore = true)
-    @Mapping(target = "bio", ignore = true)
-    @Mapping(target = "activeCode", ignore = true)
+//    @Mapping(target = "bio", ignore = true)
+//    @Mapping(target = "activeCode", ignore = true)
     @Mapping(target = "isActive", ignore = true)
     @Mapping(target = "isDeleted", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
+//    @Mapping(target = "createdAt", ignore = true)
     User toEntity(SignupRequest request);
 
     @Mapping(target = "id", ignore = true) // Ignore id if it's not supposed to be updated
+    @Mapping(source = "gender", target = "userInfo.gender")
+    @Mapping(source = "bio", target = "userInfo.bio")
     void updateUserFromProfile(ProfileRequest request, @MappingTarget User user);
 
     CreatorDTO toCreatorDTO(User user);

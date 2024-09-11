@@ -30,11 +30,11 @@ public class Saved {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -42,9 +42,6 @@ public class Saved {
     @CreatedDate
     @Temporal(TemporalType.TIMESTAMP)
     private Timestamp savedAt;
-
-//    @Column(name = "is_deleted", columnDefinition = "TINYINT(1) DEFAULT 0")
-//    private Boolean isDeleted = false;
 
 }
 

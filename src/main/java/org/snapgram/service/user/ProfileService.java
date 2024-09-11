@@ -5,8 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.ProfileRequest;
-import org.snapgram.dto.response.ProfileDTO;
-import org.snapgram.dto.response.UserDTO;
+import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.service.follow.IFollowService;
 import org.snapgram.service.post.IPostService;
@@ -24,29 +23,29 @@ public class ProfileService implements IProfileService {
     IFollowService followService;
     UserMapper userMapper;
     ITokenService tokenService;
+
     @Override
-    public ProfileDTO getProfile(String nickname) {
-        UserDTO user = userService.findByNickname(nickname);
-        ProfileDTO profile = userMapper.toProfileDTO(user);
+    public UserInfoDTO getProfile(String nickname) {
+        UserInfoDTO profile = userService.getUserInfo(nickname);
 
-        profile.setFollowerNumber(followService.countFollowers(user.getId()));
-        profile.setFolloweeNumber(followService.countFollowees(user.getId()));
+        profile.setFollowerNumber(followService.countFollowers(profile.getId()));
+        profile.setFolloweeNumber(followService.countFollowees(profile.getId()));
 
-        profile.setPostNumber(postService.countByUser(user.getId()));
+        profile.setPostNumber(postService.countByUser(profile.getId()));
         return profile;
     }
 
     @Override
-    public ProfileDTO updateProfile(ProfileRequest request, MultipartFile avatar, String refreshToken) {
+    public UserInfoDTO updateProfile(ProfileRequest request, MultipartFile avatar, String refreshToken) {
         // Get the current logged-in user's details
         CustomUserSecurity userContext = UserSecurityHelper.getCurrentUser();
 
         // Check if the email provided in the request is different from the current user's email
         // //and if it already exists in the system
-        if (!request.getEmail().equals(userContext.getEmail()) ) {
+        if (!request.getEmail().equals(userContext.getEmail())) {
             if (userService.isEmailExists(request.getEmail())) {
                 throw new IllegalArgumentException("Email already exists");
-            }else  {
+            } else {
                 tokenService.blacklistAllUserTokens(userContext.getId(), refreshToken);
             }
         }
@@ -57,17 +56,15 @@ public class ProfileService implements IProfileService {
             throw new IllegalArgumentException("Nickname already exists");
         }
 
-        String contentType = avatar.getContentType();
+        if (avatar != null) {
+            String contentType = avatar.getContentType();
 
-        // Check if the content type of the avatar file is not an image
-        if (contentType == null || !contentType.startsWith("image")) {
-            throw new IllegalArgumentException("Avatar must be an image");
+            // Check if the content type of the avatar file is not an image
+            if (contentType == null || !contentType.startsWith("image")) {
+                throw new IllegalArgumentException("Avatar must be an image");
+            }
         }
 
-        UserDTO user = userService.editUserInfo(userContext.getId(), request, avatar);
-
-        ProfileDTO profile = userMapper.toProfileDTO(user);
-        profile.setBio(request.getBio());
-        return profile;
+        return userService.editUserInfo(userContext.getId(), request, avatar);
     }
 }

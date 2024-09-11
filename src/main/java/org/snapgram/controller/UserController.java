@@ -19,7 +19,7 @@ import org.snapgram.dto.request.EmailRequest;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.JwtResponse;
-import org.snapgram.dto.response.ProfileDTO;
+import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.exception.ResourceNotFoundException;
@@ -102,18 +102,18 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseObject<ProfileDTO> getUserInfo(@RequestParam("nickname") @NotBlank String nickname) {
-        ProfileDTO profile = profileService.getProfile(nickname);
+    public ResponseObject<UserInfoDTO> getUserInfo(@RequestParam("nickname") @NotBlank String nickname) {
+        UserInfoDTO profile = profileService.getProfile(nickname);
         return new ResponseObject<>(HttpStatus.OK, profile);
     }
 
     @PutMapping
-    public ResponseObject<ProfileDTO> updateProfile(
+    public ResponseObject<UserInfoDTO> updateProfile(
             @CookieValue(SystemConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
             @RequestPart("profile") @Valid String profileJson,
             @RequestPart(value = "avatar", required = false) @ValidMedia MultipartFile avatar) throws JsonProcessingException {
         ProfileRequest request = objectMapper.readValue(profileJson, ProfileRequest.class);
-        ProfileDTO response = profileService.updateProfile(request, avatar, refreshToken);
+        UserInfoDTO response = profileService.updateProfile(request, avatar, refreshToken);
         return new ResponseObject<>(HttpStatus.OK, "Profile updated successfully", response);
     }
 
@@ -181,7 +181,7 @@ public class UserController {
 
     @PostMapping("/signup")
     public ResponseObject<Void> signup(@Valid @RequestBody SignupRequest request) {
-        UserDTO user = userService.createUser(request);
+        UserInfoDTO user = userService.createUser(request);
         if (user == null) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST, "User creation failed");
         }

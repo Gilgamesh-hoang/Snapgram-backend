@@ -10,7 +10,9 @@ import org.snapgram.dto.request.ChangePasswordRequest;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.UserDTO;
+import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.entity.database.User;
+import org.snapgram.entity.database.UserInfo;
 import org.snapgram.entity.elasticsearch.UserDocument;
 import org.snapgram.enums.Gender;
 import org.snapgram.exception.ResourceNotFoundException;
@@ -48,14 +50,11 @@ public class UserService implements IUserService {
     @Override
     public List<UserDTO> findRandomUsers(int number, List<UUID> exceptIds) {
         List<UUID> ids = userElastic.findRandomUsers(number, exceptIds).stream().map(UserDocument::getId).toList();
-        return userRepository.findAllById(ids).stream().map(user -> {
-            user.setBio(null);
-            return userMapper.toDTO(user);
-        }).toList();
+        return userRepository.findAllById(ids).stream().map(userMapper::toDTO).toList();
     }
 
     @Override
-    public UserDTO editUserInfo(UUID id, ProfileRequest request, MultipartFile avatar) {
+    public UserInfoDTO editUserInfo(UUID id, ProfileRequest request, MultipartFile avatar) {
         User user = findUserEntityById(id);
         if (user == null)
             throw new UserNotFoundException("User not found with id: " + id);
@@ -72,8 +71,8 @@ public class UserService implements IUserService {
             user.setAvatarUrl(url);
         }
 
-        userRepository.save(user);
-        return userMapper.toDTO(user);
+        user = userRepository.save(user);
+        return userMapper.toUserInfoDTO(user);
     }
 
     @Override
@@ -90,13 +89,18 @@ public class UserService implements IUserService {
         userRepository.save(user);
     }
 
+    @Override
+    public UserInfoDTO getUserInfo(String nickname) {
+        User user = findUserEntityByNickname(nickname);
+        return userMapper.toUserInfoDTO(user);
+    }
+
 
     @Override
     public UserDTO findByEmail(String email) {
         User user = findUserEntityByEmail(email);
         if (user == null)
             return null;
-        user.setBio(null);
         return userMapper.toDTO(user);
     }
 
@@ -110,7 +114,6 @@ public class UserService implements IUserService {
         User user = findUserEntityById(id);
         if (user == null)
             return null;
-        user.setBio(null);
         return userMapper.toDTO(user);
     }
 
@@ -130,7 +133,7 @@ public class UserService implements IUserService {
         Example<User> example = Example.of(User.builder().isDeleted(false).isActive(false).build());
         List<User> inactiveUsers = new ArrayList<>();
         userRepository.findAll(example).forEach(user -> {
-            if (isVerificationExpired(days, user.getCreatedAt())) {
+            if (isVerificationExpired(days, user.getUserInfo().getCreatedAt())) {
                 user.setIsDeleted(true);
                 inactiveUsers.add(user);
             }
@@ -177,7 +180,7 @@ public class UserService implements IUserService {
 
     @Override
     @Transactional
-    public UserDTO createUser(SignupRequest request) {
+    public UserInfoDTO createUser(SignupRequest request) {
         if (isEmailExists(request.getEmail())) {
             throw new IllegalArgumentException("User with email already exists");
         }
@@ -188,14 +191,19 @@ public class UserService implements IUserService {
         // Map the SignupRequest to a User entity
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setActiveCode(Generators.randomBasedGenerator().generate().toString());
         user.setIsActive(false);
         user.setIsDeleted(false);
+
+        UserInfo userInfo = UserInfo.builder().activeCode(Generators.randomBasedGenerator().generate().toString())
+                .gender(request.getGender()).build();
+        user.setUserInfo(userInfo);
+        userInfo.setUser(user);
+
         // Save the User entity to the database
         user = userRepository.save(user);
 
         // Return true if the user was created successfully, false otherwise
-        return userMapper.toDTO(user);
+        return userMapper.toUserInfoDTO(user);
     }
 
     @Override
@@ -212,7 +220,9 @@ public class UserService implements IUserService {
         user.setPassword(passwordEncoder.encode(Generators.randomBasedGenerator().toString()));
         user.setIsActive(true);
         user.setIsDeleted(false);
-        user.setGender(Gender.MALE);
+        UserInfo userInfo = UserInfo.builder().gender(Gender.MALE).build();
+        user.setUserInfo(userInfo);
+        userInfo.setUser(user);
         // Save the User entity to the database
         user = userRepository.save(user);
 
@@ -244,18 +254,19 @@ public class UserService implements IUserService {
     @Override
     @Transactional
     public boolean verifyEmail(String email, String code) {
-        Example<User> example = Example.of(User.builder().email(email).isDeleted(false).activeCode(code).build());
+        Example<User> example = Example.of(User.builder().email(email).isDeleted(false)
+                .userInfo(UserInfo.builder().activeCode(code).build()).build());
         User user = userRepository.findOne(example).orElse(null);
 
         if (user == null)
             throw new ResourceNotFoundException("Email or code is invalid");
 
-        if (isVerificationExpired(3, user.getCreatedAt())) {
+        if (isVerificationExpired(3, user.getUserInfo().getCreatedAt())) {
             return false;
         }
 
         // If the user's creation time plus 3 days is not before the current time, set the user's active code to null and set the user as active
-        user.setActiveCode(null);
+        user.getUserInfo().setActiveCode(null);
         user.setIsActive(true);
 
         // Save the updated user to the database
