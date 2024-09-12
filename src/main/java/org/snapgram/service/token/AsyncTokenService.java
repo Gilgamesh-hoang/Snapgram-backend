@@ -7,7 +7,7 @@ import lombok.experimental.NonFinal;
 import org.snapgram.dto.response.TokenDTO;
 import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.redis.IRedisService;
-import org.snapgram.util.SystemConstant;
+import org.snapgram.util.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,7 @@ public class AsyncTokenService {
         String accessId = jwtHelper.getJidFromAccessToken(accessToken);
         HashMap<String, Object> map = new HashMap<>();
         map.put(accessId, accessObj);
-        redisService.addElementsToMap(SystemConstant.BLACKLIST_TOKEN, map);
+        redisService.addElementsToMap(RedisKeyUtil.getBlacklistKey(), map);
         return CompletableFuture.completedFuture(null);
     }
 
@@ -46,7 +46,7 @@ public class AsyncTokenService {
         String refreshId = jwtHelper.getJidFromRefreshToken(refreshToken);
         HashMap<String, Object> map = new HashMap<>();
         map.put(refreshId, refreshObj);
-        redisService.addElementsToMap(SystemConstant.BLACKLIST_TOKEN, map);
+        redisService.addElementsToMap(RedisKeyUtil.getBlacklistKey(), map);
         return CompletableFuture.completedFuture(null);
     }
 }

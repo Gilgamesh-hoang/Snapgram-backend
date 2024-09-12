@@ -11,7 +11,7 @@ import org.snapgram.entity.database.User;
 import org.snapgram.repository.database.TokenRepository;
 import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.redis.IRedisService;
-import org.snapgram.util.SystemConstant;
+import org.snapgram.util.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -36,14 +36,14 @@ public class TokenService implements ITokenService {
     @Override
     public void removeExpiredTokens() {
         List<Object> tokenExpired = new ArrayList<>();
-        redisService.getMap(SystemConstant.BLACKLIST_TOKEN).forEach((key, value) -> {
+        redisService.getMap(RedisKeyUtil.getBlacklistKey()).forEach((key, value) -> {
             TokenDTO token = (TokenDTO) value;
             // check token expired
             if (token.getExpiredDate().before(new Date())) {
                 tokenExpired.add(key);
             }
         });
-        redisService.deleteElementsFromMap(SystemConstant.BLACKLIST_TOKEN, tokenExpired);
+        redisService.deleteElementsFromMap(RedisKeyUtil.getBlacklistKey(), tokenExpired);
     }
 
 
@@ -67,7 +67,7 @@ public class TokenService implements ITokenService {
                 tokenMap.put(token.getRefreshTokenId().toString(), refreshObj);
             }
         });
-        redisService.addElementsToMap(SystemConstant.BLACKLIST_TOKEN, tokenMap);
+        redisService.addElementsToMap(RedisKeyUtil.getBlacklistKey(), tokenMap);
         tokenRepository.deleteAllByRefreshTokenIdIn(tokens.stream().map(Token::getRefreshTokenId).toList());
         return CompletableFuture.completedFuture(null);
     }
@@ -90,7 +90,7 @@ public class TokenService implements ITokenService {
                 temp.add(token);
             }
         });
-        redisService.addElementsToMap(SystemConstant.BLACKLIST_TOKEN, tokenMap);
+        redisService.addElementsToMap(RedisKeyUtil.getBlacklistKey(), tokenMap);
         tokenRepository.deleteAllByRefreshTokenIdIn(temp.stream().map(Token::getRefreshTokenId).toList());
     }
 
@@ -109,12 +109,12 @@ public class TokenService implements ITokenService {
         } else {
             jid = jwtHelper.getJidFromAccessToken(token);
         }
-        return redisService.getElementFromMap(SystemConstant.BLACKLIST_TOKEN, jid, TokenDTO.class);
+        return redisService.getElementFromMap(RedisKeyUtil.getBlacklistKey(), jid, TokenDTO.class);
     }
 
     @Override
     public TokenDTO getTokenFromBlacklist(String jid) {
-        return redisService.getElementFromMap(SystemConstant.BLACKLIST_TOKEN, jid, TokenDTO.class);
+        return redisService.getElementFromMap(RedisKeyUtil.getBlacklistKey(), jid, TokenDTO.class);
     }
 
     @Override
@@ -138,7 +138,7 @@ public class TokenService implements ITokenService {
                         .build();
                 HashMap<String, Object> map = new HashMap<>();
                 map.put(token.getRefreshTokenId().toString(), refreshObj);
-                redisService.addElementsToMap(SystemConstant.BLACKLIST_TOKEN, map);
+                redisService.addElementsToMap(RedisKeyUtil.getBlacklistKey(), map);
             }
             tokenRepository.delete(token);
         }

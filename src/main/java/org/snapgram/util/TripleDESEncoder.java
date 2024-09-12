@@ -2,6 +2,7 @@ package org.snapgram.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
@@ -9,6 +10,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.DESedeKeySpec;
 import java.util.Base64;
+import java.util.concurrent.CompletableFuture;
 
 @Component
 @Slf4j
@@ -17,7 +19,8 @@ public class TripleDESEncoder {
     private String SECRET_KEY;
 
     // Method to encrypt a string using Triple DES
-    public String encode(String data) {
+    @Async
+    public CompletableFuture<String> encode(String data) {
         try {
             // Convert the key string to bytes
             byte[] keyBytes = SECRET_KEY.getBytes();
@@ -34,17 +37,19 @@ public class TripleDESEncoder {
             // Encrypt the data bytes using the cipher
             byte[] encryptedBytes = cipher.doFinal(data.getBytes());
             // Encode the encrypted bytes to a string using Base64 and return it
-            return Base64.getUrlEncoder().withoutPadding().encodeToString(encryptedBytes);
+            String result = Base64.getUrlEncoder().withoutPadding().encodeToString(encryptedBytes);
+            return CompletableFuture.completedFuture(result);
         } catch (Exception e) {
             // Print the stack trace for any exceptions
             log.error("Error while encrypting data", e);
         }
         // Return null if an exception occurred
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
     // Method to decrypt a string using Triple DES
-    public String decode(String encryptedData) {
+    @Async
+    public CompletableFuture<String>  decode(String encryptedData) {
         try {
             // Convert the key string to bytes
             byte[] keyBytes = SECRET_KEY.getBytes();
@@ -61,13 +66,14 @@ public class TripleDESEncoder {
             // Decode the encrypted data from Base64 to bytes
             byte[] decryptedBytes = cipher.doFinal(Base64.getUrlDecoder().decode(encryptedData));
             // Convert the decrypted bytes to a string and return it
-            return new String(decryptedBytes);
+            String result = new String(decryptedBytes);
+            return CompletableFuture.completedFuture(result);
         } catch (Exception e) {
             // Print the stack trace for any exceptions
             log.error("Error while encrypting data", e);
         }
         // Return null if an exception occurred
-        return null;
+        return CompletableFuture.completedFuture(null);
     }
 
 }

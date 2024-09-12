@@ -3,28 +3,49 @@ package org.snapgram.service.key;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.snapgram.entity.database.User;
+import org.snapgram.dto.KeyPair;
 import org.snapgram.exception.KeyGenerationException;
-import org.snapgram.repository.database.KeyRepository;
+import org.snapgram.service.redis.IRedisService;
+import org.snapgram.util.RedisKeyUtil;
+import org.snapgram.util.TripleDESEncoder;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AsyncKeyService {
-    KeyRepository keyRepository;
+    IRedisService redisService;
+    TripleDESEncoder encoder;
 
-    @Transactional
-    public void delete(UUID userId) {
-        keyRepository.deleteByUser(User.builder().id(userId).build());
+    @Async
+    public CompletableFuture<Void> save(KeyPair keyPair, UUID userId) {
+        CompletableFuture<String> privateAT = encoder.encode(keyPair.getPrivateKeyAT());
+        CompletableFuture<String> privateRT = encoder.encode(keyPair.getPrivateKeyRT());
+        CompletableFuture.allOf(privateAT, privateRT).join();
+        try {
+            KeyPair key = new KeyPair();
+            key.setPublicKeyAT(keyPair.getPublicKeyAT());
+            key.setPublicKeyRT(keyPair.getPublicKeyRT());
+            key.setPrivateKeyAT(privateAT.get());
+            key.setPrivateKeyRT(privateRT.get());
+            HashMap<String, Object> map = new HashMap<>();
+            map.put(userId.toString(), key);
+            redisService.addElementsToMap(RedisKeyUtil.getUserKeyPairHashKey(), map);
+            return CompletableFuture.completedFuture(null);
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new BadCredentialsException("Error while encoding keys", e);
+        }
     }
 
     @Async

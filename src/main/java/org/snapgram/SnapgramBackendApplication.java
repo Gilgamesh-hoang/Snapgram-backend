@@ -20,13 +20,12 @@ public class SnapgramBackendApplication {
     }
 
     @Autowired
-    IUserService userService;;
+    IUserService userService;
     @Autowired
     UserRepository userRepository;
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
-
         };
     }
 }

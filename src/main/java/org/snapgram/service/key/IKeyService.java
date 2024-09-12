@@ -12,9 +12,6 @@ public interface IKeyService {
 
     String getUserPublicRTKey(UUID userId);
 
-    String getUserPrivateATKey(UUID userId);
-
-    String getUserPrivateRTKey(UUID userId);
 
     void save(KeyPair keyPair, UUID userId);
     void deleteAndSave(KeyPair keyPair,UUID userId);

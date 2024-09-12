@@ -8,13 +8,16 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.snapgram.dto.KeyPair;
 import org.snapgram.dto.request.AuthenticationRequest;
 import org.snapgram.dto.request.TokenRequest;
 import org.snapgram.dto.request.VerificationRequest;
 import org.snapgram.dto.response.JwtResponse;
 import org.snapgram.dto.response.ResponseObject;
+import org.snapgram.dto.response.UserDTO;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.service.authentication.IAuthenticationService;
+import org.snapgram.service.key.IKeyService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.util.CookieUtil;
 import org.snapgram.util.SystemConstant;
@@ -27,6 +30,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.concurrent.CompletableFuture;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -36,6 +41,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class AuthenticationController {
     IUserService userService;
+    IKeyService keyService;
     IAuthenticationService authenticationService;
     ClientRegistrationRepository clientRegistrationRepository;
     UserMapper userMapper;
@@ -89,8 +95,14 @@ public class AuthenticationController {
     public ResponseObject<Boolean> verifyEmail(@RequestBody @Valid VerificationRequest request) {
         boolean isVerified = userService.verifyEmail(request.getEmail(), request.getCode());
         if (isVerified) {
-            return new ResponseObject<>(HttpStatus.OK, "Email verified successfully", isVerified);
+            // Generate key pair asynchronously
+            CompletableFuture.runAsync(()-> {
+                UserDTO user = userService.findByEmail(request.getEmail());
+                KeyPair keyPair = keyService.generateKeyPair();
+                keyService.save(keyPair, user.getId());
+            });
+            return new ResponseObject<>(HttpStatus.OK, "Email verified successfully", true);
         }
-        return new ResponseObject<>(HttpStatus.OK, "Code is expired", isVerified);
+        return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Code is expired", false);
     }
 }

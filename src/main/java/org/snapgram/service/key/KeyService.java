@@ -5,15 +5,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.KeyPair;
-import org.snapgram.entity.database.Key;
-import org.snapgram.entity.database.User;
 import org.snapgram.exception.KeyGenerationException;
-import org.snapgram.mapper.KeyMapper;
-import org.snapgram.repository.database.KeyRepository;
+import org.snapgram.service.redis.IRedisService;
+import org.snapgram.util.RedisKeyUtil;
 import org.snapgram.util.TripleDESEncoder;
-import org.springframework.data.domain.Example;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -23,10 +22,9 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class KeyService implements IKeyService {
-    KeyRepository keyRepository;
-    KeyMapper keyMapper;
     TripleDESEncoder encoder;
     AsyncKeyService asyncKeyService;
+    IRedisService redisService;
 
     @Override
     public KeyPair generateKeyPair() {
@@ -59,14 +57,20 @@ public class KeyService implements IKeyService {
 
     @Override
     public KeyPair getKeyPairByUser(UUID userId) {
-        User user = User.builder().id(userId).build();
-        Example<Key> example = Example.of(Key.builder().user(user).build());
-        Key key = keyRepository.findOne(example).orElse(null);
+        KeyPair key = redisService.getElementFromMap(RedisKeyUtil.getUserKeyPairHashKey(), userId.toString(), KeyPair.class);
 
         if (key != null) {
-            key.setPrivateKeyAT(encoder.decode(key.getPrivateKeyAT()));
-            key.setPrivateKeyRT(encoder.decode(key.getPrivateKeyRT()));
-            return keyMapper.toDto(key);
+            CompletableFuture<String> privateAT = encoder.decode(key.getPrivateKeyAT());
+            CompletableFuture<String> privateRT = encoder.decode(key.getPrivateKeyRT());
+            CompletableFuture.allOf(privateAT, privateRT).join();
+            try {
+                key.setPrivateKeyAT(privateAT.get());
+                key.setPrivateKeyRT(privateRT.get());
+            } catch (InterruptedException | ExecutionException e) {
+                Thread.currentThread().interrupt();
+                throw new BadCredentialsException("Error while decoding keys", e);
+            }
+            return key;
         } else {
             // Save the key synchronously before returning it
             KeyPair keyPair = generateKeyPair();
@@ -77,43 +81,28 @@ public class KeyService implements IKeyService {
 
     @Override
     public String getUserPublicATKey(UUID userId) {
-        return keyRepository.findPublicKeyATByUserId(userId);
+        return getKeyPairByUser(userId).getPublicKeyAT();
     }
 
     @Override
     public String getUserPublicRTKey(UUID userId) {
-        return keyRepository.findPublicKeyRTByUserId(userId);
-    }
-
-    @Override
-    public String getUserPrivateATKey(UUID userId) {
-        return keyRepository.findPrivateKeyATByUserId(userId);
-    }
-
-    @Override
-    public String getUserPrivateRTKey(UUID userId) {
-        return keyRepository.findPrivateKeyRTByUserId(userId);
+        return getKeyPairByUser(userId).getPublicKeyRT();
     }
 
 
     @Override
     public void save(KeyPair keyPair, UUID userId) {
-        Key key = keyMapper.toEntity(keyPair);
-        key.setPrivateKeyAT(encoder.encode(keyPair.getPrivateKeyAT()));
-        key.setPrivateKeyRT(encoder.encode(keyPair.getPrivateKeyRT()));
-        key.setUser(User.builder().id(userId).build());
-        keyRepository.save(key);
+        asyncKeyService.save(keyPair, userId);
     }
-
 
     @Override
     public void deleteAndSave(KeyPair keyPair, UUID userId) {
-        asyncKeyService.delete(userId);
+        deleteUserKey(userId);
         save(keyPair, userId);
     }
 
     @Override
     public void deleteUserKey(UUID userId) {
-        asyncKeyService.delete(userId);
+        redisService.deleteElementsFromMap(RedisKeyUtil.getUserKeyPairHashKey(), List.of(userId.toString()));
     }
 }

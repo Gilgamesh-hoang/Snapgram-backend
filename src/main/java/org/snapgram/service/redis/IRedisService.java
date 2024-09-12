@@ -14,17 +14,17 @@ public interface IRedisService {
 
     void saveMap(String key, Map<String, Object> map);
 
-    <T> void saveList(String key, List<T> list);
-
-    <T> List<T> getList(String key, int start, int end);
-
-    <T> List<T> getList(String key);
-
     void addElementsToMap(String key, Map<String, Object> map);
 
     void deleteElementsFromMap(String key, List<Object> fields);
 
     <T> T getElementFromMap(String key, String field, Class<T> clazz);
+
+    <T> void saveList(String key, List<T> list);
+
+    <T> List<T> getList(String key, int start, int end);
+
+    <T> List<T> getList(String key);
 
     <T> Set<T> getSet(String key);
 

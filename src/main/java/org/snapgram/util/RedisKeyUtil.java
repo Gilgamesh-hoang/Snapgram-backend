@@ -7,6 +7,13 @@ import java.util.UUID;
 @UtilityClass
 public class RedisKeyUtil {
 
+    public String getBlacklistKey() {
+        return "jwt_blacklist";
+    }
+    public String getUserKeyPairHashKey() {
+        return "asymmetric:keypair:users";
+    }
+
     public String getSearchUserKey(String keyword, int page, int size) {
         return String.format("search:user:%s:page:%d:size:%d", keyword, page, size);
     }
