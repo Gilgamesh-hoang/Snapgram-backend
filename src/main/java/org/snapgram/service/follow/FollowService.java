@@ -59,7 +59,15 @@ public class FollowService implements IFollowService {
 
     @Override
     public List<UserDTO> getFollowersByUser(UUID userId, Pageable pageable) {
-        String redisKey = RedisKeyUtil.getUserFollowersKey(userId, pageable.getPageNumber(), pageable.getPageSize());
+        int page, size;
+        try {
+            page = pageable.getPageNumber();
+            size = pageable.getPageSize();
+        } catch (UnsupportedOperationException e) {
+            // unpaged
+            page = size = -1;
+        }
+        String redisKey = RedisKeyUtil.getUserFollowersKey(userId, page, size);
         List<UserDTO> result = redisService.getList(redisKey);
         if (result != null && !result.isEmpty()) {
             return result;
@@ -70,7 +78,15 @@ public class FollowService implements IFollowService {
 
     @Override
     public List<UserDTO> getFollowingByUser(UUID userId, Pageable pageable) {
-        String redisKey = RedisKeyUtil.getUserFollowingKey(userId, pageable.getPageNumber(), pageable.getPageSize());
+        int page, size;
+        try {
+            page = pageable.getPageNumber();
+            size = pageable.getPageSize();
+        } catch (UnsupportedOperationException e) {
+            // unpaged
+            page = size = -1;
+        }
+        String redisKey = RedisKeyUtil.getUserFollowingKey(userId,  page, size);
         List<UserDTO> result = redisService.getList(redisKey);
         if (result != null && !result.isEmpty()) {
             return result;

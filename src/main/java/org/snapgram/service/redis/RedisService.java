@@ -46,7 +46,7 @@ public class RedisService implements IRedisService {
             return null;
         }
         if (start >= size ) {
-            throw new IllegalArgumentException("Start index is greater than the size of the list");
+            return new ArrayList<>();
         }
         if (end > size) {
             end = (int) size;

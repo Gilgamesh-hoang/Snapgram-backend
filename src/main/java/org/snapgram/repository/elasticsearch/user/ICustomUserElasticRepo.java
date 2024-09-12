@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface ICustomUserElasticRepo {
-    List<UserDocument> findRandomUsers(int limit, List<UUID> exceptIds);
+    Set<UserDocument> findRandomUsers(int limit, List<UUID> exceptIds);
     Set<UserDocument> searchByKeyword(String keyword, Pageable pageable);
+    Set<UserDocument> searchFollow(String keyword, List<UUID> followIds, Pageable pageable);
+
 }

@@ -128,7 +128,7 @@ public class UserController {
         int start = (pageNumber - 1) * pageSize;
         int end = pageNumber * pageSize - 1;
 
-        String redisKey = RedisKeyUtil.getFriendSuggestKey(user.getEmail());
+        String redisKey = RedisKeyUtil.getFriendSuggestKey(user.getId());
 
         // Try to get the list of friend suggestions from Redis
         List<UserDTO> users = redisService.getList(redisKey, start, end);
@@ -139,8 +139,8 @@ public class UserController {
 
             List<UserDTO> finalUsers = new ArrayList<>(users);
             CompletableFuture.runAsync(() -> {
-                redisService.saveList(RedisKeyUtil.getFriendSuggestKey(redisKey), finalUsers);
-                redisService.setTimeout(RedisKeyUtil.getFriendSuggestKey(redisKey), 5, TimeUnit.DAYS);
+                redisService.saveList(redisKey, finalUsers);
+                redisService.setTimeout(redisKey, 5, TimeUnit.DAYS);
             });
 
             // Get the sublist of users based on the pagination parameters
