@@ -17,7 +17,6 @@ import org.snapgram.repository.database.PostRepository;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.tag.ITagService;
 import org.snapgram.service.user.IUserService;
-import org.snapgram.util.RedisKeyUtil;
 import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -31,7 +30,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -115,25 +113,50 @@ public class PostService implements IPostService {
         return postMapper.toDTO(postEntity);
     }
 
+
     @Override
-    public void savePost(UUID postId, Boolean isSaved) {
-        Post post = postRepository.findById(postId).orElse(null);
-        if (post == null) {
-            throw new IllegalArgumentException("Post not found");
+    public void savePost(UUID postId) {
+        boolean isExists = postRepository.existsById(postId);
+        if (!isExists) {
+            throw new ResourceNotFoundException("Post not found");
         }
-        postSaveService.savePost(postId, isSaved);
+        postSaveService.savePost(postId);
     }
 
     @Override
-    public PostMetricDTO likePost(UUID postId, boolean isLiked) {
+    public void unsavedPost(UUID postId) {
+        boolean isExists = postRepository.existsById(postId);
+        if (!isExists) {
+            throw new ResourceNotFoundException("Post not found");
+        }
+        postSaveService.unsavedPost(postId);
+    }
+
+
+    @Override
+    public PostMetricDTO like(UUID postId) {
         Post post = postRepository.findById(postId).orElse(null);
         if (post == null) {
             throw new ResourceNotFoundException("Post not found");
         }
-        if (postLikeService.likePost(postId, isLiked)) {
-            post.setLikeCount(post.getLikeCount() + (isLiked ? 1 : -1));
-            postRepository.save(post);
+        postLikeService.like(postId);
+        post.setLikeCount(postLikeService.countByPost(postId));
+        postRepository.save(post);
+
+        return PostMetricDTO.builder().likeCount(post.getLikeCount())
+                .commentCount(post.getCommentCount())
+                .build();
+    }
+
+    @Override
+    public PostMetricDTO unlike(UUID postId) {
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) {
+            throw new ResourceNotFoundException("Post not found");
         }
+        postLikeService.unlike(postId);
+        post.setLikeCount(postLikeService.countByPost(postId));
+        postRepository.save(post);
         return PostMetricDTO.builder().likeCount(post.getLikeCount())
                 .commentCount(post.getCommentCount())
                 .build();

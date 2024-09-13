@@ -8,7 +8,10 @@ import java.util.UUID;
 
 public interface IPostSaveService {
     boolean isPostSaveByUser(UUID postId, UUID userId);
-    void savePost(UUID postId, boolean isSaved);
-
+    boolean isPostSavedByUser(UUID postId, UUID id);
     List<PostDTO> getSavedPostsByUser(UUID userId, Pageable pageable);
+
+    void savePost(UUID postId);
+
+    void unsavedPost(UUID postId);
 }

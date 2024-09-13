@@ -30,19 +30,28 @@ public class PostLikeService implements IPostLikeService {
 
     @Override
     @Transactional
-    public boolean likePost(UUID postId, boolean isLiked) {
+    public void like(UUID postId) {
         Post post = Post.builder().id(postId).build();
         User user = User.builder().id(UserSecurityHelper.getCurrentUser().getId()).build();
-        if (isLiked) {
-            if (isPostLikedByUser(postId, user.getId())) {
-                return false;
-            }
-            PostLike postLike = new PostLike(post, user);
-            postLikeRepository.save(postLike);
-            return true;
-        } else {
-           int deletedRows = postLikeRepository.deleteByPostAndUser(post, user);
-            return deletedRows > 0;
+        if (isPostLikedByUser(postId, user.getId())) {
+            return;
         }
+        PostLike postLike = new PostLike(post, user);
+        postLikeRepository.save(postLike);
+    }
+
+    @Override
+    @Transactional
+    public void unlike(UUID postId) {
+        Post post = Post.builder().id(postId).build();
+        User user = User.builder().id(UserSecurityHelper.getCurrentUser().getId()).build();
+        postLikeRepository.deleteByPostAndUser(post, user);
+    }
+
+    @Override
+    public int countByPost(UUID postId) {
+        Post post = Post.builder().id(postId).build();
+        Example<PostLike> example = Example.of(new PostLike(post, null));
+        return (int) postLikeRepository.count(example);
     }
 }

@@ -36,21 +36,6 @@ public class PostSaveService implements IPostSaveService {
     }
 
     @Override
-    @Transactional
-    public void savePost(UUID postId, boolean isSaved) {
-        CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
-        if (isSaved) {
-            Saved saved = Saved.builder()
-                    .post(Post.builder().id(postId).build())
-                    .user(User.builder().id(currentUser.getId()).build())
-                    .build();
-            postSaveRepository.save(saved);
-        } else {
-            postSaveRepository.deleteByPostIdAndUserId(postId, currentUser.getId());
-        }
-    }
-
-    @Override
     public List<PostDTO> getSavedPostsByUser(UUID userId, Pageable pageable) {
         Example<Saved> example = Example.of(Saved.builder().user(User.builder().id(userId).build()).build());
         List<Saved> savedPosts = postSaveRepository.findAll(example, pageable).getContent();
@@ -61,5 +46,33 @@ public class PostSaveService implements IPostSaveService {
             post.setLiked(isLiked);
         });
         return results;
+    }
+
+    @Override
+    public void savePost(UUID postId) {
+        CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
+        if (isPostSavedByUser(postId, currentUser.getId())) {
+            return;
+        }
+        Saved saved = Saved.builder()
+                .post(Post.builder().id(postId).build())
+                .user(User.builder().id(currentUser.getId()).build())
+                .build();
+        postSaveRepository.save(saved);
+    }
+
+    @Override
+    public boolean isPostSavedByUser(UUID postId, UUID id) {
+        User user = User.builder().id(id).build();
+        Post post = Post.builder().id(postId).build();
+        Example<Saved> example = Example.of(Saved.builder().post(post).user(user).build());
+        return postSaveRepository.exists(example);
+    }
+
+    @Override
+    @Transactional
+    public void unsavedPost(UUID postId) {
+        CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
+        postSaveRepository.deleteByPostIdAndUserId(postId, currentUser.getId());
     }
 }

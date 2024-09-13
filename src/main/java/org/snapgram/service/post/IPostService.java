@@ -22,7 +22,11 @@ public interface IPostService {
 
     PostDTO updatePost(PostRequest request, MultipartFile[] media);
 
-    void savePost(UUID postId, Boolean isSaved);
+    void savePost(UUID postId);
+    void unsavedPost(UUID postId);
 
-    PostMetricDTO likePost(UUID postId, boolean isLiked);
+
+    PostMetricDTO like(UUID postId);
+
+    PostMetricDTO unlike(UUID postId);
 }

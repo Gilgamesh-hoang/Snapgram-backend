@@ -11,13 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
 import org.snapgram.dto.CustomUserSecurity;
-import org.snapgram.dto.request.LikePostRequest;
 import org.snapgram.dto.request.PostRequest;
-import org.snapgram.dto.request.SavePostRequest;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.PostMetricDTO;
 import org.snapgram.dto.response.ResponseObject;
-import org.snapgram.service.post.IPostLikeService;
 import org.snapgram.service.post.IPostSaveService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.validation.media.ValidMedia;
@@ -43,9 +40,14 @@ public class PostController {
     ObjectMapper objectMapper;
     IPostSaveService postSaveService;
 
-    @PutMapping("/liked")
-    public ResponseObject<PostMetricDTO> likePost(@RequestBody @Valid LikePostRequest request) {
-        PostMetricDTO response = postService.likePost(request.getPostId(), request.getIsLiked());
+    @PostMapping("/{postId}/like")
+    public ResponseObject<PostMetricDTO> likePost(@PathVariable("postId") @NotNull UUID postId) {
+        PostMetricDTO response = postService.like(postId);
+        return new ResponseObject<>(HttpStatus.OK,response);
+    }
+    @DeleteMapping("/{postId}/unlike")
+    public ResponseObject<PostMetricDTO> unlikePost(@PathVariable("postId") @NotNull UUID postId) {
+        PostMetricDTO response = postService.unlike(postId);
         return new ResponseObject<>(HttpStatus.OK,response);
     }
 
@@ -62,9 +64,14 @@ public class PostController {
         return new ResponseObject<>(HttpStatus.OK, response);
     }
 
-    @PutMapping("/saved")
-    public ResponseObject<Void> savePost(@RequestBody @Valid SavePostRequest request) {
-        postService.savePost(request.getPostId(), request.getIsSaved());
+    @PostMapping("/{postId}/save")
+    public ResponseObject<Void> savePost(@PathVariable("postId") @NotNull UUID postId) {
+        postService.savePost(postId);
+        return new ResponseObject<>(HttpStatus.OK);
+    }
+    @DeleteMapping("/{postId}/unsaved")
+    public ResponseObject<Void> unsavedPost(@PathVariable("postId") @NotNull UUID postId) {
+        postService.unsavedPost(postId);
         return new ResponseObject<>(HttpStatus.OK);
     }
 
