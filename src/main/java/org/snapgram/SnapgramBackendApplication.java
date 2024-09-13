@@ -1,8 +1,5 @@
 package org.snapgram;
 
-import org.snapgram.repository.database.UserRepository;
-import org.snapgram.service.user.IUserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,13 +16,10 @@ public class SnapgramBackendApplication {
         SpringApplication.run(SnapgramBackendApplication.class, args);
     }
 
-    @Autowired
-    IUserService userService;
-    @Autowired
-    UserRepository userRepository;
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
+
         };
     }
 }

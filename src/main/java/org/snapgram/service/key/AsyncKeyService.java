@@ -7,7 +7,7 @@ import org.snapgram.dto.KeyPair;
 import org.snapgram.exception.KeyGenerationException;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.RedisKeyUtil;
-import org.snapgram.util.TripleDESEncoder;
+import org.snapgram.util.AESEncoder;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
@@ -25,7 +25,7 @@ import java.util.concurrent.ExecutionException;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AsyncKeyService {
     IRedisService redisService;
-    TripleDESEncoder encoder;
+    AESEncoder encoder;
 
     @Async
     public CompletableFuture<Void> save(KeyPair keyPair, UUID userId) {
@@ -40,7 +40,7 @@ public class AsyncKeyService {
             key.setPrivateKeyRT(privateRT.get());
             HashMap<String, Object> map = new HashMap<>();
             map.put(userId.toString(), key);
-            redisService.addElementsToMap(RedisKeyUtil.getUserKeyPairHashKey(), map);
+            redisService.addElementsToMap(RedisKeyUtil.ASYM_KEYPAIR, map);
             return CompletableFuture.completedFuture(null);
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();

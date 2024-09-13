@@ -34,7 +34,7 @@ public class AsyncTokenService {
         String accessId = jwtHelper.getJidFromAccessToken(accessToken);
         HashMap<String, Object> map = new HashMap<>();
         map.put(accessId, accessObj);
-        redisService.addElementsToMap(RedisKeyUtil.getBlacklistKey(), map);
+        redisService.addElementsToMap(RedisKeyUtil.JWT_BLACKLIST, map);
         return CompletableFuture.completedFuture(null);
     }
 
@@ -46,7 +46,7 @@ public class AsyncTokenService {
         String refreshId = jwtHelper.getJidFromRefreshToken(refreshToken);
         HashMap<String, Object> map = new HashMap<>();
         map.put(refreshId, refreshObj);
-        redisService.addElementsToMap(RedisKeyUtil.getBlacklistKey(), map);
+        redisService.addElementsToMap(RedisKeyUtil.JWT_BLACKLIST, map);
         return CompletableFuture.completedFuture(null);
     }
 }

@@ -36,14 +36,14 @@ public class TokenService implements ITokenService {
     @Override
     public void removeExpiredTokens() {
         List<Object> tokenExpired = new ArrayList<>();
-        redisService.getMap(RedisKeyUtil.getBlacklistKey()).forEach((key, value) -> {
+        redisService.getMap(RedisKeyUtil.JWT_BLACKLIST).forEach((key, value) -> {
             TokenDTO token = (TokenDTO) value;
             // check token expired
             if (token.getExpiredDate().before(new Date())) {
                 tokenExpired.add(key);
             }
         });
-        redisService.deleteElementsFromMap(RedisKeyUtil.getBlacklistKey(), tokenExpired);
+        redisService.deleteElementsFromMap(RedisKeyUtil.JWT_BLACKLIST, tokenExpired);
     }
 
 
@@ -67,7 +67,7 @@ public class TokenService implements ITokenService {
                 tokenMap.put(token.getRefreshTokenId().toString(), refreshObj);
             }
         });
-        redisService.addElementsToMap(RedisKeyUtil.getBlacklistKey(), tokenMap);
+        redisService.addElementsToMap(RedisKeyUtil.JWT_BLACKLIST, tokenMap);
         tokenRepository.deleteAllByRefreshTokenIdIn(tokens.stream().map(Token::getRefreshTokenId).toList());
         return CompletableFuture.completedFuture(null);
     }
@@ -90,7 +90,7 @@ public class TokenService implements ITokenService {
                 temp.add(token);
             }
         });
-        redisService.addElementsToMap(RedisKeyUtil.getBlacklistKey(), tokenMap);
+        redisService.addElementsToMap(RedisKeyUtil.JWT_BLACKLIST, tokenMap);
         tokenRepository.deleteAllByRefreshTokenIdIn(temp.stream().map(Token::getRefreshTokenId).toList());
     }
 
@@ -109,12 +109,12 @@ public class TokenService implements ITokenService {
         } else {
             jid = jwtHelper.getJidFromAccessToken(token);
         }
-        return redisService.getElementFromMap(RedisKeyUtil.getBlacklistKey(), jid, TokenDTO.class);
+        return redisService.getElementFromMap(RedisKeyUtil.JWT_BLACKLIST, jid, TokenDTO.class);
     }
 
     @Override
     public TokenDTO getTokenFromBlacklist(String jid) {
-        return redisService.getElementFromMap(RedisKeyUtil.getBlacklistKey(), jid, TokenDTO.class);
+        return redisService.getElementFromMap(RedisKeyUtil.JWT_BLACKLIST, jid, TokenDTO.class);
     }
 
     @Override
@@ -138,7 +138,7 @@ public class TokenService implements ITokenService {
                         .build();
                 HashMap<String, Object> map = new HashMap<>();
                 map.put(token.getRefreshTokenId().toString(), refreshObj);
-                redisService.addElementsToMap(RedisKeyUtil.getBlacklistKey(), map);
+                redisService.addElementsToMap(RedisKeyUtil.JWT_BLACKLIST, map);
             }
             tokenRepository.delete(token);
         }

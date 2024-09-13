@@ -8,7 +8,7 @@ import org.snapgram.dto.KeyPair;
 import org.snapgram.exception.KeyGenerationException;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.RedisKeyUtil;
-import org.snapgram.util.TripleDESEncoder;
+import org.snapgram.util.AESEncoder;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +22,7 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class KeyService implements IKeyService {
-    TripleDESEncoder encoder;
+    AESEncoder encoder;
     AsyncKeyService asyncKeyService;
     IRedisService redisService;
 
@@ -57,7 +57,7 @@ public class KeyService implements IKeyService {
 
     @Override
     public KeyPair getKeyPairByUser(UUID userId) {
-        KeyPair key = redisService.getElementFromMap(RedisKeyUtil.getUserKeyPairHashKey(), userId.toString(), KeyPair.class);
+        KeyPair key = redisService.getElementFromMap(RedisKeyUtil.ASYM_KEYPAIR, userId.toString(), KeyPair.class);
 
         if (key != null) {
             CompletableFuture<String> privateAT = encoder.decode(key.getPrivateKeyAT());
@@ -103,6 +103,6 @@ public class KeyService implements IKeyService {
 
     @Override
     public void deleteUserKey(UUID userId) {
-        redisService.deleteElementsFromMap(RedisKeyUtil.getUserKeyPairHashKey(), List.of(userId.toString()));
+        redisService.deleteElementsFromMap(RedisKeyUtil.ASYM_KEYPAIR, List.of(userId.toString()));
     }
 }
