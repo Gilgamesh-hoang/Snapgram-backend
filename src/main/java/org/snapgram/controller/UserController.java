@@ -123,7 +123,6 @@ public class UserController {
             @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
             @RequestParam(value = "pageSize", defaultValue = "15") @Min(0) Integer pageSize
     ) {
-
         // Calculate the start and end indices for pagination
         int start = (pageNumber - 1) * pageSize;
         int end = pageNumber * pageSize - 1;

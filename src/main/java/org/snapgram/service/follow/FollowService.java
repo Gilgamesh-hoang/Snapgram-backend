@@ -14,6 +14,7 @@ import org.snapgram.util.RedisKeyUtil;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,19 +37,26 @@ public class FollowService implements IFollowService {
     }
 
     private Example<Follow> createFollowerExample(UUID userId) {
-        User user = createActiveUser();
-        user.setId(userId);
-        return Example.of(Follow.builder().followee(user).follower(createActiveUser()).build());
+        return Example.of(Follow.builder()
+                .followee(createActiveUser(userId))
+                .follower(createActiveUser())
+                .build());
     }
 
     private Example<Follow> createFollowingExample(UUID userId) {
-        User user = createActiveUser();
-        user.setId(userId);
-        return Example.of(Follow.builder().follower(user).followee(createActiveUser()).build());
+        return Example.of(Follow.builder()
+                .follower(createActiveUser(userId))
+                .followee(createActiveUser())
+                .build());
     }
 
     private User createActiveUser() {
         return User.builder().isActive(true).isDeleted(false).build();
+    }
+    private User createActiveUser(UUID userId) {
+        User user = createActiveUser();
+        user.setId(userId);
+        return user;
     }
 
     @Override
@@ -86,13 +94,55 @@ public class FollowService implements IFollowService {
             // unpaged
             page = size = -1;
         }
-        String redisKey = RedisKeyUtil.getUserFollowingKey(userId,  page, size);
+        String redisKey = RedisKeyUtil.getUserFollowingKey(userId, page, size);
         List<UserDTO> result = redisService.getList(redisKey);
         if (result != null && !result.isEmpty()) {
             return result;
         }
         Example<Follow> example = createFollowingExample(userId);
         return getAndCacheFollowData(example, pageable, redisKey, Follow::getFollowee);
+    }
+
+    @Override
+    public void followUser(UUID userId, UUID followeeId) {
+        Follow follow = Follow.builder()
+                .follower(User.builder().id(userId).build())
+                .followee(createActiveUser(followeeId))
+                .build();
+        if (followRepository.exists(Example.of(follow))) {
+            return;
+        }
+        followRepository.save(follow);
+    }
+
+    @Override
+    @Transactional
+    public void unfollowUser(UUID userId, UUID followeeId) {
+        Follow follow = Follow.builder()
+                .follower(User.builder().id(userId).build())
+                .followee(User.builder().id(followeeId).build())
+                .build();
+        follow = followRepository.findOne(Example.of(follow)).orElse(null);
+        if (follow != null) {
+            followRepository.delete(follow);
+        }
+    }
+
+    @Override
+    public void removeFollower(UUID userId, UUID followerId) {
+        Follow follow = Follow.builder()
+                .follower(User.builder().id(followerId).build())
+                .followee(User.builder().id(userId).build())
+                .build();
+        follow = followRepository.findOne(Example.of(follow)).orElse(null);
+        if (follow != null) {
+            followRepository.delete(follow);
+        }
+    }
+
+    @Override
+    public List<UUID> getFollowedUserIds(UUID currentUserId, List<UUID> userIds) {
+        return followRepository.findByFollowerIdAndFolloweeIdIn(currentUserId, userIds);
     }
 
     private List<UserDTO> getAndCacheFollowData(Example<Follow> example, Pageable pageable, String redisKey, Function<Follow, User> userMapperFunction) {

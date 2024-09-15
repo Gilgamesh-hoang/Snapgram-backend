@@ -12,4 +12,11 @@ public interface IFollowService {
 
     List<UserDTO> getFollowersByUser(UUID userId, Pageable pageable);
     List<UserDTO> getFollowingByUser(UUID userId, Pageable pageable);
+
+    void followUser(UUID userId, UUID followeeId);
+    void unfollowUser(UUID userId, UUID followeeId);
+
+    void removeFollower(UUID userId, UUID followerId);
+
+    List<UUID> getFollowedUserIds(UUID currentUserId, List<UUID> userIds);
 }
