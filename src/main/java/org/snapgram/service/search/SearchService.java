@@ -83,9 +83,9 @@ public class SearchService implements ISearchService {
         CompletableFuture.runAsync(() -> {
             redisService.saveSet(redisKey, results);
             if (results.isEmpty()) {
-                redisService.setTimeout(redisKey, 5, TimeUnit.MINUTES);
+                redisService.setTTL(redisKey, 5, TimeUnit.MINUTES);
             } else {
-                redisService.setTimeout(redisKey, 1, TimeUnit.HOURS);
+                redisService.setTTL(redisKey, 1, TimeUnit.HOURS);
             }
         });
 

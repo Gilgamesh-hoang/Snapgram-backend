@@ -30,5 +30,7 @@ public interface IRedisService {
 
     <T> void saveSet(String key, Set<T> set);
 
-    void setTimeout(String key, long timeout, TimeUnit timeUnit);
+    void setTTL(String key, long timeout, TimeUnit timeUnit);
+
+    void deleteByPrefix(String prefix);
 }

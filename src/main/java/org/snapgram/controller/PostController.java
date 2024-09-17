@@ -3,6 +3,7 @@ package org.snapgram.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -43,12 +44,13 @@ public class PostController {
     @PostMapping("/{postId}/like")
     public ResponseObject<PostMetricDTO> likePost(@PathVariable("postId") @NotNull UUID postId) {
         PostMetricDTO response = postService.like(postId);
-        return new ResponseObject<>(HttpStatus.OK,response);
+        return new ResponseObject<>(HttpStatus.OK, response);
     }
+
     @DeleteMapping("/{postId}/unlike")
     public ResponseObject<PostMetricDTO> unlikePost(@PathVariable("postId") @NotNull UUID postId) {
         PostMetricDTO response = postService.unlike(postId);
-        return new ResponseObject<>(HttpStatus.OK,response);
+        return new ResponseObject<>(HttpStatus.OK, response);
     }
 
 
@@ -69,6 +71,7 @@ public class PostController {
         postService.savePost(postId);
         return new ResponseObject<>(HttpStatus.OK);
     }
+
     @DeleteMapping("/{postId}/unsaved")
     public ResponseObject<Void> unsavedPost(@PathVariable("postId") @NotNull UUID postId) {
         postService.unsavedPost(postId);
@@ -84,7 +87,7 @@ public class PostController {
     @GetMapping("/user")
     public ResponseObject<List<PostDTO>> getPostsByUser(@RequestParam("nickname") @NotBlank String nickname,
                                                         @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
-                                                        @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) Integer pageSize) {
+                                                        @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) @Max(50) Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
         nickname = nickname.trim();
         return new ResponseObject<>(HttpStatus.OK, postService.getPostsByUser(nickname, pageable));

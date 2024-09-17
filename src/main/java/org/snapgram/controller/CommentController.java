@@ -1,10 +1,14 @@
 package org.snapgram.controller;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.dto.CustomUserSecurity;
+import org.snapgram.dto.request.CommentRequest;
 import org.snapgram.dto.response.CommentDTO;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.service.comment.ICommentService;
@@ -12,11 +16,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,11 +31,18 @@ import java.util.UUID;
 public class CommentController {
     ICommentService commentService;
 
+    @PostMapping
+    public ResponseObject<CommentDTO> createComment(@AuthenticationPrincipal CustomUserSecurity currentUser,
+                                                    @RequestBody @Valid CommentRequest request) {
+        CommentDTO comment = commentService.createComment(currentUser.getId(), request);
+        return new ResponseObject<>(HttpStatus.CREATED, comment);
+    }
+
     @GetMapping("/posts")
     public ResponseObject<List<CommentDTO>> getCommentsByPost(
             @RequestParam("postId") @NotNull UUID postId,
             @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "30") @Min(0) Integer pageSize
+            @RequestParam(value = "pageSize", defaultValue = "30") @Min(0) @Max(50) Integer pageSize
     ) {
         Sort sort = Sort.by(Sort.Order.desc("createdAt"));
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize).withSort(sort);

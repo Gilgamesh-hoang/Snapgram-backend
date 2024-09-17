@@ -29,4 +29,8 @@ public interface IPostService {
     PostMetricDTO like(UUID postId);
 
     PostMetricDTO unlike(UUID postId);
+
+    boolean isExist(UUID postId);
+
+    void updateCommentCount(UUID postId, int count);
 }

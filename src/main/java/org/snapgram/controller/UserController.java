@@ -5,10 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -19,9 +16,9 @@ import org.snapgram.dto.request.EmailRequest;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.JwtResponse;
-import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.dto.response.UserDTO;
+import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.service.jwt.JwtService;
 import org.snapgram.service.key.IKeyService;
@@ -88,7 +85,7 @@ public class UserController {
         CompletableFuture<String> refreshTokenFuture = jwtService.generateRefreshToken(user.getUsername(), keyPair.getPrivateKeyRT());
         CompletableFuture.allOf(accessTokenFuture, refreshTokenFuture).join();
         // Save the new refresh token in the database, associated with the user
-        CompletableFuture.runAsync(()-> keyService.deleteAndSave(keyPair, user.getId()));
+        CompletableFuture.runAsync(() -> keyService.deleteAndSave(keyPair, user.getId()));
         String refreshToken = refreshTokenFuture.get();
         tokenService.storeRefreshToken(refreshToken, user.getId());
 
@@ -121,7 +118,7 @@ public class UserController {
     public ResponseObject<List<UserDTO>> friendSuggestion(
             @AuthenticationPrincipal CustomUserSecurity user,
             @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "15") @Min(0) Integer pageSize
+            @RequestParam(value = "pageSize", defaultValue = "15") @Min(0) @Max(50) Integer pageSize
     ) {
         // Calculate the start and end indices for pagination
         int start = (pageNumber - 1) * pageSize;
@@ -139,7 +136,7 @@ public class UserController {
             List<UserDTO> finalUsers = new ArrayList<>(users);
             CompletableFuture.runAsync(() -> {
                 redisService.saveList(redisKey, finalUsers);
-                redisService.setTimeout(redisKey, 5, TimeUnit.DAYS);
+                redisService.setTTL(redisKey, 5, TimeUnit.DAYS);
             });
 
             // Get the sublist of users based on the pagination parameters

@@ -1,5 +1,6 @@
 package org.snapgram.controller;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -34,7 +35,7 @@ public class SearchController {
             @RequestParam("userId") @NotNull UUID userId,
             @RequestParam("keyword") @NotBlank String keyword,
             @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) Integer pageSize) {
+            @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) @Max(50) Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
         keyword = keyword.trim().toLowerCase();
         Set<UserDTO> users = searchService.searchFollowersByUser(userId, keyword, pageable);
@@ -45,7 +46,7 @@ public class SearchController {
             @RequestParam("userId") @NotNull UUID userId,
             @RequestParam("keyword") @NotBlank String keyword,
             @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) Integer pageSize) {
+            @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) @Max(50) Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
         keyword = keyword.trim().toLowerCase();
         Set<UserDTO> users = searchService.searchFollowingByUser(userId, keyword, pageable);
@@ -55,7 +56,7 @@ public class SearchController {
     @GetMapping("/users")
     public ResponseObject<Set<UserDTO>> searchUser(@RequestParam("keyword") @NotBlank String keyword,
                                                    @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
-                                                   @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) Integer pageSize) {
+                                                   @RequestParam(value = "pageSize", defaultValue = "10") @Min(0)@Max(50)  Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
         keyword = keyword.trim().toLowerCase();
         Set<UserDTO> users = searchService.searchByKeyword(keyword, pageable);

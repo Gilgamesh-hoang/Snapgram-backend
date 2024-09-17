@@ -163,10 +163,21 @@ public class PostService implements IPostService {
     }
 
     @Override
+    public boolean isExist(UUID postId) {
+        Example<Post> example = Example.of(Post.builder().id(postId).isDeleted(false).build());
+        return postRepository.exists(example);
+    }
+
+    @Override
+    @Transactional
+    public void updateCommentCount(UUID postId, int count) {
+        postRepository.updateCommentCount(postId, count);
+    }
+
+    @Override
     public int countByUser(UUID userId) {
         Example<Post> example = Example.of(
-                Post.builder().user(User.builder().id(userId).build())
-                        .isDeleted(false).build()
+                Post.builder().user(User.builder().id(userId).build()).isDeleted(false).build()
         );
         return (int) postRepository.count(example);
     }
@@ -186,7 +197,6 @@ public class PostService implements IPostService {
                         User.builder().id(userService.findByNickname(nickname).getId()).isDeleted(false).isActive(true).build()
                 ).isDeleted(false).build()
         );
-
         Page<Post> posts = postRepository.findAll(example, pageable);
         // save to redis
         results = postMapper.toDTOs(posts.getContent());

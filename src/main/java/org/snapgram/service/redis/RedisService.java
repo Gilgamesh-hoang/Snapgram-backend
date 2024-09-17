@@ -55,6 +55,11 @@ public class RedisService implements IRedisService {
     }
     @Override
     public <T> List<T> getList(String key) {
+        // check key is exist
+        if (!redisTemplate.hasKey(key)) {
+            return null;
+        }
+
         return (List<T>) redisTemplate.opsForList().range(key, 0, -1);
     }
 
@@ -101,8 +106,16 @@ public class RedisService implements IRedisService {
     }
 
     @Override
-    public void setTimeout(String key, long timeout, TimeUnit timeUnit) {
+    public void setTTL(String key, long timeout, TimeUnit timeUnit) {
         redisTemplate.expire(key, timeout, timeUnit);
+    }
+
+    @Override
+    public void deleteByPrefix(String prefix) {
+        Set<String> keys = redisTemplate.keys(prefix + "*");
+        if (keys != null && !keys.isEmpty()) {
+            redisTemplate.delete(keys);
+        }
     }
 
     @Override

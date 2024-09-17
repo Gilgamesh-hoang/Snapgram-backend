@@ -155,7 +155,7 @@ public class FollowService implements IFollowService {
 
         // Cache the result in Redis
         redisService.saveList(redisKey, result);
-        redisService.setTimeout(redisKey, 1, result.isEmpty() ? TimeUnit.MINUTES : TimeUnit.DAYS);
+        redisService.setTTL(redisKey, 1, result.isEmpty() ? TimeUnit.MINUTES : TimeUnit.DAYS);
         return result;
     }
 

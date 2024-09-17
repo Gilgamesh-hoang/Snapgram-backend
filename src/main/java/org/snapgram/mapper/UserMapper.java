@@ -35,12 +35,8 @@ public interface UserMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "nickname", ignore = true)
     @Mapping(target = "password", ignore = true)
-//    @Mapping(target = "userInfo.bio", ignore = true)
-//    @Mapping(target = "userInfo.gender", ignore = true)
-//    @Mapping(target = "userInfo.activeCode", ignore = true)
     @Mapping(target = "isActive", ignore = true)
     @Mapping(target = "isDeleted", ignore = true)
-//    @Mapping(target = "createdAt", ignore = true)
     User toEntity(GooglePojo googlePojo);
 
 
@@ -60,11 +56,8 @@ public interface UserMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "avatarUrl", ignore = true)
-//    @Mapping(target = "bio", ignore = true)
-//    @Mapping(target = "activeCode", ignore = true)
     @Mapping(target = "isActive", ignore = true)
     @Mapping(target = "isDeleted", ignore = true)
-//    @Mapping(target = "createdAt", ignore = true)
     User toEntity(SignupRequest request);
 
     @Mapping(target = "id", ignore = true) // Ignore id if it's not supposed to be updated
@@ -73,5 +66,6 @@ public interface UserMapper {
     void updateUserFromProfile(ProfileRequest request, @MappingTarget User user);
 
     CreatorDTO toCreatorDTO(User user);
+    CreatorDTO toCreatorDTO(UserDTO user);
 
 }

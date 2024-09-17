@@ -1,5 +1,6 @@
 package org.snapgram.controller;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -75,7 +76,7 @@ public class FollowController {
     public ResponseObject<List<UserDTO>> getFollowers(
             @PathVariable("userId") @NotNull UUID userId,
             @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "15") @Min(0) Integer pageSize
+            @RequestParam(value = "pageSize", defaultValue = "15") @Min(0) @Max(50) Integer pageSize
     ) {
         Sort sort = Sort.by(Sort.Order.desc("createdAt"));
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize).withSort(sort);
@@ -87,7 +88,7 @@ public class FollowController {
     public ResponseObject<List<UserDTO>> getFollowing(
             @PathVariable("userId") @NotNull UUID userId,
             @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "15") @Min(0) Integer pageSize
+            @RequestParam(value = "pageSize", defaultValue = "15") @Min(0) @Max(50) Integer pageSize
     ) {
         Sort sort = Sort.by(Sort.Order.desc("createdAt"));
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize).withSort(sort);
