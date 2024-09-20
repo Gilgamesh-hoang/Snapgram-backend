@@ -17,8 +17,9 @@ public class CommentDTO implements Serializable {
     private UUID id;
     private CreatorDTO creator;
     private String content;
-    private CommentDTO parentComment;
+    private UUID parentCommentId;
     private Timestamp createdAt;
     private Integer likeCount = 0;
-
+    private Integer level;
+    private int replyCount;
 }

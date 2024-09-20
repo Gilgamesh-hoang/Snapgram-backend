@@ -11,6 +11,7 @@ import java.util.List;
 public interface CommentMapper {
 
     @Mapping(source = "user", target = "creator")
+    @Mapping(source = "parentComment.id", target = "parentCommentId")
     CommentDTO toDTO(Comment comment);
 
     List<CommentDTO> toDTOs(List<Comment> comments);

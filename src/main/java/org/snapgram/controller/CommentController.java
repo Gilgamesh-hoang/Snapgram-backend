@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.CommentRequest;
+import org.snapgram.dto.request.ReplyCommentRequest;
 import org.snapgram.dto.response.CommentDTO;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.service.comment.ICommentService;
@@ -38,6 +39,13 @@ public class CommentController {
         return new ResponseObject<>(HttpStatus.CREATED, comment);
     }
 
+    @PostMapping("/reply")
+    public ResponseObject<CommentDTO> replyComment(@AuthenticationPrincipal CustomUserSecurity currentUser,
+                                                   @RequestBody @Valid ReplyCommentRequest request) {
+        CommentDTO comment = commentService.createComment(currentUser.getId(), request);
+        return new ResponseObject<>(HttpStatus.CREATED, comment);
+    }
+
     @GetMapping("/posts")
     public ResponseObject<List<CommentDTO>> getCommentsByPost(
             @RequestParam("postId") @NotNull UUID postId,
@@ -47,6 +55,18 @@ public class CommentController {
         Sort sort = Sort.by(Sort.Order.desc("createdAt"));
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize).withSort(sort);
         List<CommentDTO> comments = commentService.getCommentsByPost(postId, pageable);
+        return new ResponseObject<>(HttpStatus.OK, comments);
+    }
+
+    @GetMapping("/comment")
+    public ResponseObject<List<CommentDTO>> getRepliesByComment(
+            @RequestParam("commentId") @NotNull UUID commentId,
+            @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = "30") @Min(0) @Max(50) Integer pageSize
+    ) {
+        Sort sort = Sort.by(Sort.Order.desc("createdAt"));
+        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize).withSort(sort);
+        List<CommentDTO> comments = commentService.getRepliesByComment(commentId, pageable);
         return new ResponseObject<>(HttpStatus.OK, comments);
     }
 }

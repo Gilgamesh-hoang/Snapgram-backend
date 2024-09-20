@@ -57,4 +57,10 @@ public class Comment {
     @Column(name = "like_count", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Integer likeCount = 0;
 
+    @Column(name = "level", columnDefinition = "TINYINT(1) DEFAULT 0")
+    private Integer level;
+
+    @Column(name = "replyCount", columnDefinition = "TINYINT(1) DEFAULT 0")
+    private Integer replyCount;
+
 }

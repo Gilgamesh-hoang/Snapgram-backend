@@ -1,7 +1,7 @@
 package org.snapgram.service.comment;
 
-import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.CommentRequest;
+import org.snapgram.dto.request.ReplyCommentRequest;
 import org.snapgram.dto.response.CommentDTO;
 import org.springframework.data.domain.Pageable;
 
@@ -12,4 +12,10 @@ public interface ICommentService {
     List<CommentDTO> getCommentsByPost(UUID postId, Pageable pageable);
 
     CommentDTO createComment(UUID currentUser, CommentRequest request);
+
+    CommentDTO createComment(UUID id, ReplyCommentRequest request);
+
+    void updateReplyCount(UUID commentId);
+
+    List<CommentDTO> getRepliesByComment(UUID commentId, Pageable pageable);
 }
