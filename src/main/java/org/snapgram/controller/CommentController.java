@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.CommentRequest;
+import org.snapgram.dto.request.EditCommentRequest;
 import org.snapgram.dto.request.ReplyCommentRequest;
 import org.snapgram.dto.response.CommentDTO;
 import org.snapgram.dto.response.ResponseObject;
@@ -44,6 +45,21 @@ public class CommentController {
                                                    @RequestBody @Valid ReplyCommentRequest request) {
         CommentDTO comment = commentService.createComment(currentUser.getId(), request);
         return new ResponseObject<>(HttpStatus.CREATED, comment);
+    }
+
+    @PutMapping("/{commentId}")
+    public ResponseObject<CommentDTO> editComment(@AuthenticationPrincipal CustomUserSecurity currentUser,
+                                                  @PathVariable("commentId") @NotNull UUID commentId,
+                                                  @RequestBody @NotNull EditCommentRequest request) {
+        CommentDTO comment = commentService.editComment(currentUser.getId(), commentId, request.getContent());
+        return new ResponseObject<>(HttpStatus.OK, comment);
+    }
+
+    @DeleteMapping("/{commentId}")
+    public ResponseObject<Integer> deleteComment(@AuthenticationPrincipal CustomUserSecurity currentUser,
+                                                    @PathVariable("commentId") @NotNull UUID commentId) {
+        int numberCommentDeleted = commentService.deleteComment(currentUser.getId(), commentId);
+        return new ResponseObject<>(HttpStatus.OK, numberCommentDeleted);
     }
 
     @GetMapping("/posts")

@@ -71,6 +71,63 @@ public class CommentService implements ICommentService {
     }
 
     @Override
+    public CommentDTO editComment(UUID currentUserId, UUID commentId, String content) {
+        Example<Comment> example = Example.of(Comment.builder()
+                .id(commentId)
+                .user(User.builder().id(currentUserId).build())
+                .isDeleted(false)
+                .build());
+        // Find the comment in the repository, throw an exception if not found
+        Comment comment = commentRepository.findOne(example).orElseThrow(
+                () -> new ResourceNotFoundException("Comment not found"));
+        // Set the new content of the comment
+        comment.setContent(content);
+        commentRepository.save(comment);
+
+        // Create a Redis key for the post comments
+        String redisKey = RedisKeyUtil.getPostCommentsKey(comment.getPost().getId(), 0, 0);
+        // Delete the Redis cache for the post comments
+        redisService.deleteByPrefix(redisKey.substring(0, redisKey.indexOf("page")));
+
+        return commentMapper.toDTO(comment);
+    }
+
+    @Override
+    public int deleteComment(UUID currentUserId, UUID commentId) {
+        Example<Comment> example = Example.of(Comment.builder()
+                .id(commentId)
+                .isDeleted(false)
+                .build());
+        // Find the comment in the repository, throw an exception if not found
+        Comment comment = commentRepository.findOne(example).orElseThrow(
+                () -> new ResourceNotFoundException("Comment not found"));
+
+        // Get the ID of the user who created the comment
+        UUID creatorCommentId = comment.getUser().getId();
+        Post post = comment.getPost();
+
+        // Check if the current user is the creator of the comment or the post, throw an exception if not
+        if (!currentUserId.equals(creatorCommentId) && !currentUserId.equals(post.getUser().getId())) {
+            throw new IllegalArgumentException("You are not allowed to delete this comment");
+        }
+        // Mark the comment as deleted
+        comment.setIsDeleted(true);
+        commentRepository.save(comment);
+
+        // Find all child comments of the comment
+        List<Comment> commentChild = commentRepository.findByParentCommentId(commentId);
+        // Mark all child comments as deleted
+        commentChild.forEach(c -> c.setIsDeleted(true));
+        commentRepository.saveAll(commentChild);
+
+        // Handle asynchronous comment creation for the post and the parent comment
+        handleAsyncCommentCreation(post.getId(), comment.getParentComment() != null ? comment.getParentComment().getId() : null);
+
+        // Return the total number of deleted comments (the comment itself plus all its child comments)
+        return commentChild.size() + 1;
+    }
+
+    @Override
     public void updateReplyCount(UUID commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
@@ -99,13 +156,11 @@ public class CommentService implements ICommentService {
 
     @Override
     public CommentDTO createComment(UUID currentUserId, ReplyCommentRequest request) {
-        UUID postId = request.getPostId();
-
-        validatePostExists(postId);
-
         Comment parentComment = validateParentComment(request.getParentCommentId());
+        UUID postId = parentComment.getPost().getId();
+        Comment comment = buildComment(postId, currentUserId, request.getContent(), 1,
+                parentComment.getId());
 
-        Comment comment = buildComment(postId, currentUserId, request.getContent(), 1, parentComment.getId());
         commentRepository.saveAndFlush(comment);
 
         CompletableFuture.runAsync(() -> handleAsyncCommentCreation(postId, parentComment.getId()));
@@ -120,16 +175,22 @@ public class CommentService implements ICommentService {
     }
 
     private void handleAsyncCommentCreation(UUID postId, UUID parentCommentId) {
+        // Run the following code asynchronously
         CompletableFuture.runAsync(() -> {
+            // Create an example Comment with the provided postId and isDeleted set to false
             Example<Comment> example = Example.of(Comment.builder()
                     .post(Post.builder().id(postId).build())
                     .isDeleted(false)
                     .build());
+            // Update the comment count of the post with the count of comments matching the example
             postService.updateCommentCount(postId, (int) commentRepository.count(example));
 
+            // Create a Redis key for the post comments
             String redisKey = RedisKeyUtil.getPostCommentsKey(postId, 0, 0);
+            // Delete the Redis cache for the post comments
             redisService.deleteByPrefix(redisKey.substring(0, redisKey.indexOf("page")));
 
+            // If a parentCommentId is provided, update the reply count of the parent comment
             if (parentCommentId != null) {
                 updateReplyCount(parentCommentId);
             }

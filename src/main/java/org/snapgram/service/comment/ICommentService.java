@@ -18,4 +18,8 @@ public interface ICommentService {
     void updateReplyCount(UUID commentId);
 
     List<CommentDTO> getRepliesByComment(UUID commentId, Pageable pageable);
+
+    CommentDTO editComment(UUID currentUserId, UUID commentId, String content);
+
+    int deleteComment(UUID currentUserId, UUID commentId);
 }
