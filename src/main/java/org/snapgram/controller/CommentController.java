@@ -33,6 +33,28 @@ import java.util.UUID;
 public class CommentController {
     ICommentService commentService;
 
+    @PostMapping("/liked-by-user/filter")
+    public ResponseObject<List<UUID>> filterLiked(@RequestBody @NotNull List<UUID> commentIds,
+                                                  @AuthenticationPrincipal CustomUserSecurity user) {
+        if (commentIds.isEmpty()) {
+            return new ResponseObject<>(HttpStatus.OK, List.of());
+        }
+        List<UUID> commentLikedIds = commentService.filterLiked(user.getId(), commentIds);
+        return new ResponseObject<>(HttpStatus.OK, commentLikedIds);
+    }
+
+    @PostMapping("/{commentId}/like")
+    public ResponseObject<Integer> likeComment(@PathVariable("commentId") @NotNull UUID commentId) {
+        int response = commentService.like(commentId);
+        return new ResponseObject<>(HttpStatus.OK, response);
+    }
+
+    @DeleteMapping("/{commentId}/unlike")
+    public ResponseObject<Integer> unlikeComment(@PathVariable("commentId") @NotNull UUID commentId) {
+        int response = commentService.unlike(commentId);
+        return new ResponseObject<>(HttpStatus.OK, response);
+    }
+
     @PostMapping
     public ResponseObject<CommentDTO> createComment(@AuthenticationPrincipal CustomUserSecurity currentUser,
                                                     @RequestBody @Valid CommentRequest request) {
@@ -57,7 +79,7 @@ public class CommentController {
 
     @DeleteMapping("/{commentId}")
     public ResponseObject<Integer> deleteComment(@AuthenticationPrincipal CustomUserSecurity currentUser,
-                                                    @PathVariable("commentId") @NotNull UUID commentId) {
+                                                 @PathVariable("commentId") @NotNull UUID commentId) {
         int numberCommentDeleted = commentService.deleteComment(currentUser.getId(), commentId);
         return new ResponseObject<>(HttpStatus.OK, numberCommentDeleted);
     }

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +37,7 @@ public class CommentService implements ICommentService {
     IUserService userService;
     UserMapper userMapper;
     IRedisService redisService;
+    ICommentLikeService commentLikeService;
 
     @Override
     public List<CommentDTO> getCommentsByPost(UUID postId, Pageable pageable) {
@@ -94,13 +96,8 @@ public class CommentService implements ICommentService {
 
     @Override
     public int deleteComment(UUID currentUserId, UUID commentId) {
-        Example<Comment> example = Example.of(Comment.builder()
-                .id(commentId)
-                .isDeleted(false)
-                .build());
         // Find the comment in the repository, throw an exception if not found
-        Comment comment = commentRepository.findOne(example).orElseThrow(
-                () -> new ResourceNotFoundException("Comment not found"));
+        Comment comment = validateComment(commentId);
 
         // Get the ID of the user who created the comment
         UUID creatorCommentId = comment.getUser().getId();
@@ -128,9 +125,46 @@ public class CommentService implements ICommentService {
     }
 
     @Override
+    public int like(UUID commentId) {
+        return updateLikeCount(commentId, commentLikeService::like);
+    }
+
+    private int updateLikeCount(UUID commentId, Consumer<UUID> action) {
+        Comment comment = validateComment(commentId);
+
+        // Create a Redis key for the post comments
+        String redisKey = RedisKeyUtil.getPostCommentsKey(comment.getPost().getId(), 0, 0);
+        // Delete the Redis cache for the post comments
+        redisService.deleteByPrefix(redisKey.substring(0, redisKey.indexOf("page")));
+
+        action.accept(commentId);
+        comment.setLikeCount(commentLikeService.countByComment(commentId));
+        commentRepository.save(comment);
+        return comment.getLikeCount();
+    }
+
+    @Override
+    public int unlike(UUID commentId) {
+        return updateLikeCount(commentId, commentLikeService::unlike);
+    }
+
+    @Override
+    public List<UUID> filterLiked(UUID id, List<UUID> commentIds) {
+        return commentLikeService.filterLiked(id, commentIds);
+    }
+
+    private Comment validateComment(UUID commentId) {
+        Example<Comment> example = Example.of(Comment.builder()
+                .id(commentId)
+                .isDeleted(false)
+                .build());
+        return commentRepository.findOne(example).orElseThrow(
+                () -> new ResourceNotFoundException("Comment not found"));
+    }
+
+    @Override
     public void updateReplyCount(UUID commentId) {
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+        Comment comment = validateComment(commentId);
         Example<Comment> example = Example.of(Comment.builder()
                 .parentComment(Comment.builder().id(commentId).build())
                 .level(1)
@@ -211,8 +245,7 @@ public class CommentService implements ICommentService {
     }
 
     private Comment validateParentComment(UUID parentCommentId) {
-        Comment parentComment = commentRepository.findById(parentCommentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+        Comment parentComment = validateComment(parentCommentId);
 
         if (parentComment.getLevel() == 1) {
             throw new IllegalArgumentException("Cannot reply to a reply comment");

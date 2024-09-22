@@ -22,4 +22,10 @@ public interface ICommentService {
     CommentDTO editComment(UUID currentUserId, UUID commentId, String content);
 
     int deleteComment(UUID currentUserId, UUID commentId);
+
+    int like(UUID commentId);
+
+    int unlike(UUID commentId);
+
+    List<UUID> filterLiked(UUID id, List<UUID> commentIds);
 }
