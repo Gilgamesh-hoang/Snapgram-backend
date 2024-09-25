@@ -1,7 +1,8 @@
 package org.snapgram;
 
-import org.snapgram.dto.request.CommentRequest;
-import org.snapgram.service.comment.CommentService;
+import org.snapgram.dto.response.UserInfoDTO;
+import org.snapgram.kafka.producer.MailProducer;
+import org.snapgram.service.mail.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -10,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @SpringBootApplication
@@ -22,15 +24,22 @@ public class SnapgramBackendApplication {
     }
 
     @Autowired
-    CommentService commentService;
+    MailProducer mailProducer;
 
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
-//            CommentRequest commentRequest = new CommentRequest();
-//            commentRequest.setContent("Hello World");
-//            commentRequest.setPostId(UUID.randomUUID());
-//            commentService.createComment(UUID.randomUUID(),commentRequest);
+//            UserInfoDTO user = new UserInfoDTO();
+//            user.setEmail("21130363@st.hcmuaf.edu.vn");
+//            user.setFullName("Nguyen Van A");
+//            user.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+//            user.setActiveCode(UUID.randomUUID().toString());
+//            System.out.println("chuan bi gui mail");
+//            long a = System.currentTimeMillis();
+//            mailProducer.sendVerificationEmail(user);
+//            System.out.println("Message sent to Kafka successfully! " + (System.currentTimeMillis() - a));
+//            Thread.sleep(5000);
+//            System.out.println("done");
         };
     }
 }

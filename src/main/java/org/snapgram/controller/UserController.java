@@ -20,6 +20,7 @@ import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.exception.ResourceNotFoundException;
+import org.snapgram.kafka.producer.MailProducer;
 import org.snapgram.service.jwt.JwtService;
 import org.snapgram.service.key.IKeyService;
 import org.snapgram.service.mail.IEmailService;
@@ -30,7 +31,7 @@ import org.snapgram.service.user.IProfileService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.util.CookieUtil;
 import org.snapgram.util.RedisKeyUtil;
-import org.snapgram.util.SystemConstant;
+import org.snapgram.util.AppConstant;
 import org.snapgram.validation.media.ValidMedia;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -50,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("${API_PREFIX}/users")
 @Validated
 public class UserController {
+    MailProducer mailProducer;
     IRedisService redisService;
     IUserService userService;
     FriendSuggestionService friendSuggestionService;
@@ -90,7 +92,7 @@ public class UserController {
         tokenService.storeRefreshToken(refreshToken, user.getId());
 
         // Create a new cookie for the refresh token
-        Cookie cookie = CookieUtil.createCookie(SystemConstant.REFRESH_TOKEN, refreshToken,
+        Cookie cookie = CookieUtil.createCookie(AppConstant.REFRESH_TOKEN, refreshToken,
                 "localhost", 604800, true, false);
         response.addCookie(cookie);
 
@@ -106,7 +108,7 @@ public class UserController {
 
     @PutMapping
     public ResponseObject<UserInfoDTO> updateProfile(
-            @CookieValue(SystemConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
+            @CookieValue(AppConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
             @RequestPart("profile") @Valid String profileJson,
             @RequestPart(value = "avatar", required = false) @ValidMedia MultipartFile avatar) throws JsonProcessingException {
         ProfileRequest request = objectMapper.readValue(profileJson, ProfileRequest.class);
@@ -159,7 +161,7 @@ public class UserController {
             throw new ResourceNotFoundException("Email not found");
         }
         String newPassword = userService.generateForgotPasswordCode(request.getEmail());
-        emailService.sendForgotPasswordEmail(request.getEmail(), newPassword);
+        mailProducer.sendForgotPasswordEmail(request.getEmail(), newPassword);
         return new ResponseObject<>(HttpStatus.CREATED, "Set new password successfully");
     }
 
@@ -181,7 +183,7 @@ public class UserController {
         if (user == null) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST, "User creation failed");
         }
-        emailService.sendVerificationEmail(user);
+        mailProducer.sendVerificationEmail(user);
         return new ResponseObject<>(HttpStatus.CREATED, "User created successfully");
     }
 }

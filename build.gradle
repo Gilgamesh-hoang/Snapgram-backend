@@ -43,6 +43,8 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     implementation 'com.cloudinary:cloudinary-http44:1.39.0'
+    implementation 'org.springframework.kafka:spring-kafka'
+
 
     compileOnly 'org.projectlombok:lombok'
 

@@ -257,7 +257,6 @@ public class UserService implements IUserService {
         Example<User> example = Example.of(User.builder().email(email).isDeleted(false)
                 .userInfo(UserInfo.builder().activeCode(code).build()).build());
         User user = userRepository.findOne(example).orElse(null);
-
         if (user == null)
             throw new ResourceNotFoundException("Email or code is invalid");
 

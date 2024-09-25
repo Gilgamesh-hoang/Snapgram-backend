@@ -8,19 +8,18 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.snapgram.dto.KeyPair;
 import org.snapgram.dto.request.AuthenticationRequest;
 import org.snapgram.dto.request.TokenRequest;
 import org.snapgram.dto.request.VerificationRequest;
 import org.snapgram.dto.response.JwtResponse;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.dto.response.UserDTO;
+import org.snapgram.kafka.producer.KeyPairProducer;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.service.authentication.IAuthenticationService;
-import org.snapgram.service.key.IKeyService;
 import org.snapgram.service.user.IUserService;
+import org.snapgram.util.AppConstant;
 import org.snapgram.util.CookieUtil;
-import org.snapgram.util.SystemConstant;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -29,8 +28,6 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.concurrent.CompletableFuture;
 
 
 @RestController
@@ -41,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class AuthenticationController {
     IUserService userService;
-    IKeyService keyService;
+    KeyPairProducer keyPairProducer;
     IAuthenticationService authenticationService;
     ClientRegistrationRepository clientRegistrationRepository;
     UserMapper userMapper;
@@ -58,7 +55,7 @@ public class AuthenticationController {
 
     private ResponseObject<JwtResponse> createResponse(HttpServletResponse response, JwtResponse jwtObj) {
         // Set refresh token in HTTP-Only cookie
-        Cookie refreshTokenCookie = CookieUtil.createCookie(SystemConstant.REFRESH_TOKEN, jwtObj.getRefreshToken(),
+        Cookie refreshTokenCookie = CookieUtil.createCookie(AppConstant.REFRESH_TOKEN, jwtObj.getRefreshToken(),
                 "localhost", 604800, true, false);
         response.addCookie(refreshTokenCookie);
         return new ResponseObject<>(HttpStatus.OK, "Login successfully", jwtObj);
@@ -72,20 +69,20 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseObject<JwtResponse> refreshToken(@CookieValue(SystemConstant.REFRESH_TOKEN) @NotBlank String refreshToken) {
+    public ResponseObject<JwtResponse> refreshToken(@CookieValue(AppConstant.REFRESH_TOKEN) @NotBlank String refreshToken) {
         JwtResponse jwtObj = authenticationService.refreshToken(refreshToken);
         return new ResponseObject<>(HttpStatus.OK, "Refresh token successfully", jwtObj);
     }
 
     @PostMapping("/logout")
     public ResponseObject<Void> logout(@RequestHeader("Authorization") String authHeader,
-                                       @CookieValue(SystemConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
+                                       @CookieValue(AppConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
                                        HttpServletResponse response
     ) {
         String jwtToken = authHeader.substring("Bearer ".length());
         authenticationService.logout(jwtToken, refreshToken);
         // clear refresh token cookie
-        Cookie refreshTokenCookie = CookieUtil.createCookie(SystemConstant.REFRESH_TOKEN, null, "localhost",
+        Cookie refreshTokenCookie = CookieUtil.createCookie(AppConstant.REFRESH_TOKEN, null, "localhost",
                 0, true, false);
         response.addCookie(refreshTokenCookie);
         return new ResponseObject<>(HttpStatus.OK, "Logout successfully", null);
@@ -94,15 +91,12 @@ public class AuthenticationController {
     @PostMapping("/verification-email")
     public ResponseObject<Boolean> verifyEmail(@RequestBody @Valid VerificationRequest request) {
         boolean isVerified = userService.verifyEmail(request.getEmail(), request.getCode());
-        if (isVerified) {
-            // Generate key pair asynchronously
-            CompletableFuture.runAsync(()-> {
-                UserDTO user = userService.findByEmail(request.getEmail());
-                KeyPair keyPair = keyService.generateKeyPair();
-                keyService.save(keyPair, user.getId());
-            });
-            return new ResponseObject<>(HttpStatus.OK, "Email verified successfully", true);
+        if (!isVerified) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Code is expired", false);
         }
-        return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Code is expired", false);
+        UserDTO user = userService.findByEmail(request.getEmail());
+        keyPairProducer.generateKeyPair(user.getId());
+
+        return new ResponseObject<>(HttpStatus.OK, "Email verified successfully", true);
     }
 }
