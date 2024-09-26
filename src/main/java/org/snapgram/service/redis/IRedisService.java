@@ -12,8 +12,6 @@ public interface IRedisService {
 
     Map<Object, Object> getMap(String key);
 
-    void saveMap(String key, Map<String, Object> map);
-
     void addElementsToMap(String key, Map<String, Object> map);
 
     void deleteElementsFromMap(String key, List<Object> fields);

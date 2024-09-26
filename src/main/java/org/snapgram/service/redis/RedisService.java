@@ -27,10 +27,6 @@ public class RedisService implements IRedisService {
         // Convert data from JSON (String) to the desired type
         return clazz.cast(data);
     }
-    @Override
-    public void saveMap(String key, Map<String, Object> map) {
-        redisTemplate.opsForHash().putAll(key, map);
-    }
 
     @Override
     public <T> void saveList(String key, List<T> list) {
@@ -56,7 +52,7 @@ public class RedisService implements IRedisService {
     @Override
     public <T> List<T> getList(String key) {
         // check key is exist
-        if (!redisTemplate.hasKey(key)) {
+        if (Boolean.FALSE.equals(redisTemplate.hasKey(key))) {
             return null;
         }
 

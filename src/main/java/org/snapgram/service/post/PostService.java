@@ -7,13 +7,19 @@ import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.PostMetricDTO;
-import org.snapgram.entity.database.*;
+import org.snapgram.entity.database.Post;
+import org.snapgram.entity.database.PostMedia;
+import org.snapgram.entity.database.Tag;
+import org.snapgram.entity.database.User;
 import org.snapgram.exception.ResourceNotFoundException;
+import org.snapgram.kafka.producer.PostProducer;
+import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.mapper.PostMapper;
 import org.snapgram.repository.database.PostRepository;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.tag.ITagService;
 import org.snapgram.service.user.IUserService;
+import org.snapgram.util.RedisKeyUtil;
 import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -27,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Service
@@ -39,6 +46,8 @@ public class PostService implements IPostService {
     ITagService tagService;
     PostMediaService postMediaService;
     IRedisService redisService;
+    PostProducer postProducer;
+    RedisProducer redisProducer;
     IPostLikeService postLikeService;
     IPostSaveService postSaveService;
 
@@ -66,6 +75,11 @@ public class PostService implements IPostService {
             List<PostMedia> postMediaList = postMediaService.savePostMedia(media, post.getId());
             post.setMedia(postMediaList);
         }
+
+        // delete cache
+        String redisKey = RedisKeyUtil.getUserPostKey(user.getNickname(), 0,0);
+        redisProducer.sendDeleteByKey(redisKey.substring(0, redisKey.indexOf("page")));
+
         return CompletableFuture.completedFuture(postMapper.toDTO(post));
     }
 
@@ -97,7 +111,7 @@ public class PostService implements IPostService {
 
         // If there are any media to remove, remove them asynchronously
         if (request.getRemoveMedia() != null && !request.getRemoveMedia().isEmpty()) {
-            CompletableFuture.runAsync(() -> postMediaService.removeMedia(request.getRemoveMedia()));
+            postProducer.sendRemoveMedia(request.getRemoveMedia());
         }
 
         // If there are any media to add, add them
@@ -108,7 +122,12 @@ public class PostService implements IPostService {
 
         // Save the updated post entity to the database
         postRepository.save(postEntity);
-        return postMapper.toDTO(postEntity);
+        PostDTO result = postMapper.toDTO(postEntity);
+
+        // save to redis
+        redisProducer.sendSaveValue(RedisKeyUtil.getPostKey(postEntity.getId()), result, 1, TimeUnit.DAYS);
+
+        return result;
     }
 
 
@@ -175,59 +194,41 @@ public class PostService implements IPostService {
 
     @Override
     public List<PostDTO> getPostsByUser(String nickname, Pageable pageable) {
-//        String redisKey = RedisKeyUtil.getUserPostKey(nickname, pageable.getPageNumber(), pageable.getPageSize());
-//        List<PostDTO> results = redisService.getList(redisKey);
+        String redisKey = RedisKeyUtil.getUserPostKey(nickname, pageable.getPageNumber(), pageable.getPageSize());
+        List<PostDTO> results = redisService.getList(redisKey);
 
-//        if (results != null && !results.isEmpty()) {
-//            return results;
-//        }
+        if (results != null && !results.isEmpty()) {
+            return results;
+        }
         //select in database
-        List<PostDTO> results;
         Example<Post> example = Example.of(
                 Post.builder().user(
                         User.builder().id(userService.findByNickname(nickname).getId()).isDeleted(false).isActive(true).build()
                 ).isDeleted(false).build()
         );
         Page<Post> posts = postRepository.findAll(example, pageable);
-        // save to redis
         results = postMapper.toDTOs(posts.getContent());
-        CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
-        results.forEach(postDTO -> {
-            boolean isLiked = postLikeService.isPostLikedByUser(postDTO.getId(), currentUser.getId());
-            postDTO.setLiked(isLiked);
-            boolean isSaved = postSaveService.isPostSaveByUser(postDTO.getId(), currentUser.getId());
-            postDTO.setSaved(isSaved);
-        });
 
-//        if (!results.isEmpty()) {
-//            redisService.saveList(redisKey, results);
-//            redisService.setTimeout(redisKey, 5, TimeUnit.DAYS);
-//        }
+        // save to redis
+        redisProducer.sendSaveList(redisKey, results, 1, TimeUnit.MINUTES);
         return results;
     }
 
     @Override
     public PostDTO getPostById(UUID id) {
-//        String redisKey = RedisKeyUtil.getPostKey(id);
-        PostDTO result;
-//        PostDTO result = redisService.getValue(redisKey, PostDTO.class);
-//        if (result != null) {
-//            return result;
-//        }
-        Post post = postRepository.findById(id).orElse(null);
-        if (post == null) {
-            return null;
+        String redisKey = RedisKeyUtil.getPostKey(id);
+        PostDTO result = redisService.getValue(redisKey, PostDTO.class);
+        if (result != null) {
+            return result;
         }
-        CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
-        boolean isLiked = postLikeService.isPostLikedByUser(post.getId(), currentUser.getId());
-        boolean isSaved = postSaveService.isPostSaveByUser(post.getId(), currentUser.getId());
-        result = postMapper.toDTO(post);
-        result.setLiked(isLiked);
-        result.setSaved(isSaved);
-//        redisService.saveValue(redisKey, result);
-//        redisService.setTimeout(redisKey, 30, TimeUnit.SECONDS);
+        Post post = postRepository.findById(id).orElse(null);
+
+        if (post != null) {
+            result = postMapper.toDTO(post);
+        }
+        // save to redis
+        redisProducer.sendSaveValue(redisKey, result, 1, TimeUnit.MINUTES);
         return result;
     }
-
 
 }

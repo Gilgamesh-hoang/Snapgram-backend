@@ -95,7 +95,7 @@ public class AuthenticationController {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Code is expired", false);
         }
         UserDTO user = userService.findByEmail(request.getEmail());
-        keyPairProducer.generateKeyPair(user.getId());
+        keyPairProducer.sendGenerateKeyPair(user.getId());
 
         return new ResponseObject<>(HttpStatus.OK, "Email verified successfully", true);
     }

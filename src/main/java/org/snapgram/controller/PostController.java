@@ -16,6 +16,7 @@ import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.PostMetricDTO;
 import org.snapgram.dto.response.ResponseObject;
+import org.snapgram.service.post.IPostLikeService;
 import org.snapgram.service.post.IPostSaveService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.validation.media.ValidMedia;
@@ -40,6 +41,21 @@ public class PostController {
     IPostService postService;
     ObjectMapper objectMapper;
     IPostSaveService postSaveService;
+    IPostLikeService postLikeService;
+
+    @PostMapping("/check-likes")
+    public ResponseObject<List<UUID>> checkUserLikes(@RequestBody List<UUID> postIds,
+                                                     @AuthenticationPrincipal CustomUserSecurity user) {
+        List<UUID> likedPostIds = postLikeService.getLikedPosts(user.getId(), postIds);
+        return new ResponseObject<>(HttpStatus.OK, likedPostIds);
+    }
+
+    @PostMapping("/check-saves")
+    public ResponseObject<List<UUID>> checkUserSaves(@RequestBody List<UUID> postIds,
+                                                     @AuthenticationPrincipal CustomUserSecurity user) {
+        List<UUID> savedPostIds = postSaveService.getSavedPosts(user.getId(), postIds);
+        return new ResponseObject<>(HttpStatus.OK, savedPostIds);
+    }
 
     @PostMapping("/{postId}/like")
     public ResponseObject<PostMetricDTO> likePost(@PathVariable("postId") @NotNull UUID postId) {

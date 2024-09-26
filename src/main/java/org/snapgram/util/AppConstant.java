@@ -8,4 +8,12 @@ public class AppConstant {
     public final String EMAIL_VERIFICATION_TOPIC = "email-verification";
     public final String FORGOT_PASSWORD_TOPIC = "forgot-password";
     public final String GENERATE_KEY_PAIR_TOPIC = "generate-key-pair";
+    public final String SAVE_VALUE_TO_REDIS_TOPIC = "save-value-redis";
+    public final String SAVE_LIST_TO_REDIS_TOPIC = "save-list-redis";
+    public final String SAVE_SET_TO_REDIS_TOPIC = "save-set-redis";
+    public final String SAVE_MAP_TO_REDIS_TOPIC = "save-map-redis";
+    public final String DELETE_KEY_REDIS_TOPIC = "delete-key-redis";
+    public final String UPDATE_COMMENT_COUNT_TOPIC = "update-comment-count";
+    public final String REMOVE_MEDIA_TOPIC = "remove-media";
+    public final String DELETE_MAP_ITEMS_TOPIC = "delete-map-items";
 }

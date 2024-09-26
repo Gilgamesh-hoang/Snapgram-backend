@@ -6,14 +6,15 @@ import java.util.UUID;
 
 public interface IKeyService {
     KeyPair generateKeyPair();
+
     KeyPair getKeyPairByUser(UUID userId);
 
     String getUserPublicATKey(UUID userId);
 
     String getUserPublicRTKey(UUID userId);
 
-
     void save(KeyPair keyPair, UUID userId);
+
     void deleteAndSave(KeyPair keyPair,UUID userId);
 
     void deleteUserKey(UUID userId);

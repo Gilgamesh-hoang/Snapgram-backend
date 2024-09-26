@@ -10,6 +10,8 @@ import org.snapgram.entity.database.Comment;
 import org.snapgram.entity.database.Post;
 import org.snapgram.entity.database.User;
 import org.snapgram.exception.ResourceNotFoundException;
+import org.snapgram.kafka.producer.PostProducer;
+import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.mapper.CommentMapper;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.repository.database.CommentRepository;
@@ -38,6 +40,8 @@ public class CommentService implements ICommentService {
     UserMapper userMapper;
     IRedisService redisService;
     ICommentLikeService commentLikeService;
+    RedisProducer redisProducer;
+    PostProducer postProducer;
 
     @Override
     public List<CommentDTO> getCommentsByPost(UUID postId, Pageable pageable) {
@@ -54,8 +58,7 @@ public class CommentService implements ICommentService {
                 .isDeleted(false)
                 .build());
         comments = fetchCommentsFromDatabase(example, pageable);
-
-        cacheComments(redisKey, comments);
+        redisProducer.sendSaveList(redisKey, comments, 1, TimeUnit.DAYS);
         return comments;
     }
 
@@ -88,8 +91,7 @@ public class CommentService implements ICommentService {
 
         // Create a Redis key for the post comments
         String redisKey = RedisKeyUtil.getPostCommentsKey(comment.getPost().getId(), 0, 0);
-        // Delete the Redis cache for the post comments
-        redisService.deleteByPrefix(redisKey.substring(0, redisKey.indexOf("page")));
+        redisProducer.sendDeleteByKey(redisKey.substring(0, redisKey.indexOf("page")));
 
         return commentMapper.toDTO(comment);
     }
@@ -135,7 +137,7 @@ public class CommentService implements ICommentService {
         // Create a Redis key for the post comments
         String redisKey = RedisKeyUtil.getPostCommentsKey(comment.getPost().getId(), 0, 0);
         // Delete the Redis cache for the post comments
-        redisService.deleteByPrefix(redisKey.substring(0, redisKey.indexOf("page")));
+        redisProducer.sendDeleteByKey(redisKey.substring(0, redisKey.indexOf("page")));
 
         action.accept(commentId);
         comment.setLikeCount(commentLikeService.countByComment(commentId));
@@ -217,12 +219,12 @@ public class CommentService implements ICommentService {
                     .isDeleted(false)
                     .build());
             // Update the comment count of the post with the count of comments matching the example
-            postService.updateCommentCount(postId, (int) commentRepository.count(example));
+            postProducer.sendUpdateCommentCount(postId, (int) commentRepository.count(example));
 
             // Create a Redis key for the post comments
             String redisKey = RedisKeyUtil.getPostCommentsKey(postId, 0, 0);
             // Delete the Redis cache for the post comments
-            redisService.deleteByPrefix(redisKey.substring(0, redisKey.indexOf("page")));
+            redisProducer.sendDeleteByKey(redisKey.substring(0, redisKey.indexOf("page")));
 
             // If a parentCommentId is provided, update the reply count of the parent comment
             if (parentCommentId != null) {
@@ -260,14 +262,6 @@ public class CommentService implements ICommentService {
         }
     }
 
-    private void cacheComments(String redisKey, List<CommentDTO> comments) {
-        redisService.saveList(redisKey, comments);
-        if (comments.isEmpty()) {
-            redisService.setTTL(redisKey, 5, TimeUnit.MINUTES);
-        } else {
-            redisService.setTTL(redisKey, 1, TimeUnit.DAYS);
-        }
-    }
 
     private List<CommentDTO> fetchCommentsFromDatabase(Example<Comment> example, Pageable pageable) {
         List<Comment> content = commentRepository.findAll(example, pageable).getContent();

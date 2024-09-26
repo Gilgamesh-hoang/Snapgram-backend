@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.response.UserInfoDTO;
-import org.snapgram.mapper.UserMapper;
 import org.snapgram.service.follow.IFollowService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.service.token.ITokenService;
@@ -21,7 +20,6 @@ public class ProfileService implements IProfileService {
     IUserService userService;
     IPostService postService;
     IFollowService followService;
-    UserMapper userMapper;
     ITokenService tokenService;
 
     @Override

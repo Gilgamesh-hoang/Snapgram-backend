@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.response.TokenDTO;
 import org.snapgram.entity.database.Token;
 import org.snapgram.entity.database.User;
+import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.repository.database.TokenRepository;
 import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.redis.IRedisService;
@@ -32,6 +33,7 @@ public class TokenService implements ITokenService {
     JwtHelper jwtHelper;
     IRedisService redisService;
     AsyncTokenService asyncTokenService;
+    RedisProducer redisProducer;
 
     @Override
     public void removeExpiredTokens() {
@@ -43,7 +45,7 @@ public class TokenService implements ITokenService {
                 tokenExpired.add(key);
             }
         });
-        redisService.deleteElementsFromMap(RedisKeyUtil.JWT_BLACKLIST, tokenExpired);
+        redisProducer.sendDeleteElementsInMap(RedisKeyUtil.JWT_BLACKLIST, tokenExpired);
     }
 
 
@@ -67,7 +69,7 @@ public class TokenService implements ITokenService {
                 tokenMap.put(token.getRefreshTokenId().toString(), refreshObj);
             }
         });
-        redisService.addElementsToMap(RedisKeyUtil.JWT_BLACKLIST, tokenMap);
+        redisProducer.sendSaveMap(RedisKeyUtil.JWT_BLACKLIST, tokenMap);
         tokenRepository.deleteAllByRefreshTokenIdIn(tokens.stream().map(Token::getRefreshTokenId).toList());
         return CompletableFuture.completedFuture(null);
     }
@@ -90,7 +92,7 @@ public class TokenService implements ITokenService {
                 temp.add(token);
             }
         });
-        redisService.addElementsToMap(RedisKeyUtil.JWT_BLACKLIST, tokenMap);
+        redisProducer.sendSaveMap(RedisKeyUtil.JWT_BLACKLIST, tokenMap);
         tokenRepository.deleteAllByRefreshTokenIdIn(temp.stream().map(Token::getRefreshTokenId).toList());
     }
 
@@ -138,7 +140,7 @@ public class TokenService implements ITokenService {
                         .build();
                 HashMap<String, Object> map = new HashMap<>();
                 map.put(token.getRefreshTokenId().toString(), refreshObj);
-                redisService.addElementsToMap(RedisKeyUtil.JWT_BLACKLIST, map);
+                redisProducer.sendSaveMap(RedisKeyUtil.JWT_BLACKLIST, map);
             }
             tokenRepository.delete(token);
         }

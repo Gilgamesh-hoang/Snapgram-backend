@@ -20,18 +20,19 @@ import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.exception.ResourceNotFoundException;
+import org.snapgram.kafka.producer.KeyPairProducer;
 import org.snapgram.kafka.producer.MailProducer;
+import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.service.jwt.JwtService;
 import org.snapgram.service.key.IKeyService;
-import org.snapgram.service.mail.IEmailService;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.suggestion.FriendSuggestionService;
 import org.snapgram.service.token.ITokenService;
 import org.snapgram.service.user.IProfileService;
 import org.snapgram.service.user.IUserService;
+import org.snapgram.util.AppConstant;
 import org.snapgram.util.CookieUtil;
 import org.snapgram.util.RedisKeyUtil;
-import org.snapgram.util.AppConstant;
 import org.snapgram.validation.media.ValidMedia;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,7 +40,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -55,12 +55,13 @@ public class UserController {
     IRedisService redisService;
     IUserService userService;
     FriendSuggestionService friendSuggestionService;
-    IEmailService emailService;
     IProfileService profileService;
     ITokenService tokenService;
     JwtService jwtService;
     ObjectMapper objectMapper;
     IKeyService keyService;
+    KeyPairProducer keyPairProducer;
+    RedisProducer redisProducer;
 
     @PostMapping("/change-password")
     public ResponseObject<JwtResponse> changePass(
@@ -87,7 +88,7 @@ public class UserController {
         CompletableFuture<String> refreshTokenFuture = jwtService.generateRefreshToken(user.getUsername(), keyPair.getPrivateKeyRT());
         CompletableFuture.allOf(accessTokenFuture, refreshTokenFuture).join();
         // Save the new refresh token in the database, associated with the user
-        CompletableFuture.runAsync(() -> keyService.deleteAndSave(keyPair, user.getId()));
+        keyPairProducer.sendGenerateKeyPair(user.getId(), keyPair);
         String refreshToken = refreshTokenFuture.get();
         tokenService.storeRefreshToken(refreshToken, user.getId());
 
@@ -130,21 +131,16 @@ public class UserController {
 
         // Try to get the list of friend suggestions from Redis
         List<UserDTO> users = redisService.getList(redisKey, start, end);
-
-        if (users == null) {
-            // Generate friend suggestions
-            users = friendSuggestionService.recommendFriends(user.getId());
-
-            List<UserDTO> finalUsers = new ArrayList<>(users);
-            CompletableFuture.runAsync(() -> {
-                redisService.saveList(redisKey, finalUsers);
-                redisService.setTTL(redisKey, 5, TimeUnit.DAYS);
-            });
-
-            // Get the sublist of users based on the pagination parameters
-            users = users.subList(start, Math.min(users.size(), end + 1));
+        if (users != null) {
+            return new ResponseObject<>(HttpStatus.OK, users);
         }
 
+        // Generate friend suggestions
+        users = friendSuggestionService.recommendFriends(user.getId());
+        redisProducer.sendSaveList(redisKey, users, 5, TimeUnit.DAYS);
+
+        // Get the sublist of users based on the pagination parameters
+        users = users.subList(start, Math.min(users.size(), end + 1));
         return new ResponseObject<>(HttpStatus.OK, users);
     }
 

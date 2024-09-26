@@ -5,8 +5,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import org.snapgram.dto.response.TokenDTO;
+import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.service.jwt.JwtHelper;
-import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -24,7 +24,7 @@ public class AsyncTokenService {
     @NonFinal
     long REFRESH_TOKEN_LIFETIME;
     JwtHelper jwtHelper;
-    IRedisService redisService;
+    RedisProducer redisProducer;
 
     @Async
     public CompletableFuture<Void> blacklistAccessToken(String accessToken) {
@@ -34,7 +34,7 @@ public class AsyncTokenService {
         String accessId = jwtHelper.getJidFromAccessToken(accessToken);
         HashMap<String, Object> map = new HashMap<>();
         map.put(accessId, accessObj);
-        redisService.addElementsToMap(RedisKeyUtil.JWT_BLACKLIST, map);
+        redisProducer.sendSaveMap(RedisKeyUtil.JWT_BLACKLIST, map);
         return CompletableFuture.completedFuture(null);
     }
 
@@ -46,7 +46,7 @@ public class AsyncTokenService {
         String refreshId = jwtHelper.getJidFromRefreshToken(refreshToken);
         HashMap<String, Object> map = new HashMap<>();
         map.put(refreshId, refreshObj);
-        redisService.addElementsToMap(RedisKeyUtil.JWT_BLACKLIST, map);
+        redisProducer.sendSaveMap(RedisKeyUtil.JWT_BLACKLIST, map);
         return CompletableFuture.completedFuture(null);
     }
 }

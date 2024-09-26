@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.KeyPair;
 import org.snapgram.exception.KeyGenerationException;
+import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.RedisKeyUtil;
 import org.snapgram.util.AESEncoder;
@@ -25,6 +26,7 @@ public class KeyService implements IKeyService {
     AESEncoder encoder;
     AsyncKeyService asyncKeyService;
     IRedisService redisService;
+    RedisProducer redisProducer;
 
     @Override
     public KeyPair generateKeyPair() {
@@ -103,6 +105,6 @@ public class KeyService implements IKeyService {
 
     @Override
     public void deleteUserKey(UUID userId) {
-        redisService.deleteElementsFromMap(RedisKeyUtil.ASYM_KEYPAIR, List.of(userId.toString()));
+        redisProducer.sendDeleteElementsInMap(RedisKeyUtil.ASYM_KEYPAIR, List.of(userId.toString()));
     }
 }

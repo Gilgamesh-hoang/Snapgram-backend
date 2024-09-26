@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.elasticsearch.UserDocument;
+import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.repository.database.UserRepository;
 import org.snapgram.repository.elasticsearch.user.ICustomUserElasticRepo;
@@ -19,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -34,6 +34,7 @@ public class SearchService implements ISearchService {
     ICustomUserElasticRepo customUserElastic;
     UserRepository userRepository;
     UserMapper userMapper;
+    RedisProducer redisProducer;
 
     @Override
     public Set<UserDTO> searchFollowersByUser(UUID userId, String keyword, Pageable pageable) {
@@ -80,14 +81,7 @@ public class SearchService implements ISearchService {
                 .stream().map(userMapper::toDTO).collect(Collectors.toSet());
 
         // Cache the results in Redis asynchronously
-        CompletableFuture.runAsync(() -> {
-            redisService.saveSet(redisKey, results);
-            if (results.isEmpty()) {
-                redisService.setTTL(redisKey, 5, TimeUnit.MINUTES);
-            } else {
-                redisService.setTTL(redisKey, 1, TimeUnit.HOURS);
-            }
-        });
+        redisProducer.sendSaveSet(redisKey, results,5, TimeUnit.MINUTES);
 
         return results;
     }

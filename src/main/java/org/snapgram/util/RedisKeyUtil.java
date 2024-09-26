@@ -49,4 +49,8 @@ public class RedisKeyUtil {
         return String.format("post:%s", id.toString());
     }
 
+    public static String getSavedPostsKey(UUID userId, int pageNumber, int pageSize) {
+        return String.format("saved-posts:user:%s:page:%d:size:%d", userId.toString(), pageNumber,pageSize);
+    }
+
 }

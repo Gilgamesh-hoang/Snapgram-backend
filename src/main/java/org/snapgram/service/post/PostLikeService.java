@@ -12,6 +12,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -53,5 +54,10 @@ public class PostLikeService implements IPostLikeService {
         Post post = Post.builder().id(postId).build();
         Example<PostLike> example = Example.of(new PostLike(post, null));
         return (int) postLikeRepository.count(example);
+    }
+
+    @Override
+    public List<UUID> getLikedPosts(UUID currentUserId, List<UUID> postIds) {
+        return postLikeRepository.findLikedPosts(currentUserId, postIds);
     }
 }

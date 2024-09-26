@@ -14,4 +14,6 @@ public interface IPostSaveService {
     void savePost(UUID postId);
 
     void unsavedPost(UUID postId);
+
+    List<UUID> getSavedPosts(UUID currentUserId, List<UUID> postIds);
 }

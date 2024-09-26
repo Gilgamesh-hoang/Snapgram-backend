@@ -19,12 +19,11 @@ public interface IPostService {
 
     PostDTO getPostById(UUID id);
 
-
     PostDTO updatePost(PostRequest request, MultipartFile[] media);
 
     void savePost(UUID postId);
-    void unsavedPost(UUID postId);
 
+    void unsavedPost(UUID postId);
 
     PostMetricDTO like(UUID postId);
 
