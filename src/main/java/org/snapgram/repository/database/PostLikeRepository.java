@@ -13,7 +13,7 @@ import java.util.UUID;
 public interface PostLikeRepository extends JpaRepository<PostLike, UUID> {
     int deleteByPostAndUser(Post post, User user);
 
-    @Query("SELECT pl.post.id FROM PostLike pl WHERE pl.user.id = :userId AND pl.post.id IN :postIds")
+    @Query("SELECT pl.post.id FROM PostLike pl WHERE pl.user.id = :currentUserId AND pl.post.id IN :postIds")
     List<UUID> findLikedPosts(@Param("userId") UUID currentUserId, @Param("postIds") List<UUID> postIds);
 
 }

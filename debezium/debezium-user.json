@@ -1,0 +1,19 @@
+{
+  "name": "user-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "task.max": "1",
+    "database.hostname": "mysql",
+    "database.port": "3306",
+    "database.user": "root",
+    "database.password": "",
+    "database.server.id": "184054",
+    "topic.prefix": "db",
+    "database.include.list": "snapgram",
+    "table.include.list": "snapgram.user",
+    "column.include.list": "snapgram.user.id",
+    "schema.history.internal.kafka.bootstrap.servers": "kafka:9092",
+    "schema.history.internal.kafka.topic": "schema_history.user",
+    "include.schema.changes": "true"
+  }
+}

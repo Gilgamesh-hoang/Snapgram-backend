@@ -16,4 +16,8 @@ public class AppConstant {
     public final String UPDATE_COMMENT_COUNT_TOPIC = "update-comment-count";
     public final String REMOVE_MEDIA_TOPIC = "remove-media";
     public final String DELETE_MAP_ITEMS_TOPIC = "delete-map-items";
+    public final String DEBEZIUM_UPDATE = "u";
+    public final String DEBEZIUM_CREATE = "c";
+    public final String DEBEZIUM_DELETE = "d";
+    public final String DEBEZIUM_READ = "r";
 }

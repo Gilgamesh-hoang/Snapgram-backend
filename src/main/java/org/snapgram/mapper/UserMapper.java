@@ -26,7 +26,11 @@ public interface UserMapper {
 
     @IterableMapping(qualifiedByName = "userToUserDTO")
     List<UserDTO> toDTOs(List<User> users);
+
     UserDTO toDTO(UserDocument user);
+
+    UserDocument toUserDocument(User user);
+
     Collection<UserDTO> toDTOs(Collection<UserDocument> users);
 
     @Mapping(source = "name", target = "fullName")
@@ -66,6 +70,8 @@ public interface UserMapper {
     void updateUserFromProfile(ProfileRequest request, @MappingTarget User user);
 
     CreatorDTO toCreatorDTO(User user);
+
     CreatorDTO toCreatorDTO(UserDTO user);
 
+    void updateUserDocumentFromUser(@MappingTarget UserDocument userDocument, User user);
 }

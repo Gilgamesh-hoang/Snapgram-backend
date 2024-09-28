@@ -11,6 +11,6 @@ import java.util.UUID;
 public interface PostSaveRepository extends JpaRepository<Saved, UUID> {
     void deleteByPostIdAndUserId(UUID postId, UUID userId);
 
-    @Query("SELECT s.post.id FROM Saved s WHERE s.user.id = :userId AND s.post.id IN :postIds")
+    @Query("SELECT s.post.id FROM Saved s WHERE s.user.id = :currentUserId AND s.post.id IN :postIds")
     List<UUID> findSavedPosts(@Param("userId") UUID currentUserId, @Param("postIds") List<UUID> postIds);
 }

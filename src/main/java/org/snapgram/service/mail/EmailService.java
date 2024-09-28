@@ -15,15 +15,11 @@ import org.thymeleaf.context.Context;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class EmailService implements IEmailService {
-//    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
     private final TemplateEngine templateEngine;
     private final JavaMailSender mailSender;
     @Value("${spring.mail.username}")
@@ -33,27 +29,18 @@ public class EmailService implements IEmailService {
 
     @Override
     public void sendVerificationEmail(UserInfoDTO user) {
+        LocalDateTime datePlusDays = user.getCreatedAt().toLocalDateTime().plusDays(3);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String formattedString = datePlusDays.format(formatter);
 
         Context context = new Context();
-        context.setVariable("fullName", "Nguyễn Văn A");
-        context.setVariable("email", "vophihoang252003@gmail.com");
-        context.setVariable("url", frontendUrl+"/sign-in?action=verify-email&code="+"user.getActiveCode()"+"&email="+"21130363@st.hcmuaf.edu.vn");
-        context.setVariable("expired", "3 ngày");
+        context.setVariable("fullName", user.getFullName());
+        context.setVariable("email", user.getEmail());
+        context.setVariable("url", frontendUrl+"/sign-in?action=verify-email&code="+user.getActiveCode()+"&email="+user.getEmail());
+        context.setVariable("expired", formattedString);
 
         String process = templateEngine.process("verify-email-template.html", context);
-        sendMail("vophihoang252003@gmail.com", "Snapgram - Xác thực tài khoản", process);
-//        LocalDateTime datePlusDays = user.getCreatedAt().toLocalDateTime().plusDays(3);
-//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-//        String formattedString = datePlusDays.format(formatter);
-//
-//        Context context = new Context();
-//        context.setVariable("fullName", user.getFullName());
-//        context.setVariable("email", user.getEmail());
-//        context.setVariable("url", frontendUrl+"/sign-in?action=verify-email&code="+user.getActiveCode()+"&email="+user.getEmail());
-//        context.setVariable("expired", formattedString);
-//
-//        String process = templateEngine.process("verify-email-template.html", context);
-//        sendMail(user.getEmail(), "Snapgram - Xác thực tài khoản", process);
+        sendMail(user.getEmail(), "Snapgram - Xác thực tài khoản", process);
     }
 
     @Override
@@ -66,7 +53,6 @@ public class EmailService implements IEmailService {
     }
 
     private void sendMail(String to, String subject, String content) {
-//        executorService.submit(() -> {
             try {
                 MimeMessage message = mailSender.createMimeMessage();
                 MimeMessageHelper helper = new MimeMessageHelper(message, true, "utf-8");
@@ -79,6 +65,5 @@ public class EmailService implements IEmailService {
             } catch (MessagingException ex) {
                 log.error(ex.getMessage());
             }
-//        });
     }
 }

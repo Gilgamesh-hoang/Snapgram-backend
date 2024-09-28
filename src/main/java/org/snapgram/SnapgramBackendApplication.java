@@ -19,7 +19,6 @@ public class SnapgramBackendApplication {
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
-
         };
     }
 }
