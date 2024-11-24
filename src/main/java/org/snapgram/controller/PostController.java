@@ -135,7 +135,7 @@ public class PostController {
         return new ResponseObject<>(HttpStatus.ACCEPTED, "Post is being processed");
     }
 
-    @PutMapping
+    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseObject<PostDTO> updatePost(@RequestBody PostRequest request) {
         if (request.getId() == null) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Post id must be provided");
@@ -144,7 +144,7 @@ public class PostController {
         return new ResponseObject<>(HttpStatus.OK, response);
     }
 
-    @PutMapping
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseObject<PostDTO> updatePost(
             @RequestPart("post") @NotBlank String postJson,
             @RequestPart(value = "media", required = false) @Valid @ValidMedia MultipartFile[] media) throws JsonProcessingException {

@@ -8,7 +8,6 @@ import org.snapgram.dto.kafka.DeleteRedisMessage;
 import org.snapgram.dto.kafka.SaveRedisMessage;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.AppConstant;
-import org.snapgram.util.RedisKeyUtil;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 

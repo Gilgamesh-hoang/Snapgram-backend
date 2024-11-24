@@ -1,5 +1,6 @@
 package org.snapgram.service.redis;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.StringRedisConnection;
@@ -25,6 +26,15 @@ public class RedisService implements IRedisService {
     public <T> T getValue(String key, Class<T> clazz) {
         Object data = redisTemplate.opsForValue().get(key);
         // Convert data from JSON (String) to the desired type
+
+        if (data == null) {
+            return null;
+        }
+        if (data instanceof Map<?,?>) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            data = objectMapper.convertValue(data, clazz);
+            return (T) data;
+        }
         return clazz.cast(data);
     }
 
