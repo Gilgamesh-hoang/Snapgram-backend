@@ -5,6 +5,8 @@ import com.fasterxml.uuid.Generators;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.apache.commons.lang3.StringUtils;
+import org.snapgram.dto.CloudinaryMedia;
 import org.snapgram.dto.response.CloudinarySignature;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -63,7 +65,11 @@ public class CloudinarySignatureService implements ICloudinarySignatureService{
     }
 
     @Override
-    public boolean verifySignature(String publicId, String version, String signature) {
-        return cloudinary.verifyApiResponseSignature(publicId, version, signature);
+    public boolean verifySignature(CloudinaryMedia media) {
+        if(StringUtils.isBlank(media.getPublicId())
+                || StringUtils.isBlank(media.getSignature())
+                || StringUtils.isBlank(media.getVersion()))
+            return false;
+        return cloudinary.verifyApiResponseSignature(media.getPublicId(), media.getVersion(), media.getSignature());
     }
 }

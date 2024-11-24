@@ -12,6 +12,7 @@ import java.util.concurrent.CompletableFuture;
 
 public interface IPostService {
     CompletableFuture<PostDTO> createPost(PostRequest request, MultipartFile[] media);
+    PostDTO createPost(PostRequest request);
 
     int countByUser(UUID userId);
 
@@ -32,4 +33,6 @@ public interface IPostService {
     boolean isExist(UUID postId);
 
     void updateCommentCount(UUID postId, int count);
+
+    PostDTO updatePost(PostRequest request);
 }

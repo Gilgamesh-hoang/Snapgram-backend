@@ -3,6 +3,7 @@ package org.snapgram.service.post;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.dto.CloudinaryMedia;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.response.PostDTO;
@@ -16,6 +17,7 @@ import org.snapgram.kafka.producer.PostProducer;
 import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.mapper.PostMapper;
 import org.snapgram.repository.database.PostRepository;
+import org.snapgram.service.cloudinary.ICloudinarySignatureService;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.tag.ITagService;
 import org.snapgram.service.user.IUserService;
@@ -50,11 +52,9 @@ public class PostService implements IPostService {
     RedisProducer redisProducer;
     IPostLikeService postLikeService;
     IPostSaveService postSaveService;
+    ICloudinarySignatureService signatureService;
 
-    @Override
-    @Transactional
-    @Async
-    public CompletableFuture<PostDTO> createPost(PostRequest request, MultipartFile[] media) {
+    private Post savePost(PostRequest request) {
         request.setCaption(request.getCaption().trim());
         request.getTags().replaceAll(String::trim);
 
@@ -71,21 +71,98 @@ public class PostService implements IPostService {
                 .tags(tagEntity)
                 .build();
         postRepository.save(post);
+        return post;
+    }
+
+    @Override
+    @Transactional
+    @Async
+    public CompletableFuture<PostDTO> createPost(PostRequest request, MultipartFile[] media) {
+        CustomUserSecurity user = UserSecurityHelper.getCurrentUser();
+        Post post = savePost(request);
         if (media != null) {
             List<PostMedia> postMediaList = postMediaService.savePostMedia(media, post.getId());
             post.setMedia(postMediaList);
         }
 
         // delete cache
-        String redisKey = RedisKeyUtil.getUserPostKey(user.getNickname(), 0,0);
-        redisProducer.sendDeleteByKey(redisKey.substring(0, redisKey.indexOf("page")));
+        deletePostCache(user.getNickname());
 
         return CompletableFuture.completedFuture(postMapper.toDTO(post));
     }
 
     @Override
     @Transactional
+    public PostDTO createPost(PostRequest request) {
+        List<CloudinaryMedia> validMedia = request.getMedia().stream()
+                .filter(signatureService::verifySignature)
+                .toList();
+        if (validMedia.isEmpty()) {
+            throw new IllegalArgumentException("Invalid media");
+        }
+        CustomUserSecurity user = UserSecurityHelper.getCurrentUser();
+        Post post = savePost(request);
+
+        List<PostMedia> postMediaList = postMediaService.savePostMedia(validMedia, post.getId());
+        post.setMedia(postMediaList);
+
+        // delete cache
+        deletePostCache(user.getNickname());
+
+        return postMapper.toDTO(post);
+    }
+
+    private void deletePostCache(String nickname) {
+        String redisKey = RedisKeyUtil.getUserPostKey(nickname, 0, 0);
+        redisProducer.sendDeleteByKey(redisKey.substring(0, redisKey.indexOf("page")));
+    }
+
+    @Override
+    @Transactional
     public PostDTO updatePost(PostRequest request, MultipartFile[] media) {
+        Post postEntity = validateAndPreparePostForUpdate(request);
+
+        // If there are any media to add, add them
+        if (media != null) {
+            List<PostMedia> postMediaList = postMediaService.savePostMedia(media, postEntity.getId());
+            postEntity.setMedia(postMediaList);
+        }
+
+        // Save the updated post entity to the database
+        postRepository.save(postEntity);
+        PostDTO result = postMapper.toDTO(postEntity);
+
+        // save to redis
+        redisProducer.sendSaveValue(RedisKeyUtil.getPostKey(postEntity.getId()), result, 1, TimeUnit.DAYS);
+
+        return result;
+    }
+
+    @Override
+    @Transactional
+    public PostDTO updatePost(PostRequest request) {
+        Post postEntity = validateAndPreparePostForUpdate(request);
+
+        // If there are any media to add, add them
+        List<CloudinaryMedia> validMedia = request.getMedia().stream()
+                .filter(signatureService::verifySignature)
+                .toList();
+        if (!validMedia.isEmpty()) {
+            List<PostMedia> postMediaList = postMediaService.savePostMedia(validMedia, postEntity.getId());
+            postEntity.setMedia(postMediaList);
+        }
+
+        // Save the updated post entity to the database
+        postRepository.save(postEntity);
+        PostDTO result = postMapper.toDTO(postEntity);
+
+        // save to redis
+        redisProducer.sendSaveValue(RedisKeyUtil.getPostKey(postEntity.getId()), result, 1, TimeUnit.DAYS);
+
+        return result;
+    }
+
+    private Post validateAndPreparePostForUpdate(PostRequest request) {
         Post postEntity = postRepository.findById(request.getId()).orElse(null);
         CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
 
@@ -114,20 +191,7 @@ public class PostService implements IPostService {
             postProducer.sendRemoveMedia(request.getRemoveMedia());
         }
 
-        // If there are any media to add, add them
-        if (media != null) {
-            List<PostMedia> postMediaList = postMediaService.savePostMedia(media, postEntity.getId());
-            postEntity.setMedia(postMediaList);
-        }
-
-        // Save the updated post entity to the database
-        postRepository.save(postEntity);
-        PostDTO result = postMapper.toDTO(postEntity);
-
-        // save to redis
-        redisProducer.sendSaveValue(RedisKeyUtil.getPostKey(postEntity.getId()), result, 1, TimeUnit.DAYS);
-
-        return result;
+        return postEntity;
     }
 
 

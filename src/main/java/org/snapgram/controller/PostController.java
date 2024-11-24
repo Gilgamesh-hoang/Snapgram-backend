@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -109,7 +110,18 @@ public class PostController {
         return new ResponseObject<>(HttpStatus.OK, postService.getPostsByUser(nickname, pageable));
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseObject<Void> createPost(@RequestBody PostRequest request) {
+
+        if (StringUtils.isBlank(request.getCaption()) && request.getMedia() == null) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Caption or media  must be provided");
+        }
+
+        postService.createPost(request);
+        return new ResponseObject<>(HttpStatus.ACCEPTED, "Post is being processed");
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseObject<Void> createPost(
             @RequestPart("post") @NotBlank String postJson,
             @RequestPart("media") @Valid @ValidMedia MultipartFile[] media) throws JsonProcessingException {
@@ -121,6 +133,15 @@ public class PostController {
 
         postService.createPost(request, media);
         return new ResponseObject<>(HttpStatus.ACCEPTED, "Post is being processed");
+    }
+
+    @PutMapping
+    public ResponseObject<PostDTO> updatePost(@RequestBody PostRequest request) {
+        if (request.getId() == null) {
+            return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Post id must be provided");
+        }
+        PostDTO response = postService.updatePost(request);
+        return new ResponseObject<>(HttpStatus.OK, response);
     }
 
     @PutMapping

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
+import org.snapgram.dto.CloudinaryMedia;
 import org.snapgram.validation.enum_pattern.EnumPattern;
 import org.snapgram.enums.Gender;
 
@@ -25,4 +26,5 @@ public class ProfileRequest {
     private Gender gender;
     @Length(max = 400)
     private String bio;
+    private CloudinaryMedia profilePicture;
 }

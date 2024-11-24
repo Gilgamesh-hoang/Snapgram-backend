@@ -3,6 +3,7 @@ package org.snapgram.service.post;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.dto.CloudinaryMedia;
 import org.snapgram.dto.CloudinaryPojo;
 import org.snapgram.entity.database.Post;
 import org.snapgram.entity.database.PostMedia;
@@ -80,4 +81,23 @@ public class PostMediaService {
         uploader.deleteFiles(postMedia.stream().map(PostMedia::getCloudinaryPublicId).toList());
     }
 
+    @Transactional
+    public List<PostMedia> savePostMedia(List<CloudinaryMedia> media, UUID postId) {
+        List<PostMedia> postMediaList = new ArrayList<>();
+        for (CloudinaryMedia file : media) {
+            MediaType type = null;
+            if (file.getResourceType().equals("image")) {
+                type = MediaType.IMAGE;
+            } else if (file.getResourceType().equals("video")) {
+                type = MediaType.VIDEO;
+            }
+            postMediaList.add(PostMedia.builder()
+                    .url(file.getUrl())
+                    .type(type)
+                    .cloudinaryPublicId(file.getPublicId())
+                    .post(Post.builder().id(postId).build()).isDeleted(false).build());
+        }
+        // save media to database
+        return postMediaRepository.saveAllAndFlush(postMediaList);
+    }
 }

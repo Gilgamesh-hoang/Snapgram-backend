@@ -2,6 +2,7 @@ package org.snapgram.dto.request;
 
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
+import org.snapgram.dto.CloudinaryMedia;
 import org.snapgram.validation.tag.ValidTags;
 
 import java.util.List;
@@ -15,4 +16,5 @@ public class PostRequest {
     @ValidTags
     private List<String> tags;
     private List<UUID> removeMedia;
+    private List<CloudinaryMedia> media;
 }

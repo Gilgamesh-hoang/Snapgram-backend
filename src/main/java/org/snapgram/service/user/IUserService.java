@@ -83,6 +83,8 @@ public interface IUserService {
 
     UserInfoDTO editUserInfo(UUID id, ProfileRequest request, MultipartFile avatar);
 
+    UserInfoDTO editUserInfo(UUID id, ProfileRequest request);
+
     void changePassword(UUID id, ChangePasswordRequest request);
 
     UserInfoDTO getUserInfo(String nickname);

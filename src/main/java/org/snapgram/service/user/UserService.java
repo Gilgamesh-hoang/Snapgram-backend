@@ -76,6 +76,22 @@ public class UserService implements IUserService {
     }
 
     @Override
+    public UserInfoDTO editUserInfo(UUID id, ProfileRequest request) {
+        User user = findUserEntityById(id);
+        if (user == null)
+            throw new UserNotFoundException("User not found with id: " + id);
+
+        userMapper.updateUserFromProfile(request, user);
+
+        if (request.getProfilePicture() != null) {
+            user.setAvatarUrl(request.getProfilePicture().getUrl());
+        }
+
+        user = userRepository.save(user);
+        return userMapper.toUserInfoDTO(user);
+    }
+
+    @Override
     public void changePassword(UUID id, ChangePasswordRequest request) {
         User user = findUserEntityById(id);
         if (user == null)

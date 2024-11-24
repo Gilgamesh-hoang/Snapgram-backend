@@ -35,6 +35,7 @@ import org.snapgram.util.CookieUtil;
 import org.snapgram.util.RedisKeyUtil;
 import org.snapgram.validation.media.ValidMedia;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -107,7 +108,15 @@ public class UserController {
         return new ResponseObject<>(HttpStatus.OK, profile);
     }
 
-    @PutMapping
+    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseObject<UserInfoDTO> updateProfile(
+            @CookieValue(AppConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
+            @RequestBody @Valid ProfileRequest request){
+        UserInfoDTO response = profileService.updateProfile(request, refreshToken);
+        return new ResponseObject<>(HttpStatus.OK, "Profile updated successfully", response);
+    }
+
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseObject<UserInfoDTO> updateProfile(
             @CookieValue(AppConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
             @RequestPart("profile") @Valid String profileJson,

@@ -8,5 +8,7 @@ public interface IProfileService {
     UserInfoDTO getProfile(String nickname);
 
     UserInfoDTO updateProfile(ProfileRequest request, MultipartFile avatar, String refreshToken);
+
+    UserInfoDTO updateProfile(ProfileRequest request, String refreshToken);
 }
 
