@@ -1,16 +1,18 @@
 package org.snapgram.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.CloudinaryMedia;
-import org.snapgram.dto.request.FaceRecognitionRequest;
+import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.service.cloudinary.ICloudinarySignatureService;
 import org.snapgram.service.face.IFaceRecognitionService;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,15 +45,16 @@ public class FaceRecognitionController {
     }
 
     @PostMapping("/trainings")
-    public ResponseObject<Void> train(@RequestBody @Valid FaceRecognitionRequest request) {
-        List<String> filteredMedia = request.getImages().stream()
+    public ResponseObject<Void> train(@RequestBody @Valid @NotEmpty List<CloudinaryMedia> images,
+                                      @AuthenticationPrincipal CustomUserSecurity currentUser) {
+        List<String> filteredMedia = images.stream()
                 .filter(cloudinarySignatureService::verifySignature).map(CloudinaryMedia::getUrl).toList();
 
         if (filteredMedia.isEmpty()) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Invalid signature for images", null);
         }
 
-//        faceService.train(request.getUserId(), filteredMedia);
+        faceService.train(currentUser.getId(), filteredMedia);
         return new ResponseObject<>(HttpStatus.OK, "Training started", null);
     }
 }

@@ -69,10 +69,6 @@ public class FaceRecognitionService implements IFaceRecognitionService {
     @Override
     @Async
     public CompletableFuture<Void> train(UUID userId, List<String> urls) {
-        UserDTO user = userService.findById(userId);
-        if (user == null) {
-            throw new IllegalArgumentException("User not found");
-        }
         JSONObject json = new JSONObject();
         json.put("user_id", userId);
         json.put("imageURLs", urls);
