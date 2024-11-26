@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 public class EditCommentRequest {
-    @NotBlank
+    @NotBlank(message = "Content is mandatory")
     private String content;
 }

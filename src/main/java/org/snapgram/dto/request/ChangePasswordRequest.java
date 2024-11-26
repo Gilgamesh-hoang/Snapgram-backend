@@ -11,15 +11,15 @@ import java.io.Serializable;
 @PasswordMatches
 public class ChangePasswordRequest implements Serializable {
 
-    @NotBlank
+    @NotBlank(message = "Current password is mandatory")
     @Size(min = 8)
     private String currentPassword;
 
-    @NotBlank
+    @NotBlank(message = "New password is mandatory")
     @Size(min = 8)
     private String newPassword;
 
-    @NotBlank
+    @NotBlank(message = "Confirm new password is mandatory")
     @Size(min = 8)
     private String confirmNewPassword;
 

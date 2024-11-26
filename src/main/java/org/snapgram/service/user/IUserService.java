@@ -88,4 +88,6 @@ public interface IUserService {
     void changePassword(UUID id, ChangePasswordRequest request);
 
     UserInfoDTO getUserInfo(String nickname);
+
+    List<UserDTO> getUsersByUUIDs(UUID[] uuids);
 }

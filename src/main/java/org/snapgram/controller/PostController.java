@@ -111,7 +111,7 @@ public class PostController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseObject<Void> createPost(@RequestBody PostRequest request) {
+    public ResponseObject<Void> createPost(@RequestBody @Valid PostRequest request) {
 
         if (StringUtils.isBlank(request.getCaption()) && request.getMedia() == null) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Caption or media  must be provided");
@@ -136,7 +136,7 @@ public class PostController {
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseObject<PostDTO> updatePost(@RequestBody PostRequest request) {
+    public ResponseObject<PostDTO> updatePost(@RequestBody @Valid PostRequest request) {
         if (request.getId() == null) {
             return new ResponseObject<>(HttpStatus.BAD_REQUEST, "Post id must be provided");
         }

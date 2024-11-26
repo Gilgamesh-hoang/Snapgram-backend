@@ -144,12 +144,14 @@ public class PostService implements IPostService {
         Post postEntity = validateAndPreparePostForUpdate(request);
 
         // If there are any media to add, add them
-        List<CloudinaryMedia> validMedia = request.getMedia().stream()
-                .filter(signatureService::verifySignature)
-                .toList();
-        if (!validMedia.isEmpty()) {
-            List<PostMedia> postMediaList = postMediaService.savePostMedia(validMedia, postEntity.getId());
-            postEntity.setMedia(postMediaList);
+        if (request.getMedia() != null) {
+            List<CloudinaryMedia> validMedia = request.getMedia().stream()
+                    .filter(signatureService::verifySignature)
+                    .toList();
+            if (!validMedia.isEmpty()) {
+                List<PostMedia> postMediaList = postMediaService.savePostMedia(validMedia, postEntity.getId());
+                postEntity.setMedia(postMediaList);
+            }
         }
 
         // Save the updated post entity to the database

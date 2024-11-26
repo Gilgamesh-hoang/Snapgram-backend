@@ -8,8 +8,8 @@ import java.util.UUID;
 
 @Data
 public class ReplyCommentRequest {
-    @NotNull
+    @NotNull(message = "Parent comment id is mandatory")
     private UUID parentCommentId;
-    @NotBlank
+    @NotBlank(message = "Content is mandatory")
     private String content;
 }

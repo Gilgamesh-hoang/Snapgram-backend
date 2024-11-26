@@ -111,6 +111,12 @@ public class UserService implements IUserService {
         return userMapper.toUserInfoDTO(user);
     }
 
+    @Override
+    public List<UserDTO> getUsersByUUIDs(UUID[] uuids) {
+        List<User> users = userRepository.findAllById(List.of(uuids));
+        return userMapper.toDTOs(users);
+    }
+
 
     @Override
     public UserDTO findByEmail(String email) {

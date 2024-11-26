@@ -1,5 +1,7 @@
 package org.snapgram;
 
+import org.snapgram.service.face.FaceRecognitionService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,9 +18,12 @@ public class SnapgramBackendApplication {
         SpringApplication.run(SnapgramBackendApplication.class, args);
     }
 
+//    @Autowired
+//    FaceRecognitionService faceRecognitionService;
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
+//            faceRecognitionService.identify("https://res.cloudinary.com/dqjwkvfko/image/upload/v1732349992/snapgram/file_40628927-f440-4024-a289-27f4400024a3.jpg");
         };
     }
 }
