@@ -6,7 +6,7 @@ import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.KeyPair;
 import org.snapgram.dto.request.KeyPairRequest;
 import org.snapgram.service.key.IKeyService;
-import org.snapgram.util.AppConstant;
+import org.snapgram.util.KafkaTopicConstant;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,7 @@ import java.util.UUID;
 public class KeyPairConsumer {
     IKeyService keyService;
 
-    @KafkaListener(topics = AppConstant.GENERATE_KEY_PAIR_TOPIC)
+    @KafkaListener(topics = KafkaTopicConstant.GENERATE_KEY_PAIR_TOPIC)
     public void handleGenerateKeyPair(KeyPairRequest keyPairRequest) {
         UUID userId = keyPairRequest.getUserId();
         KeyPair keyPair = keyPairRequest.getKeyPair();

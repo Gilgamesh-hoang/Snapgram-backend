@@ -1,7 +1,5 @@
 package org.snapgram.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -13,7 +11,6 @@ import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.KeyPair;
 import org.snapgram.dto.request.ChangePasswordRequest;
 import org.snapgram.dto.request.EmailRequest;
-import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.JwtResponse;
 import org.snapgram.dto.response.ResponseObject;
@@ -33,13 +30,10 @@ import org.snapgram.service.user.IUserService;
 import org.snapgram.util.AppConstant;
 import org.snapgram.util.CookieUtil;
 import org.snapgram.util.RedisKeyUtil;
-import org.snapgram.validation.media.ValidMedia;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -59,7 +53,6 @@ public class UserController {
     IProfileService profileService;
     ITokenService tokenService;
     JwtService jwtService;
-    ObjectMapper objectMapper;
     IKeyService keyService;
     KeyPairProducer keyPairProducer;
     RedisProducer redisProducer;
@@ -108,23 +101,6 @@ public class UserController {
         return new ResponseObject<>(HttpStatus.OK, profile);
     }
 
-    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseObject<UserInfoDTO> updateProfile(
-            @CookieValue(AppConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
-            @RequestBody @Valid ProfileRequest request){
-        UserInfoDTO response = profileService.updateProfile(request, refreshToken);
-        return new ResponseObject<>(HttpStatus.OK, "Profile updated successfully", response);
-    }
-
-    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseObject<UserInfoDTO> updateProfile(
-            @CookieValue(AppConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
-            @RequestPart("profile") @Valid String profileJson,
-            @RequestPart(value = "avatar", required = false) @ValidMedia MultipartFile avatar) throws JsonProcessingException {
-        ProfileRequest request = objectMapper.readValue(profileJson, ProfileRequest.class);
-        UserInfoDTO response = profileService.updateProfile(request, avatar, refreshToken);
-        return new ResponseObject<>(HttpStatus.OK, "Profile updated successfully", response);
-    }
 
     @GetMapping("/friend-suggestions")
     public ResponseObject<List<UserDTO>> friendSuggestion(

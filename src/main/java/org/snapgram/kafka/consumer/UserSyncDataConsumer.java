@@ -5,7 +5,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.service.user.IUserSyncDataService;
-import org.snapgram.util.AppConstant;
+import org.snapgram.util.DebeziumConstant;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -27,15 +27,15 @@ public class UserSyncDataConsumer {
         String action = jsonNode.path("payload").path("op").asText();
 
         switch (action) {
-            case AppConstant.DEBEZIUM_CREATE, AppConstant.DEBEZIUM_READ:
+            case DebeziumConstant.DEBEZIUM_CREATE, DebeziumConstant.DEBEZIUM_READ:
                 id = UUID.fromString(jsonNode.path("payload").path("after").path("id").asText());
                 userSyncDataService.createUser(id);
                 break;
-            case AppConstant.DEBEZIUM_UPDATE:
+            case DebeziumConstant.DEBEZIUM_UPDATE:
                 id = UUID.fromString(jsonNode.path("payload").path("after").path("id").asText());
                 userSyncDataService.updateUser(id);
                 break;
-            case AppConstant.DEBEZIUM_DELETE:
+            case DebeziumConstant.DEBEZIUM_DELETE:
                 id = UUID.fromString(jsonNode.path("payload").path("before").path("id").asText());
                 userSyncDataService.deleteUser(id);
                 break;

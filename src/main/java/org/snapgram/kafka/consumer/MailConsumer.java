@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.request.ForgotPasswordRequest;
 import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.service.mail.IEmailService;
-import org.snapgram.util.AppConstant;
+import org.snapgram.util.KafkaTopicConstant;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +18,13 @@ import org.springframework.stereotype.Service;
 public class MailConsumer {
     IEmailService emailService;
 
-    @KafkaListener(topics = AppConstant.EMAIL_VERIFICATION_TOPIC)
+    @KafkaListener(topics = KafkaTopicConstant.EMAIL_VERIFICATION_TOPIC)
     public void handleVerificationEmail(UserInfoDTO user) {
         emailService.sendVerificationEmail(user);
         log.info("Processing verification email for user: {}", user);
     }
 
-    @KafkaListener(topics = AppConstant.FORGOT_PASSWORD_TOPIC)
+    @KafkaListener(topics = KafkaTopicConstant.FORGOT_PASSWORD_TOPIC)
     public void handleForgotPasswordEmail(ForgotPasswordRequest message) {
         String email = message.getEmail();
         String newPassword = message.getNewPassword();

@@ -6,7 +6,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.request.ForgotPasswordRequest;
 import org.snapgram.dto.response.UserInfoDTO;
-import org.snapgram.util.AppConstant;
+import org.snapgram.util.KafkaTopicConstant;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +18,7 @@ public class MailProducer {
     KafkaTemplate<String, Object> kafkaTemplate;
 
     public void sendVerificationEmail(UserInfoDTO user) {
-        kafkaTemplate.send(AppConstant.EMAIL_VERIFICATION_TOPIC, user);
+        kafkaTemplate.send(KafkaTopicConstant.EMAIL_VERIFICATION_TOPIC, user);
         log.info("Sent verification email event: {}", user);
     }
 
@@ -27,7 +27,7 @@ public class MailProducer {
                 .email(email)
                 .newPassword(newPassword)
                 .build();
-        kafkaTemplate.send(AppConstant.FORGOT_PASSWORD_TOPIC, request);
+        kafkaTemplate.send(KafkaTopicConstant.FORGOT_PASSWORD_TOPIC, request);
         log.info("Sent forgot password email event for: {}", email);
     }
 }

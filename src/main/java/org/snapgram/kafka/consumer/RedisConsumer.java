@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.kafka.DeleteRedisMessage;
 import org.snapgram.dto.kafka.SaveRedisMessage;
 import org.snapgram.service.redis.IRedisService;
-import org.snapgram.util.AppConstant;
+import org.snapgram.util.KafkaTopicConstant;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
@@ -24,12 +24,12 @@ import java.util.concurrent.TimeUnit;
 public class RedisConsumer {
     IRedisService redisService;
 
-    @KafkaListener(topics = AppConstant.DELETE_MAP_ITEMS_TOPIC)
+    @KafkaListener(topics = KafkaTopicConstant.DELETE_MAP_ITEMS_TOPIC)
     public void deleteElementsRedis(DeleteRedisMessage message) {
         redisService.deleteElementsFromMap(message.redisKey(), (List<Object>) message.obj());
     }
 
-    @KafkaListener(topics = AppConstant.SAVE_VALUE_TO_REDIS_TOPIC)
+    @KafkaListener(topics = KafkaTopicConstant.SAVE_VALUE_TO_REDIS_TOPIC)
     public void saveValueToRedis(SaveRedisMessage message) {
         redisService.saveValue(message.redisKey(), message.obj());
         if (message.obj() == null) {
@@ -39,12 +39,12 @@ public class RedisConsumer {
         }
     }
 
-    @KafkaListener(topics = AppConstant.DELETE_KEY_REDIS_TOPIC)
+    @KafkaListener(topics = KafkaTopicConstant.DELETE_KEY_REDIS_TOPIC)
     public void deleteRedisByKey(String message) {
         redisService.deleteByPrefix(message);
     }
 
-    @KafkaListener(topics = AppConstant.SAVE_LIST_TO_REDIS_TOPIC)
+    @KafkaListener(topics = KafkaTopicConstant.SAVE_LIST_TO_REDIS_TOPIC)
     public void saveListToRedis(SaveRedisMessage message) {
         try {
             if (message.obj() instanceof List<?> list) {
@@ -62,7 +62,7 @@ public class RedisConsumer {
         }
     }
 
-    @KafkaListener(topics = AppConstant.SAVE_SET_TO_REDIS_TOPIC)
+    @KafkaListener(topics = KafkaTopicConstant.SAVE_SET_TO_REDIS_TOPIC)
     public void saveSetToRedis(SaveRedisMessage message) {
         try {
             if (message.obj() instanceof List<?> list) {
@@ -89,7 +89,7 @@ public class RedisConsumer {
     }
 
 
-    @KafkaListener(topics = AppConstant.SAVE_MAP_TO_REDIS_TOPIC)
+    @KafkaListener(topics = KafkaTopicConstant.SAVE_MAP_TO_REDIS_TOPIC)
     public void saveMapToRedis(SaveRedisMessage message) {
         try {
             if (!(message.obj() instanceof Map<?, ?> )) {

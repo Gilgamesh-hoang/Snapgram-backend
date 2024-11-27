@@ -11,21 +11,15 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
-import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.response.PostDTO;
-import org.snapgram.dto.response.PostMetricDTO;
 import org.snapgram.dto.response.ResponseObject;
-import org.snapgram.service.post.IPostLikeService;
-import org.snapgram.service.post.IPostSaveService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.validation.media.ValidMedia;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,59 +35,6 @@ import java.util.UUID;
 public class PostController {
     IPostService postService;
     ObjectMapper objectMapper;
-    IPostSaveService postSaveService;
-    IPostLikeService postLikeService;
-
-    @PostMapping("/check-likes")
-    public ResponseObject<List<UUID>> checkUserLikes(@RequestBody List<UUID> postIds,
-                                                     @AuthenticationPrincipal CustomUserSecurity user) {
-        List<UUID> likedPostIds = postLikeService.getLikedPosts(user.getId(), postIds);
-        return new ResponseObject<>(HttpStatus.OK, likedPostIds);
-    }
-
-    @PostMapping("/check-saves")
-    public ResponseObject<List<UUID>> checkUserSaves(@RequestBody List<UUID> postIds,
-                                                     @AuthenticationPrincipal CustomUserSecurity user) {
-        List<UUID> savedPostIds = postSaveService.getSavedPosts(user.getId(), postIds);
-        return new ResponseObject<>(HttpStatus.OK, savedPostIds);
-    }
-
-    @PostMapping("/{postId}/like")
-    public ResponseObject<PostMetricDTO> likePost(@PathVariable("postId") @NotNull UUID postId) {
-        PostMetricDTO response = postService.like(postId);
-        return new ResponseObject<>(HttpStatus.OK, response);
-    }
-
-    @DeleteMapping("/{postId}/unlike")
-    public ResponseObject<PostMetricDTO> unlikePost(@PathVariable("postId") @NotNull UUID postId) {
-        PostMetricDTO response = postService.unlike(postId);
-        return new ResponseObject<>(HttpStatus.OK, response);
-    }
-
-
-    @GetMapping("/saved")
-    public ResponseObject<List<PostDTO>> getSavedPostsByUser(
-            @AuthenticationPrincipal CustomUserSecurity user,
-            @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
-            @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) Integer pageSize
-    ) {
-        Sort sort = Sort.by(Sort.Order.desc("savedAt"));
-        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize).withSort(sort);
-        List<PostDTO> response = postSaveService.getSavedPostsByUser(user.getId(), pageable);
-        return new ResponseObject<>(HttpStatus.OK, response);
-    }
-
-    @PostMapping("/{postId}/save")
-    public ResponseObject<Void> savePost(@PathVariable("postId") @NotNull UUID postId) {
-        postService.savePost(postId);
-        return new ResponseObject<>(HttpStatus.OK);
-    }
-
-    @DeleteMapping("/{postId}/unsaved")
-    public ResponseObject<Void> unsavedPost(@PathVariable("postId") @NotNull UUID postId) {
-        postService.unsavedPost(postId);
-        return new ResponseObject<>(HttpStatus.OK);
-    }
 
     @GetMapping("/{id}")
     public ResponseObject<PostDTO> getPostsById(@PathVariable("id") @NotNull UUID id) {
