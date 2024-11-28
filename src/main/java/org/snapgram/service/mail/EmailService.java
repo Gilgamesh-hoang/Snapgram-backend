@@ -36,7 +36,7 @@ public class EmailService implements IEmailService {
         Context context = new Context();
         context.setVariable("fullName", user.getFullName());
         context.setVariable("email", user.getEmail());
-        context.setVariable("url", frontendUrl+"/sign-in?action=verify-email&code="+user.getActiveCode()+"&email="+user.getEmail());
+        context.setVariable("url", frontendUrl + "/sign-in?action=verify-email&code=" + user.getActiveCode() + "&email=" + user.getEmail());
         context.setVariable("expired", formattedString);
 
         String process = templateEngine.process("verify-email-template.html", context);
@@ -53,17 +53,17 @@ public class EmailService implements IEmailService {
     }
 
     private void sendMail(String to, String subject, String content) {
-            try {
-                MimeMessage message = mailSender.createMimeMessage();
-                MimeMessageHelper helper = new MimeMessageHelper(message, true, "utf-8");
-                helper.setFrom(new InternetAddress(username));
-                helper.setTo(new InternetAddress(to));
-                helper.setSubject(subject);
-                helper.setText(content, true);
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "utf-8");
+            helper.setFrom(new InternetAddress(username));
+            helper.setTo(new InternetAddress(to));
+            helper.setSubject(subject);
+            helper.setText(content, true);
 
-                mailSender.send(message);
-            } catch (MessagingException ex) {
-                log.error(ex.getMessage());
-            }
+            mailSender.send(message);
+        } catch (MessagingException ex) {
+            log.error(ex.getMessage());
+        }
     }
 }

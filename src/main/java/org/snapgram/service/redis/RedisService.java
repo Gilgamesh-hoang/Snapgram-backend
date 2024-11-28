@@ -3,6 +3,8 @@ package org.snapgram.service.redis;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.connection.StringRedisConnection;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -16,12 +18,13 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class RedisService implements IRedisService {
     private final RedisTemplate<String, Object> redisTemplate;
-
+    private final RedissonClient redissonClient;
 
     @Override
     public void saveValue(String key, Object value) {
         redisTemplate.opsForValue().set(key, value);
     }
+
     @Override
     public <T> T getValue(String key, Class<T> clazz) {
         Object data = redisTemplate.opsForValue().get(key);
@@ -30,7 +33,7 @@ public class RedisService implements IRedisService {
         if (data == null) {
             return null;
         }
-        if (data instanceof Map<?,?>) {
+        if (data instanceof Map<?, ?>) {
             ObjectMapper objectMapper = new ObjectMapper();
             data = objectMapper.convertValue(data, clazz);
             return (T) data;
@@ -51,7 +54,7 @@ public class RedisService implements IRedisService {
         if (size == 0) {
             return null;
         }
-        if (start >= size ) {
+        if (start >= size) {
             return new ArrayList<>();
         }
         if (end > size) {
@@ -59,6 +62,7 @@ public class RedisService implements IRedisService {
         }
         return (List<T>) redisTemplate.opsForList().range(key, start, end);
     }
+
     @Override
     public <T> List<T> getList(String key) {
         // check key is exist
@@ -69,12 +73,53 @@ public class RedisService implements IRedisService {
         return (List<T>) redisTemplate.opsForList().range(key, 0, -1);
     }
 
-    public Map<Object, Object> getMap(String key) {
-        return redisTemplate.opsForHash().entries(key);
-    }
+
     @Override
     public void addElementsToMap(String key, Map<String, Object> map) {
         redisTemplate.opsForHash().putAll(key, map);
+    }
+
+    public Map<Object, Object> getMap(String key) {
+        return redisTemplate.opsForHash().entries(key);
+    }
+
+    public Map<Object, Object> popAllElementsFromMapWithLock(String key) {
+        String lockKey = key + ":lock";
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            if (lock.tryLock(5, 2, TimeUnit.SECONDS)) {
+                try {
+                    Map<Object, Object> result = getMap(key);
+                    deleteByPattern(key);
+                    return result;
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                return new HashMap<>();
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Thread interrupted while waiting for lock", e);
+        }
+    }
+
+    @Override
+    public void incrementHashValue(String key, Object field, long value) {
+        String lockKey = key + ":lock";
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            if (lock.tryLock(10, 2, TimeUnit.SECONDS)) {
+                try {
+                    redisTemplate.opsForHash().increment(key, field, value);
+                } finally {
+                    lock.unlock();
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Thread interrupted while waiting for lock", e);
+        }
     }
 
 
@@ -95,6 +140,7 @@ public class RedisService implements IRedisService {
         // Convert data from JSON (String) to the desired type
         return clazz.cast(data);
     }
+
 
     @Override
     public <T> Set<T> getSet(String key) {
@@ -117,8 +163,8 @@ public class RedisService implements IRedisService {
     }
 
     @Override
-    public void deleteByPrefix(String prefix) {
-        Set<String> keys = redisTemplate.keys(prefix + "*");
+    public void deleteByPattern(String pattern) {
+        Set<String> keys = redisTemplate.keys(pattern);
         if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);
         }

@@ -14,6 +14,10 @@ public interface IRedisService {
 
     void addElementsToMap(String key, Map<String, Object> map);
 
+    Map<Object, Object> popAllElementsFromMapWithLock(String key);
+
+    void incrementHashValue(String key, Object field, long value);
+
     void deleteElementsFromMap(String key, List<Object> fields);
 
     <T> T getElementFromMap(String key, String field, Class<T> clazz);
@@ -30,5 +34,7 @@ public interface IRedisService {
 
     void setTTL(String key, long timeout, TimeUnit timeUnit);
 
-    void deleteByPrefix(String prefix);
+    void deleteByPattern(String pattern);
+
+
 }

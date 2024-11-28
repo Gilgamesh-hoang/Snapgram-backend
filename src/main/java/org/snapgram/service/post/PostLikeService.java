@@ -3,9 +3,11 @@ package org.snapgram.service.post;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.dto.kafka.PostLikeUpdateMessage;
 import org.snapgram.entity.database.Post;
 import org.snapgram.entity.database.PostLike;
 import org.snapgram.entity.database.User;
+import org.snapgram.kafka.producer.PostLikeProducer;
 import org.snapgram.repository.database.PostLikeRepository;
 import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Example;
@@ -20,7 +22,7 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class PostLikeService implements IPostLikeService {
     PostLikeRepository postLikeRepository;
-
+    PostLikeProducer likeProducer;
     @Override
     public boolean isPostLikedByUser(UUID postId, UUID userId) {
         User user = User.builder().id(userId).build();
@@ -31,22 +33,34 @@ public class PostLikeService implements IPostLikeService {
 
     @Override
     @Transactional
-    public void like(UUID postId) {
+    public boolean like(UUID postId) {
         Post post = Post.builder().id(postId).build();
         User user = User.builder().id(UserSecurityHelper.getCurrentUser().getId()).build();
         if (isPostLikedByUser(postId, user.getId())) {
-            return;
+            return false;
         }
+        likeProducer.sendUpdateLike(
+                PostLikeUpdateMessage.builder().postId(postId).action(PostLikeUpdateMessage.Action.INCREMENT).build()
+        );
         PostLike postLike = new PostLike(post, user);
         postLikeRepository.save(postLike);
+        return true;
     }
 
     @Override
     @Transactional
-    public void unlike(UUID postId) {
+    public boolean unlike(UUID postId) {
         Post post = Post.builder().id(postId).build();
         User user = User.builder().id(UserSecurityHelper.getCurrentUser().getId()).build();
-        postLikeRepository.deleteByPostAndUser(post, user);
+        if (isPostLikedByUser(postId, user.getId())) {
+            likeProducer.sendUpdateLike(
+                    PostLikeUpdateMessage.builder().postId(postId).action(PostLikeUpdateMessage.Action.DECREMENT).build()
+            );
+            postLikeRepository.deleteByPostAndUser(post, user);
+            return true;
+        }
+        return false;
+
     }
 
     @Override

@@ -5,7 +5,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class KafkaTopicConstant {
     public final String EMAIL_VERIFICATION_TOPIC = "email-verification";
-    public final String POST_LIKE_UPDATE_TOPIC = "email-verification";
+    public final String POST_LIKE_UPDATE_TOPIC = "post-like-update";
     public final String FORGOT_PASSWORD_TOPIC = "forgot-password";
     public final String GENERATE_KEY_PAIR_TOPIC = "generate-key-pair";
     public final String SAVE_VALUE_TO_REDIS_TOPIC = "save-value-redis";

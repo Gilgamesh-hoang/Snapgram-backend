@@ -45,6 +45,7 @@ dependencies {
     implementation 'com.cloudinary:cloudinary-http44:1.39.0'
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'org.redisson:redisson:3.39.0'
 
     compileOnly 'org.projectlombok:lombok'
 

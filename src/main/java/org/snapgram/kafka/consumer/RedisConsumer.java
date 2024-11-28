@@ -41,7 +41,7 @@ public class RedisConsumer {
 
     @KafkaListener(topics = KafkaTopicConstant.DELETE_KEY_REDIS_TOPIC)
     public void deleteRedisByKey(String message) {
-        redisService.deleteByPrefix(message);
+        redisService.deleteByPattern(message+"*");
     }
 
     @KafkaListener(topics = KafkaTopicConstant.SAVE_LIST_TO_REDIS_TOPIC)

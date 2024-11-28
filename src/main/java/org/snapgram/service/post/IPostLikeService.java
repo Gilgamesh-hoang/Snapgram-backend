@@ -6,9 +6,9 @@ import java.util.UUID;
 public interface IPostLikeService {
     boolean isPostLikedByUser(UUID postId, UUID userId);
 
-    void like(UUID postId);
+    boolean like(UUID postId);
 
-    void unlike(UUID postId);
+    boolean unlike(UUID postId);
 
     int countByPost(UUID postId);
 

@@ -6,8 +6,9 @@ import java.util.UUID;
 
 @UtilityClass
 public class RedisKeyUtil {
-    public static final String JWT_BLACKLIST = "jwt_blacklist";
-    public static final String ASYM_KEYPAIR = "asymmetric:keypair:users";
+    public final String JWT_BLACKLIST = "jwt_blacklist";
+    public final String ASYM_KEYPAIR = "asymmetric:keypair:users";
+    public final String POST_LIKE_COUNT = "post:likes";
 
     /*Comment key*/
     public String getPostCommentsKey(UUID postId, int page, int size) {

@@ -164,6 +164,7 @@ public class PostService implements IPostService {
         return result;
     }
 
+
     private Post validateAndPreparePostForUpdate(PostRequest request) {
         Post postEntity = postRepository.findById(request.getId()).orElse(null);
         CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
@@ -217,7 +218,16 @@ public class PostService implements IPostService {
 
     @Override
     public PostMetricDTO like(UUID postId) {
-        return updateLikeCount(postId, postLikeService::like);
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) {
+            throw new ResourceNotFoundException("Post not found");
+        }
+        boolean isSuccess = postLikeService.like(postId);
+//        post.setLikeCount(postLikeService.countByPost(postId));
+//        postRepository.save(post);
+        return PostMetricDTO.builder().likeCount(post.getLikeCount() + (isSuccess ? 1 : 0))
+                .commentCount(post.getCommentCount())
+                .build();
     }
 
     private PostMetricDTO updateLikeCount(UUID postId, Consumer<UUID> action) {
@@ -226,8 +236,8 @@ public class PostService implements IPostService {
             throw new ResourceNotFoundException("Post not found");
         }
         action.accept(postId);
-        post.setLikeCount(postLikeService.countByPost(postId));
-        postRepository.save(post);
+//        post.setLikeCount(postLikeService.countByPost(postId));
+//        postRepository.save(post);
         return PostMetricDTO.builder().likeCount(post.getLikeCount())
                 .commentCount(post.getCommentCount())
                 .build();
@@ -235,7 +245,16 @@ public class PostService implements IPostService {
 
     @Override
     public PostMetricDTO unlike(UUID postId) {
-        return updateLikeCount(postId, postLikeService::unlike);
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) {
+            throw new ResourceNotFoundException("Post not found");
+        }
+        boolean isSuccess = postLikeService.unlike(postId);
+//        post.setLikeCount(postLikeService.countByPost(postId));
+//        postRepository.save(post);
+        return PostMetricDTO.builder().likeCount(post.getLikeCount() - (isSuccess ? 1 : 0))
+                .commentCount(post.getCommentCount())
+                .build();
     }
 
     @Override
@@ -248,6 +267,19 @@ public class PostService implements IPostService {
     @Transactional
     public void updateCommentCount(UUID postId, int count) {
         postRepository.updateCommentCount(postId, count);
+    }
+
+    @Override
+    @Async
+    @Transactional
+    public CompletableFuture<Void> updateLikeCount(UUID postId, int likeCount) {
+        Post post = postRepository.findById(postId).orElse(null);
+        if (post == null) {
+            throw new ResourceNotFoundException("Post not found");
+        }
+        postRepository.updateLikeCount(postId, post.getLikeCount() + likeCount);
+        return CompletableFuture.completedFuture(null);
+
     }
 
     @Override
