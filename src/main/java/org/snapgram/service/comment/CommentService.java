@@ -46,7 +46,7 @@ public class CommentService implements ICommentService {
     @Override
     public List<CommentDTO> getCommentsByPost(UUID postId, Pageable pageable) {
         String redisKey = RedisKeyUtil.getPostCommentsKey(postId, pageable.getPageNumber(), pageable.getPageSize());
-        List<CommentDTO> comments = redisService.getList(redisKey);
+        List<CommentDTO> comments = redisService.getList(redisKey, CommentDTO.class);
         if (comments != null) {
             return comments;
         }

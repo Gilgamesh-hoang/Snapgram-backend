@@ -5,15 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.kafka.UpdateCommentCountMessage;
-import org.snapgram.dto.request.ForgotPasswordRequest;
-import org.snapgram.dto.response.UserInfoDTO;
-import org.snapgram.entity.database.Comment;
-import org.snapgram.entity.database.Post;
-import org.snapgram.service.mail.IEmailService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.service.post.PostMediaService;
 import org.snapgram.util.KafkaTopicConstant;
-import org.springframework.data.domain.Example;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 

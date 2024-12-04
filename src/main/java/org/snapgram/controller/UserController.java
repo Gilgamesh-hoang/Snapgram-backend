@@ -115,7 +115,7 @@ public class UserController {
         String redisKey = RedisKeyUtil.getFriendSuggestKey(user.getId());
 
         // Try to get the list of friend suggestions from Redis
-        List<UserDTO> users = redisService.getList(redisKey, start, end);
+        List<UserDTO> users = redisService.getList(redisKey, start, end, UserDTO.class);
         if (users != null) {
             return new ResponseObject<>(HttpStatus.OK, users);
         }

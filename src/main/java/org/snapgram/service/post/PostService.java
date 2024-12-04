@@ -8,6 +8,7 @@ import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.PostMetricDTO;
+import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.Post;
 import org.snapgram.entity.database.PostMedia;
 import org.snapgram.entity.database.Tag;
@@ -15,6 +16,7 @@ import org.snapgram.entity.database.User;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.kafka.producer.PostProducer;
 import org.snapgram.kafka.producer.RedisProducer;
+import org.snapgram.kafka.producer.TimelineProducer;
 import org.snapgram.mapper.PostMapper;
 import org.snapgram.repository.database.PostRepository;
 import org.snapgram.service.cloudinary.ICloudinarySignatureService;
@@ -31,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -50,6 +53,7 @@ public class PostService implements IPostService {
     IRedisService redisService;
     PostProducer postProducer;
     RedisProducer redisProducer;
+    TimelineProducer timelineProducer;
     IPostLikeService postLikeService;
     IPostSaveService postSaveService;
     ICloudinarySignatureService signatureService;
@@ -88,6 +92,8 @@ public class PostService implements IPostService {
         // delete cache
         deletePostCache(user.getNickname());
 
+        timelineProducer.sendPostCreatedMessage(user.getId(), post.getId(), post.getCreatedAt());
+
         return CompletableFuture.completedFuture(postMapper.toDTO(post));
     }
 
@@ -109,8 +115,12 @@ public class PostService implements IPostService {
         // delete cache
         deletePostCache(user.getNickname());
 
+        timelineProducer.sendPostCreatedMessage(user.getId(), post.getId(), post.getCreatedAt());
+
         return postMapper.toDTO(post);
     }
+
+
 
     private void deletePostCache(String nickname) {
         String redisKey = RedisKeyUtil.getUserPostKey(nickname, 0, 0);
@@ -225,7 +235,7 @@ public class PostService implements IPostService {
         boolean isSuccess = postLikeService.like(postId);
 //        post.setLikeCount(postLikeService.countByPost(postId));
 //        postRepository.save(post);
-        return PostMetricDTO.builder().likeCount(post.getLikeCount() + (isSuccess ? 1 : 0))
+        return PostMetricDTO.builder().likeCount(post.getLikeCount())
                 .commentCount(post.getCommentCount())
                 .build();
     }
@@ -252,7 +262,7 @@ public class PostService implements IPostService {
         boolean isSuccess = postLikeService.unlike(postId);
 //        post.setLikeCount(postLikeService.countByPost(postId));
 //        postRepository.save(post);
-        return PostMetricDTO.builder().likeCount(post.getLikeCount() - (isSuccess ? 1 : 0))
+        return PostMetricDTO.builder().likeCount(post.getLikeCount())
                 .commentCount(post.getCommentCount())
                 .build();
     }
@@ -292,8 +302,16 @@ public class PostService implements IPostService {
 
     @Override
     public List<PostDTO> getPostsByUser(String nickname, Pageable pageable) {
-        String redisKey = RedisKeyUtil.getUserPostKey(nickname, pageable.getPageNumber(), pageable.getPageSize());
-        List<PostDTO> results = redisService.getList(redisKey);
+        int page, size;
+        try {
+            page = pageable.getPageNumber();
+            size = pageable.getPageSize();
+        } catch (UnsupportedOperationException e) {
+            // unpaged
+            page = size = -1;
+        }
+        String redisKey = RedisKeyUtil.getUserPostKey(nickname, page, size);
+        List<PostDTO> results = redisService.getList(redisKey, PostDTO.class);
 
         if (results != null && !results.isEmpty()) {
             return results;
@@ -313,6 +331,12 @@ public class PostService implements IPostService {
     }
 
     @Override
+    public List<PostDTO> getPostsByUser(UUID userId, Pageable pageable) {
+        UserDTO user = userService.findById(userId);
+        return getPostsByUser(user.getNickname(), pageable);
+    }
+
+    @Override
     public PostDTO getPostById(UUID id) {
         String redisKey = RedisKeyUtil.getPostKey(id);
         PostDTO result = redisService.getValue(redisKey, PostDTO.class);
@@ -329,4 +353,19 @@ public class PostService implements IPostService {
         return result;
     }
 
+    @Override
+    public List<PostDTO> getPostsByIds(List<UUID> postIds) {
+        List<Post> posts = postRepository.findAllById(postIds);
+
+        if (!posts.isEmpty()) {
+            return postMapper.toDTOs(posts);
+        }
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<PostDTO> getPostsByUsersAndAfter(List<UUID> userIds, Timestamp time) {
+        List<Post> posts = postRepository.findAllByUserIdsAndAfter(userIds, time);
+        return postMapper.toDTOs(posts);
+    }
 }

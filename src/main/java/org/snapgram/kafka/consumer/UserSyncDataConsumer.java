@@ -24,19 +24,20 @@ public class UserSyncDataConsumer {
         }
 
         UUID id;
-        String action = jsonNode.path("payload").path("op").asText();
+        JsonNode payload = jsonNode.path("payload");
+        String action = payload.path("op").asText();
 
         switch (action) {
             case DebeziumConstant.DEBEZIUM_CREATE, DebeziumConstant.DEBEZIUM_READ:
-                id = UUID.fromString(jsonNode.path("payload").path("after").path("id").asText());
+                id = UUID.fromString(payload.path("after").path("id").asText());
                 userSyncDataService.createUser(id);
                 break;
             case DebeziumConstant.DEBEZIUM_UPDATE:
-                id = UUID.fromString(jsonNode.path("payload").path("after").path("id").asText());
+                id = UUID.fromString(payload.path("after").path("id").asText());
                 userSyncDataService.updateUser(id);
                 break;
             case DebeziumConstant.DEBEZIUM_DELETE:
-                id = UUID.fromString(jsonNode.path("payload").path("before").path("id").asText());
+                id = UUID.fromString(payload.path("before").path("id").asText());
                 userSyncDataService.deleteUser(id);
                 break;
             default:

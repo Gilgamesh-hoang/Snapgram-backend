@@ -41,7 +41,7 @@ public class RedisConsumer {
 
     @KafkaListener(topics = KafkaTopicConstant.DELETE_KEY_REDIS_TOPIC)
     public void deleteRedisByKey(String message) {
-        redisService.deleteByPattern(message+"*");
+        redisService.deleteByPattern(message + "*");
     }
 
     @KafkaListener(topics = KafkaTopicConstant.SAVE_LIST_TO_REDIS_TOPIC)
@@ -92,11 +92,11 @@ public class RedisConsumer {
     @KafkaListener(topics = KafkaTopicConstant.SAVE_MAP_TO_REDIS_TOPIC)
     public void saveMapToRedis(SaveRedisMessage message) {
         try {
-            if (!(message.obj() instanceof Map<?, ?> )) {
+            if (!(message.obj() instanceof Map<?, ?>)) {
                 log.error("Invalid data type for map saving in Redis. Expected map but found: {}", message.obj().getClass());
             }
 
-            Map<String, Object> map = (Map<String, Object>) message.obj();
+            Map<Object, Object> map = (Map<Object, Object>) message.obj();
             redisService.addElementsToMap(message.redisKey(), map);
 
             if (message.timeout() == null || message.timeUnit() == null) {
@@ -111,6 +111,14 @@ public class RedisConsumer {
         } catch (Exception e) {
             log.error("Error saving list to Redis: ", e);
         }
+    }
+
+    @KafkaListener(topics = KafkaTopicConstant.DELETE_ITEM_IN_SET_TOPIC)
+    public void deleteItemInSet(DeleteRedisMessage message) {
+        if (!(message.obj() instanceof List<?>)) {
+            log.error("Invalid data type for set saving in Redis. Expected List but found: {}", message.obj().getClass());
+        }
+        redisService.deleteItemsFromSet(message.redisKey(), (List<Object>) message.obj());
     }
 
 }

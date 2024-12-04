@@ -12,7 +12,7 @@ public interface IRedisService {
 
     Map<Object, Object> getMap(String key);
 
-    void addElementsToMap(String key, Map<String, Object> map);
+    void addElementsToMap(String key, Map<Object, Object> map);
 
     Map<Object, Object> popAllElementsFromMapWithLock(String key);
 
@@ -20,15 +20,17 @@ public interface IRedisService {
 
     void deleteElementsFromMap(String key, List<Object> fields);
 
-    <T> T getElementFromMap(String key, String field, Class<T> clazz);
+    <T> T getElementFromMap(String key, Object hashKey, Class<T> clazz);
 
     <T> void saveList(String key, List<T> list);
 
-    <T> List<T> getList(String key, int start, int end);
+    <T> List<T> getList(String key, int start, int end, Class<T> clazz);
 
-    <T> List<T> getList(String key);
+    <T> List<T> getList(String key, Class<T> clazz);
 
     <T> Set<T> getSet(String key);
+
+    boolean containInSet(String key, Object item);
 
     <T> void saveSet(String key, Set<T> set);
 
@@ -37,4 +39,5 @@ public interface IRedisService {
     void deleteByPattern(String pattern);
 
 
+    void deleteItemsFromSet(String key, List<Object> items);
 }

@@ -9,6 +9,15 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaTopicConfig {
     @Bean
+    public NewTopic deleteItemSetTopic() {
+        return TopicBuilder.name(KafkaTopicConstant.DELETE_ITEM_IN_SET_TOPIC).partitions(1).build();
+    }
+    @Bean
+    public NewTopic generateTimelineTopic() {
+        return TopicBuilder.name(KafkaTopicConstant.TIMELINE_POST_CREATE_TOPIC).partitions(1).build();
+    }
+
+    @Bean
     public NewTopic postLikeUpdateTopic() {
         return TopicBuilder.name(KafkaTopicConstant.POST_LIKE_UPDATE_TOPIC).partitions(1).build();
     }

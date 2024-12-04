@@ -8,12 +8,15 @@ import java.util.UUID;
 
 public interface IFollowService {
     int countFollowers(UUID userId);
+
     int countFollowees(UUID userId);
 
     List<UserDTO> getFollowersByUser(UUID userId, Pageable pageable);
-    List<UserDTO> getFollowingByUser(UUID userId, Pageable pageable);
+
+    List<UserDTO> getFolloweesByUser(UUID userId, Pageable pageable);
 
     void followUser(UUID userId, UUID followeeId);
+
     void unfollowUser(UUID userId, UUID followeeId);
 
     void removeFollower(UUID userId, UUID followerId);

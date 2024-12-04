@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -52,4 +53,7 @@ public class RedisProducer {
         kafkaTemplate.send(KafkaTopicConstant.DELETE_KEY_REDIS_TOPIC, redisKey);
     }
 
+    public void sendDeleteItemsInSet(String key, List<UUID> ids) {
+        kafkaTemplate.send(KafkaTopicConstant.DELETE_ITEM_IN_SET_TOPIC, new DeleteRedisMessage(key, ids));
+    }
 }

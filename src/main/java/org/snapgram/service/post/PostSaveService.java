@@ -12,7 +12,6 @@ import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.mapper.PostMapper;
 import org.snapgram.repository.database.PostSaveRepository;
 import org.snapgram.service.redis.IRedisService;
-import org.snapgram.service.redis.RedisService;
 import org.snapgram.util.RedisKeyUtil;
 import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Example;
@@ -44,7 +43,7 @@ public class PostSaveService implements IPostSaveService {
     @Override
     public List<PostDTO> getSavedPostsByUser(UUID userId, Pageable pageable) {
         String redisKey = RedisKeyUtil.getSavedPostsKey(userId, pageable.getPageNumber(), pageable.getPageSize());
-        List<PostDTO> results = redisService.getList(redisKey);
+        List<PostDTO> results = redisService.getList(redisKey, PostDTO.class);
         if (results != null && !results.isEmpty()) {
             return results;
         }

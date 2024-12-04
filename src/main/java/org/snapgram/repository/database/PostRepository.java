@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.sql.Timestamp;
+import java.util.List;
 import java.util.UUID;
 
 public interface PostRepository extends JpaRepository<Post, UUID> {
@@ -16,4 +18,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     @Modifying
     @Query("UPDATE Post p SET p.likeCount = :likeCount WHERE p.id = :postId")
     int updateLikeCount(@Param("postId") UUID postId, @Param("likeCount") int likeCount);
+
+    @Query("SELECT p FROM Post p WHERE p.user.id IN :userIds AND p.createdAt > :time ORDER BY p.createdAt DESC")
+    List<Post> findAllByUserIdsAndAfter(@Param("userIds") List<UUID> userIds, @Param("time") Timestamp time);
 }

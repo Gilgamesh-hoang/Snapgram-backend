@@ -10,12 +10,14 @@ import org.snapgram.dto.KeyPair;
 import org.snapgram.dto.request.AuthenticationRequest;
 import org.snapgram.dto.response.JwtResponse;
 import org.snapgram.dto.response.UserDTO;
+import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.jwt.JwtService;
 import org.snapgram.service.key.IKeyService;
 import org.snapgram.service.token.ITokenService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.service.user.UserDetailServiceImpl;
+import org.snapgram.util.RedisKeyUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +25,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -39,6 +43,7 @@ public class AuthenticationService implements IAuthenticationService {
     UserDetailServiceImpl userDetailsService;
     IUserService userService;
     IKeyService keyService;
+    RedisProducer redisProducer;
 
     // Method to handle common logic for generating JWT response
     private JwtResponse generateJwtResponse(String email, KeyPair keyPair) throws InterruptedException, ExecutionException {
@@ -107,6 +112,9 @@ public class AuthenticationService implements IAuthenticationService {
             JwtResponse jwtResponse = generateJwtResponse(user.getEmail(), keyPair);
             tokenService.storeRefreshToken(token, jwtResponse.getRefreshToken());
             tokenService.blacklistRefreshToken(token);
+
+            // Save last refresh token used
+            redisProducer.sendSaveMap(RedisKeyUtil.LAST_REFRESH_TOKEN, Map.of(user.getId(), new Timestamp(System.currentTimeMillis())));
             return jwtResponse;
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();

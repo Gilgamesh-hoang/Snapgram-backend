@@ -9,6 +9,14 @@ public class RedisKeyUtil {
     public final String JWT_BLACKLIST = "jwt_blacklist";
     public final String ASYM_KEYPAIR = "asymmetric:keypair:users";
     public final String POST_LIKE_COUNT = "post:likes";
+    public final String LAST_REFRESH_TOKEN = "auth:refresh_token_last_used";
+    public final String USERS_INACTIVE = "users:inactive";
+    public final String GET_TIMELINE_LATEST = "timeline:users:latest";
+
+    /*timeline*/
+    public String getTimelineKey(UUID userId, int page, int size) {
+        return String.format("timeline:%s:page:%d:size:%d", userId.toString(), page, size);
+    }
 
     /*Comment key*/
     public String getPostCommentsKey(UUID postId, int page, int size) {

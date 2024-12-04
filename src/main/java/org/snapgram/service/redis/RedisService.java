@@ -2,6 +2,7 @@ package org.snapgram.service.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -16,9 +17,10 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
 public class RedisService implements IRedisService {
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final RedissonClient redissonClient;
+    RedisTemplate<String, Object> redisTemplate;
+    RedissonClient redissonClient;
 
     @Override
     public void saveValue(String key, Object value) {
@@ -49,7 +51,7 @@ public class RedisService implements IRedisService {
     }
 
     @Override
-    public <T> List<T> getList(String key, int start, int end) {
+    public <T> List<T> getList(String key, int start, int end, Class<T> clazz) {
         long size = redisTemplate.opsForList().size(key);
         if (size == 0) {
             return null;
@@ -60,22 +62,30 @@ public class RedisService implements IRedisService {
         if (end > size) {
             end = (int) size;
         }
-        return (List<T>) redisTemplate.opsForList().range(key, start, end);
+
+        List<?> data = redisTemplate.opsForList().range(key, start, end);
+        if (data == null || data.isEmpty()) {
+            return new ArrayList<>();
+        }
+        if (data.get(0) instanceof Map<?, ?>) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return data.stream().map(item -> objectMapper.convertValue(item, clazz)).toList();
+        }
+        return (List<T>) data;
     }
 
     @Override
-    public <T> List<T> getList(String key) {
+    public <T> List<T> getList(String key, Class<T> clazz) {
         // check key is exist
         if (Boolean.FALSE.equals(redisTemplate.hasKey(key))) {
             return null;
         }
-
-        return (List<T>) redisTemplate.opsForList().range(key, 0, -1);
+        return getList(key, 0, -1, clazz);
     }
 
 
     @Override
-    public void addElementsToMap(String key, Map<String, Object> map) {
+    public void addElementsToMap(String key, Map<Object, Object> map) {
         redisTemplate.opsForHash().putAll(key, map);
     }
 
@@ -135,10 +145,15 @@ public class RedisService implements IRedisService {
     }
 
     @Override
-    public <T> T getElementFromMap(String key, String field, Class<T> clazz) {
-        Object data = redisTemplate.opsForHash().get(key, field);
+    public <T> T getElementFromMap(String key, Object hashKey, Class<T> clazz) {
+        hashKey = hashKey.toString();
+        Object data = redisTemplate.opsForHash().get(key, hashKey);
+        if (data == null) {
+            return null;
+        }
         // Convert data from JSON (String) to the desired type
-        return clazz.cast(data);
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.convertValue(data, clazz);
     }
 
 
@@ -158,6 +173,16 @@ public class RedisService implements IRedisService {
     }
 
     @Override
+    public boolean containInSet(String key, Object item) {
+        return redisTemplate.opsForSet().isMember(key, item);
+    }
+
+    @Override
+    public <T> void saveSet(String key, Set<T> set) {
+        redisTemplate.opsForSet().add(key, set);
+    }
+
+    @Override
     public void setTTL(String key, long timeout, TimeUnit timeUnit) {
         redisTemplate.expire(key, timeout, timeUnit);
     }
@@ -171,7 +196,8 @@ public class RedisService implements IRedisService {
     }
 
     @Override
-    public <T> void saveSet(String key, Set<T> set) {
-        redisTemplate.opsForSet().add(key, set);
+    public void deleteItemsFromSet(String key, List<Object> items) {
+        redisTemplate.opsForSet().remove(key, items.toArray());
     }
+
 }

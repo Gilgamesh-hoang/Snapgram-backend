@@ -5,8 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.kafka.UpdateCommentCountMessage;
-import org.snapgram.dto.request.ForgotPasswordRequest;
-import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.util.KafkaTopicConstant;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;

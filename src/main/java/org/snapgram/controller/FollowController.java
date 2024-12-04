@@ -92,7 +92,7 @@ public class FollowController {
     ) {
         Sort sort = Sort.by(Sort.Order.desc("createdAt"));
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize).withSort(sort);
-        List<UserDTO> res = followService.getFollowingByUser(userId, pageable);
+        List<UserDTO> res = followService.getFolloweesByUser(userId, pageable);
         return new ResponseObject<>(HttpStatus.OK, res);
     }
 }

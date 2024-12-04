@@ -40,7 +40,6 @@ public class FaceRecognitionService implements IFaceRecognitionService {
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful() && response.body() != null) {
                 String responseBody = response.body().string();
-                System.out.println("Response: " + responseBody);
                 JsonNode jsonNode = objectMapper.readTree(responseBody);
 
                 int code = jsonNode.get("status_code").asInt();

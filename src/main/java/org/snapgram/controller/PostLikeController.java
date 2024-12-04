@@ -1,6 +1,5 @@
 package org.snapgram.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +8,6 @@ import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.response.PostMetricDTO;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.service.post.IPostLikeService;
-import org.snapgram.service.post.IPostSaveService;
 import org.snapgram.service.post.IPostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

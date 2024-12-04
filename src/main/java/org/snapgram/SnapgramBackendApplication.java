@@ -1,7 +1,5 @@
 package org.snapgram;
 
-import org.snapgram.service.face.FaceRecognitionService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,13 +16,39 @@ public class SnapgramBackendApplication {
         SpringApplication.run(SnapgramBackendApplication.class, args);
     }
 
-//    @Autowired
-//    FaceRecognitionService faceRecognitionService;
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
-//            faceRecognitionService.identify("https://res.cloudinary.com/dqjwkvfko/image/upload/v1732349992/snapgram/file_40628927-f440-4024-a289-27f4400024a3.jpg");
+
         };
     }
+
+//    void generateTimeline() {
+//        @Autowired
+//        UserRepository userRepository;
+//        @Autowired
+//        IFollowService followService;
+//        @Autowired
+//        PostRepository postRepository;
+//        @Autowired
+//        TimelineRepository timelineRepository;
+//        List<Timeline> timelines = new ArrayList<>();
+//        List<User> all = userRepository.findAll();
+//        System.out.println("User count: " + all.size());
+//
+//        for (User user : all) {
+//            followService.getFolloweesByUser(user.getId(), Pageable.unpaged()).forEach(followee -> {
+//                Example<Post> example = Example.of(
+//                        Post.builder().user(User.builder().id(followee.getId()).build()).isDeleted(false).build()
+//                );
+//                postRepository.findAll(example).forEach(post -> {
+//                    timelines.add(Timeline.builder().userId(user.getId()).postId(post.getId()).postCreatedAt(post.getCreatedAt()).build());
+//                });
+//            });
+//        }
+//
+//        List<Timeline> timelines1 = timelineRepository.saveAllAndFlush(timelines);
+//        System.out.println("Timeline1 count: " + timelines1.size());
+//    }
 }
 // ./gradlew sonar -D sonar.projectKey=Snapgram-backend -D sonar.host.url=http://localhost:8998 -D sonar.login=sqp_846a015e770ec5b9ec749641e0359e14434386e4

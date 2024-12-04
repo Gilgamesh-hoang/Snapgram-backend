@@ -23,7 +23,6 @@ public class UpdateLikeTask {
     @Transactional
     public void fetchAndDeleteHash() {
         Map<Object, Object> likes = redisService.popAllElementsFromMapWithLock(RedisKeyUtil.POST_LIKE_COUNT);
-        log.info("Processing {} likes", likes.size());
         for (Map.Entry<Object, Object> entry : likes.entrySet()) {
             UUID postId = UUID.fromString((String) entry.getKey());
             Integer likeCount = (Integer) entry.getValue();

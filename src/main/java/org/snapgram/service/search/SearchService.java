@@ -51,7 +51,7 @@ public class SearchService implements ISearchService {
     @Override
     public Set<UserDTO> searchFollowingByUser(UUID userId, String keyword, Pageable pageable) {
         String redisKey = RedisKeyUtil.getSearchFollowingKey(userId, keyword, pageable.getPageNumber(), pageable.getPageSize());
-        List<UUID> followerIds = followService.getFollowingByUser(userId, Pageable.unpaged())
+        List<UUID> followerIds = followService.getFolloweesByUser(userId, Pageable.unpaged())
                 .stream().map(UserDTO::getId).toList();
         if (followerIds.isEmpty()) {
             return Collections.emptySet();

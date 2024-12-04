@@ -38,8 +38,8 @@ public class AsyncKeyService {
             key.setPublicKeyRT(keyPair.getPublicKeyRT());
             key.setPrivateKeyAT(privateAT.get());
             key.setPrivateKeyRT(privateRT.get());
-            HashMap<String, Object> map = new HashMap<>();
-            map.put(userId.toString(), key);
+            HashMap<Object, Object> map = new HashMap<>();
+            map.put(userId, key);
             redisService.addElementsToMap(RedisKeyUtil.ASYM_KEYPAIR, map);
             return CompletableFuture.completedFuture(null);
         } catch (InterruptedException | ExecutionException e) {

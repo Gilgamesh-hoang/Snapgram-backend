@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.Follow;
 import org.snapgram.entity.database.User;
+import org.snapgram.kafka.producer.TimelineProducer;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.repository.database.FollowRepository;
 import org.snapgram.service.redis.IRedisService;
@@ -29,6 +30,7 @@ public class FollowService implements IFollowService {
     FollowRepository followRepository;
     UserMapper userMapper;
     IRedisService redisService;
+    TimelineProducer timelineProducer;
 
     @Override
     public int countFollowers(UUID userId) {
@@ -76,7 +78,7 @@ public class FollowService implements IFollowService {
             page = size = -1;
         }
         String redisKey = RedisKeyUtil.getUserFollowersKey(userId, page, size);
-        List<UserDTO> result = redisService.getList(redisKey);
+        List<UserDTO> result = redisService.getList(redisKey, UserDTO.class);
         if (result != null && !result.isEmpty()) {
             return result;
         }
@@ -85,7 +87,7 @@ public class FollowService implements IFollowService {
     }
 
     @Override
-    public List<UserDTO> getFollowingByUser(UUID userId, Pageable pageable) {
+    public List<UserDTO> getFolloweesByUser(UUID userId, Pageable pageable) {
         int page, size;
         try {
             page = pageable.getPageNumber();
@@ -95,7 +97,7 @@ public class FollowService implements IFollowService {
             page = size = -1;
         }
         String redisKey = RedisKeyUtil.getUserFollowingKey(userId, page, size);
-        List<UserDTO> result = redisService.getList(redisKey);
+        List<UserDTO> result = redisService.getList(redisKey, UserDTO.class);
         if (result != null && !result.isEmpty()) {
             return result;
         }
@@ -112,6 +114,7 @@ public class FollowService implements IFollowService {
         if (followRepository.exists(Example.of(follow))) {
             return;
         }
+        timelineProducer.sendFollowCreatedMessage(userId, followeeId);
         followRepository.save(follow);
     }
 
@@ -125,6 +128,7 @@ public class FollowService implements IFollowService {
         follow = followRepository.findOne(Example.of(follow)).orElse(null);
         if (follow != null) {
             followRepository.delete(follow);
+            timelineProducer.sendUnfollowMessage(userId, followeeId);
         }
     }
 
@@ -137,6 +141,7 @@ public class FollowService implements IFollowService {
         follow = followRepository.findOne(Example.of(follow)).orElse(null);
         if (follow != null) {
             followRepository.delete(follow);
+            timelineProducer.sendUnfollowMessage(followerId, userId);
         }
     }
 
