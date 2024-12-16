@@ -1,9 +1,11 @@
 package org.snapgram.service.follow;
 
+import org.snapgram.dto.AffinityDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public interface IFollowService {
@@ -22,4 +24,6 @@ public interface IFollowService {
     void removeFollower(UUID userId, UUID followerId);
 
     List<UUID> getFollowedUserIds(UUID currentUserId, List<UUID> userIds);
+
+    List<AffinityDTO> getAffinities(UUID followerId, Set<UUID> followeeIds);
 }

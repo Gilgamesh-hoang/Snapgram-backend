@@ -1,4 +1,4 @@
-package org.snapgram.service.timeline;
+package org.snapgram.service.newsfeed;
 
 import org.snapgram.dto.response.PostDTO;
 import org.springframework.data.domain.Pageable;
@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public interface ITimelineService {
-    List<PostDTO> getTimelinesByUser(UUID userId, Pageable pageable);
+public interface INewsfeedService {
+    List<PostDTO> getNewsfeedByUser(UUID userId, Pageable pageable);
 
-    CompletableFuture<Void> generateTimeline(UUID creatorId, UUID postId, Timestamp createdAt);
+    CompletableFuture<Void> generateNewsfeed(UUID creatorId, UUID postId, Timestamp createdAt);
 
     /**
      * Thêm bài viết của người được follow (followee) vào timeline của follower.
@@ -19,7 +19,7 @@ public interface ITimelineService {
      * @param followerId ID của người theo dõi.
      * @param followeeId ID của người được theo dõi.
      */
-    CompletableFuture<Void> addPostsToTimeline(UUID followerId, UUID followeeId);
+    CompletableFuture<Void> addPostsToNewsfeed(UUID followerId, UUID followeeId);
 
     /**
      * Xóa bài viết của người bị unfollow (followee) khỏi timeline của follower.
@@ -27,5 +27,5 @@ public interface ITimelineService {
      * @param followerId ID của người theo dõi.
      * @param followeeId ID của người bị unfollow.
      */
-    CompletableFuture<Void> removePostsFromTimeline(UUID followerId, UUID followeeId);
+    CompletableFuture<Void> removePostsInNewsfeed(UUID followerId, UUID followeeId);
 }

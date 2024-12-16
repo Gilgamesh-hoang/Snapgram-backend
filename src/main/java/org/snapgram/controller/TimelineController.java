@@ -9,7 +9,7 @@ import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.kafka.producer.RedisProducer;
-import org.snapgram.service.timeline.ITimelineService;
+import org.snapgram.service.newsfeed.INewsfeedService;
 import org.snapgram.util.RedisKeyUtil;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,7 +29,7 @@ import java.util.Map;
 @RequestMapping("${API_PREFIX}/timeline")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TimelineController {
-    ITimelineService timelineService;
+    INewsfeedService timelineService;
     RedisProducer redisProducer;
 
     @GetMapping
@@ -39,7 +39,7 @@ public class TimelineController {
             @RequestParam(value = "pageSize", defaultValue = "20") @Min(0) @Max(30) Integer pageSize
     ) {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
-        List<PostDTO> timelinesByUser = timelineService.getTimelinesByUser(user.getId(), pageable);
+        List<PostDTO> timelinesByUser = timelineService.getNewsfeedByUser(user.getId(), pageable);
 
         redisProducer.sendSaveMap(RedisKeyUtil.GET_TIMELINE_LATEST,
                 Map.of(user.getId(), new Timestamp(System.currentTimeMillis())));

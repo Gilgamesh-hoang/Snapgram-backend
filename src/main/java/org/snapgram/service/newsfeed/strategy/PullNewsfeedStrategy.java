@@ -1,4 +1,4 @@
-package org.snapgram.service.timeline.strategy;
+package org.snapgram.service.newsfeed.strategy;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +7,7 @@ import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.timeline.Timeline;
 import org.snapgram.kafka.producer.RedisProducer;
-import org.snapgram.repository.database.TimelineRepository;
+import org.snapgram.repository.database.NewsfeedRepository;
 import org.snapgram.service.follow.IFollowService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.service.redis.IRedisService;
@@ -25,9 +25,9 @@ import java.util.concurrent.CompletableFuture;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class InactiveUserTimelineStrategy implements TimelineStrategy {
+public class PullNewsfeedStrategy implements NewsfeedStrategy {
     final IFollowService followService;
-    final TimelineRepository timelineRepository;
+    final NewsfeedRepository newsfeedRepository;
     final IRedisService redisService;
     final RedisProducer redisProducer;
     final IPostService postService;
@@ -35,7 +35,7 @@ public class InactiveUserTimelineStrategy implements TimelineStrategy {
     static final int SIZE_OF_FOLLOW = 20;
 
     @Override
-    public List<PostDTO> getTimeline(UUID userId, Pageable pageable) {
+    public List<PostDTO> getNewsfeed(UUID userId, Pageable pageable) {
         // Remove user from inactive set
         redisProducer.sendDeleteItemsInSet(RedisKeyUtil.USERS_INACTIVE, List.of(userId));
 
@@ -75,7 +75,7 @@ public class InactiveUserTimelineStrategy implements TimelineStrategy {
                     ).toList());
 
                     if (batchTimelines.size() >= batchSize) {
-                        timelineRepository.saveAll(batchTimelines);
+                        newsfeedRepository.saveAll(batchTimelines);
                         batchTimelines.clear();
                     }
                     pageOfFollow++;
@@ -83,7 +83,7 @@ public class InactiveUserTimelineStrategy implements TimelineStrategy {
             }
 
             if (!batchTimelines.isEmpty()) {
-                timelineRepository.saveAll(batchTimelines);
+                newsfeedRepository.saveAll(batchTimelines);
             }
         });
     }
@@ -114,7 +114,7 @@ public class InactiveUserTimelineStrategy implements TimelineStrategy {
             List<Timeline> timelines = secondPage.stream().map(post ->
                     Timeline.builder().userId(userId).postId(post.getId()).postCreatedAt(post.getCreatedAt()).build()
             ).toList();
-            timelineRepository.saveAll(timelines);
+            newsfeedRepository.saveAll(timelines);
         });
     }
 }

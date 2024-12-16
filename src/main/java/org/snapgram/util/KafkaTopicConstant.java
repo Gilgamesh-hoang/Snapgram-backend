@@ -4,9 +4,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class KafkaTopicConstant {
-    public final String TIMELINE_POST_CREATE_TOPIC = "timeline-post-created";
-    public final String TIMELINE_FOLLOW_CREATE_TOPIC = "timeline-follow-created";
-    public final String TIMELINE_UNFOLLOW_TOPIC = "timeline-unfollow";
+    public final String NEWSFEED_TOPIC = "newsfeed";
     public final String EMAIL_VERIFICATION_TOPIC = "email-verification";
     public final String POST_LIKE_UPDATE_TOPIC = "post-like-update";
     public final String FORGOT_PASSWORD_TOPIC = "forgot-password";
@@ -20,4 +18,5 @@ public class KafkaTopicConstant {
     public final String REMOVE_MEDIA_TOPIC = "remove-media";
     public final String DELETE_MAP_ITEMS_TOPIC = "delete-map-items";
     public final String DELETE_ITEM_IN_SET_TOPIC = "delete-item-in-set";
+    public final String AFFINITY_TOPIC = "affinity";
 }

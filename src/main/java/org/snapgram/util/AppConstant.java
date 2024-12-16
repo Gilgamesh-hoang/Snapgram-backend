@@ -5,4 +5,5 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class AppConstant {
     public final String REFRESH_TOKEN = "refresh_token";
+    public final String AFFINITY_SEPARATOR = "::";
 }

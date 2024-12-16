@@ -7,7 +7,6 @@ import org.snapgram.dto.CloudinaryMedia;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.response.PostDTO;
-import org.snapgram.dto.response.PostMetricDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.Post;
 import org.snapgram.entity.database.PostMedia;
@@ -16,7 +15,7 @@ import org.snapgram.entity.database.User;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.kafka.producer.PostProducer;
 import org.snapgram.kafka.producer.RedisProducer;
-import org.snapgram.kafka.producer.TimelineProducer;
+import org.snapgram.kafka.producer.NewsfeedProducer;
 import org.snapgram.mapper.PostMapper;
 import org.snapgram.repository.database.PostRepository;
 import org.snapgram.service.cloudinary.ICloudinarySignatureService;
@@ -53,8 +52,7 @@ public class PostService implements IPostService {
     IRedisService redisService;
     PostProducer postProducer;
     RedisProducer redisProducer;
-    TimelineProducer timelineProducer;
-    IPostLikeService postLikeService;
+    NewsfeedProducer newsfeedProducer;
     IPostSaveService postSaveService;
     ICloudinarySignatureService signatureService;
 
@@ -92,7 +90,7 @@ public class PostService implements IPostService {
         // delete cache
         deletePostCache(user.getNickname());
 
-        timelineProducer.sendPostCreatedMessage(user.getId(), post.getId(), post.getCreatedAt());
+        newsfeedProducer.sendPostCreatedMessage(user.getId(), post.getId(), post.getCreatedAt());
 
         return CompletableFuture.completedFuture(postMapper.toDTO(post));
     }
@@ -115,7 +113,7 @@ public class PostService implements IPostService {
         // delete cache
         deletePostCache(user.getNickname());
 
-        timelineProducer.sendPostCreatedMessage(user.getId(), post.getId(), post.getCreatedAt());
+        newsfeedProducer.sendPostCreatedMessage(user.getId(), post.getId(), post.getCreatedAt());
 
         return postMapper.toDTO(post);
     }
@@ -226,46 +224,6 @@ public class PostService implements IPostService {
         action.accept(postId);
     }
 
-    @Override
-    public PostMetricDTO like(UUID postId) {
-        Post post = postRepository.findById(postId).orElse(null);
-        if (post == null) {
-            throw new ResourceNotFoundException("Post not found");
-        }
-        boolean isSuccess = postLikeService.like(postId);
-//        post.setLikeCount(postLikeService.countByPost(postId));
-//        postRepository.save(post);
-        return PostMetricDTO.builder().likeCount(post.getLikeCount())
-                .commentCount(post.getCommentCount())
-                .build();
-    }
-
-    private PostMetricDTO updateLikeCount(UUID postId, Consumer<UUID> action) {
-        Post post = postRepository.findById(postId).orElse(null);
-        if (post == null) {
-            throw new ResourceNotFoundException("Post not found");
-        }
-        action.accept(postId);
-//        post.setLikeCount(postLikeService.countByPost(postId));
-//        postRepository.save(post);
-        return PostMetricDTO.builder().likeCount(post.getLikeCount())
-                .commentCount(post.getCommentCount())
-                .build();
-    }
-
-    @Override
-    public PostMetricDTO unlike(UUID postId) {
-        Post post = postRepository.findById(postId).orElse(null);
-        if (post == null) {
-            throw new ResourceNotFoundException("Post not found");
-        }
-        boolean isSuccess = postLikeService.unlike(postId);
-//        post.setLikeCount(postLikeService.countByPost(postId));
-//        postRepository.save(post);
-        return PostMetricDTO.builder().likeCount(post.getLikeCount())
-                .commentCount(post.getCommentCount())
-                .build();
-    }
 
     @Override
     public boolean isExist(UUID postId) {

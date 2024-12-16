@@ -12,6 +12,7 @@ public class RedisKeyUtil {
     public final String LAST_REFRESH_TOKEN = "auth:refresh_token_last_used";
     public final String USERS_INACTIVE = "users:inactive";
     public final String GET_TIMELINE_LATEST = "timeline:users:latest";
+    public final String AFFINITY = "affinity";
 
     /*timeline*/
     public String getTimelineKey(UUID userId, int page, int size) {

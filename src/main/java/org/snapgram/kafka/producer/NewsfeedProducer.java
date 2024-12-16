@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.kafka.FollowCreatedMessage;
+import org.snapgram.dto.kafka.NewsfeedMessage;
 import org.snapgram.dto.kafka.PostCreatedMessage;
 import org.snapgram.util.KafkaTopicConstant;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -17,7 +18,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
-public class TimelineProducer {
+public class NewsfeedProducer {
     KafkaTemplate<String, Object> kafkaTemplate;
 
     public void sendPostCreatedMessage(UUID creatorId, UUID postId, Timestamp createdAt) {
@@ -25,8 +26,11 @@ public class TimelineProducer {
             log.error("Invalid input for PostCreatedMessage");
             return;
         }
-        PostCreatedMessage message = new PostCreatedMessage(creatorId, postId, createdAt);
-        kafkaTemplate.send(KafkaTopicConstant.TIMELINE_POST_CREATE_TOPIC, message);
+        PostCreatedMessage post = new PostCreatedMessage(creatorId, postId, createdAt);
+        NewsfeedMessage message = NewsfeedMessage.builder()
+                .type(NewsfeedMessage.NewsfeedType.POST_CREATED)
+                .data(post).build();
+        kafkaTemplate.send(KafkaTopicConstant.NEWSFEED_TOPIC, message);
     }
 
     public void sendFollowCreatedMessage(UUID followerId, UUID followeeId) {
@@ -34,8 +38,11 @@ public class TimelineProducer {
             log.error("Invalid input for FollowCreatedMessage");
             return;
         }
-        FollowCreatedMessage message = new FollowCreatedMessage(followerId, followeeId);
-        kafkaTemplate.send(KafkaTopicConstant.TIMELINE_FOLLOW_CREATE_TOPIC, message);
+        FollowCreatedMessage follow = new FollowCreatedMessage(followerId, followeeId);
+        NewsfeedMessage message = NewsfeedMessage.builder()
+                .type(NewsfeedMessage.NewsfeedType.FOLLOW_CREATED)
+                .data(follow).build();
+        kafkaTemplate.send(KafkaTopicConstant.NEWSFEED_TOPIC, message);
     }
 
     public void sendUnfollowMessage(UUID userId, UUID followeeId) {
@@ -43,7 +50,10 @@ public class TimelineProducer {
             log.error("Invalid input for UnfollowMessage");
             return;
         }
-        FollowCreatedMessage message = new FollowCreatedMessage(userId, followeeId);
-        kafkaTemplate.send(KafkaTopicConstant.TIMELINE_UNFOLLOW_TOPIC, message);
+        FollowCreatedMessage follow = new FollowCreatedMessage(userId, followeeId);
+        NewsfeedMessage message = NewsfeedMessage.builder()
+                .type(NewsfeedMessage.NewsfeedType.UNFOLLOW)
+                .data(follow).build();
+        kafkaTemplate.send(KafkaTopicConstant.NEWSFEED_TOPIC, message);
     }
 }

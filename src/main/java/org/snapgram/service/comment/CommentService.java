@@ -15,6 +15,7 @@ import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.mapper.CommentMapper;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.repository.database.CommentRepository;
+import org.snapgram.service.follow.IAffinityService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.user.IUserService;
@@ -42,6 +43,7 @@ public class CommentService implements ICommentService {
     ICommentLikeService commentLikeService;
     RedisProducer redisProducer;
     PostProducer postProducer;
+    IAffinityService affinityService;
 
     @Override
     public List<CommentDTO> getCommentsByPost(UUID postId, Pageable pageable) {
@@ -198,6 +200,8 @@ public class CommentService implements ICommentService {
                 parentComment.getId());
 
         commentRepository.saveAndFlush(comment);
+
+        affinityService.increaseAffinityByComment(postId);
 
         CompletableFuture.runAsync(() -> handleAsyncCommentCreation(postId, parentComment.getId()));
 

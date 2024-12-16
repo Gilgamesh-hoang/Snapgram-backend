@@ -4,10 +4,13 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.snapgram.dto.AffinityDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.Follow;
 import org.snapgram.entity.database.User;
-import org.snapgram.kafka.producer.TimelineProducer;
+import org.snapgram.kafka.producer.RedisProducer;
+import org.snapgram.kafka.producer.NewsfeedProducer;
+import org.snapgram.mapper.FollowMapper;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.repository.database.FollowRepository;
 import org.snapgram.service.redis.IRedisService;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -29,8 +33,10 @@ import java.util.function.Function;
 public class FollowService implements IFollowService {
     FollowRepository followRepository;
     UserMapper userMapper;
+    FollowMapper followMapper;
     IRedisService redisService;
-    TimelineProducer timelineProducer;
+    NewsfeedProducer newsfeedProducer;
+    RedisProducer redisProducer;
 
     @Override
     public int countFollowers(UUID userId) {
@@ -42,6 +48,7 @@ public class FollowService implements IFollowService {
         return Example.of(Follow.builder()
                 .followee(createActiveUser(userId))
                 .follower(createActiveUser())
+                .isDeleted(false)
                 .build());
     }
 
@@ -49,12 +56,14 @@ public class FollowService implements IFollowService {
         return Example.of(Follow.builder()
                 .follower(createActiveUser(userId))
                 .followee(createActiveUser())
+                .isDeleted(false)
                 .build());
     }
 
     private User createActiveUser() {
         return User.builder().isActive(true).isDeleted(false).build();
     }
+
     private User createActiveUser(UUID userId) {
         User user = createActiveUser();
         user.setId(userId);
@@ -106,48 +115,81 @@ public class FollowService implements IFollowService {
     }
 
     @Override
+    @Transactional
     public void followUser(UUID userId, UUID followeeId) {
         Follow follow = Follow.builder()
-                .follower(User.builder().id(userId).build())
+                .follower(createActiveUser(userId))
                 .followee(createActiveUser(followeeId))
                 .build();
-        if (followRepository.exists(Example.of(follow))) {
+
+        Follow entity = followRepository.findOne(Example.of(follow)).orElse(null);
+        if (entity != null && !entity.getIsDeleted()) {
             return;
         }
-        timelineProducer.sendFollowCreatedMessage(userId, followeeId);
+        follow.setIsDeleted(false);
         followRepository.save(follow);
+        newsfeedProducer.sendFollowCreatedMessage(userId, followeeId);
+
+        String followingKey = RedisKeyUtil.getUserFollowingKey(userId, 0, 0);
+        redisProducer.sendDeleteByKey(followingKey.substring(0, followingKey.indexOf("page")));
+
+        String followersKey = RedisKeyUtil.getUserFollowersKey(followeeId, 0, 0);
+        redisProducer.sendDeleteByKey(followersKey.substring(0, followersKey.indexOf("page")));
     }
 
     @Override
     @Transactional
     public void unfollowUser(UUID userId, UUID followeeId) {
-        Follow follow = Follow.builder()
-                .follower(User.builder().id(userId).build())
-                .followee(User.builder().id(followeeId).build())
-                .build();
-        follow = followRepository.findOne(Example.of(follow)).orElse(null);
-        if (follow != null) {
-            followRepository.delete(follow);
-            timelineProducer.sendUnfollowMessage(userId, followeeId);
-        }
+        processUnFollow(userId, followeeId, false);
+
+        String followingKey = RedisKeyUtil.getUserFollowingKey(userId, 0, 0);
+        redisProducer.sendDeleteByKey(followingKey.substring(0, followingKey.indexOf("page")));
+
+        String followersKey = RedisKeyUtil.getUserFollowersKey(followeeId, 0, 0);
+        redisProducer.sendDeleteByKey(followersKey.substring(0, followersKey.indexOf("page")));
     }
 
     @Override
+    @Transactional
     public void removeFollower(UUID userId, UUID followerId) {
+        processUnFollow(followerId, userId, true);
+
+        String followingKey = RedisKeyUtil.getUserFollowingKey(followerId, 0, 0);
+        redisProducer.sendDeleteByKey(followingKey.substring(0, followingKey.indexOf("page")));
+
+        String followersKey = RedisKeyUtil.getUserFollowersKey(userId, 0, 0);
+        redisProducer.sendDeleteByKey(followersKey.substring(0, followersKey.indexOf("page")));
+    }
+
+    private void processUnFollow(UUID followerId, UUID followeeId, boolean isRemoveFollower) {
         Follow follow = Follow.builder()
-                .follower(User.builder().id(followerId).build())
-                .followee(User.builder().id(userId).build())
+                .follower(createActiveUser(followerId))
+                .followee(createActiveUser(followeeId))
                 .build();
-        follow = followRepository.findOne(Example.of(follow)).orElse(null);
-        if (follow != null) {
-            followRepository.delete(follow);
-            timelineProducer.sendUnfollowMessage(followerId, userId);
+        Follow entity = followRepository.findOne(Example.of(follow)).orElse(null);
+        if (entity == null || entity.getIsDeleted()) {
+            return;
+        }
+        entity.setIsDeleted(true);
+        followRepository.save(entity);
+
+        if (isRemoveFollower) {
+            newsfeedProducer.sendUnfollowMessage(followerId, followeeId);
+        } else {
+            newsfeedProducer.sendUnfollowMessage(followeeId, followerId);
         }
     }
+
 
     @Override
     public List<UUID> getFollowedUserIds(UUID currentUserId, List<UUID> userIds) {
         return followRepository.findByFollowerIdAndFolloweeIdIn(currentUserId, userIds);
+    }
+
+    @Override
+    public List<AffinityDTO> getAffinities(UUID followerId, Set<UUID> followeeIds) {
+        List<Follow> follows = followRepository.getAffinities(followerId, followeeIds);
+        return followMapper.toAffinities(follows);
     }
 
     private List<UserDTO> getAndCacheFollowData(Example<Follow> example, Pageable pageable, String redisKey, Function<Follow, User> userMapperFunction) {

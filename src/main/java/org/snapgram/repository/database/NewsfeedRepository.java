@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.UUID;
 
-public interface TimelineRepository extends JpaRepository<Timeline, UUID> {
+public interface NewsfeedRepository extends JpaRepository<Timeline, UUID> {
     @Modifying
     @Query("DELETE FROM Timeline t WHERE t.userId = :userId AND t.postId IN :postIds")
     void deleteAllByUserIdAndPostIds(@Param("userId") UUID userId, @Param("postIds") List<UUID> postIds);

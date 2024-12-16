@@ -8,7 +8,6 @@ import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.response.PostMetricDTO;
 import org.snapgram.dto.response.ResponseObject;
 import org.snapgram.service.post.IPostLikeService;
-import org.snapgram.service.post.IPostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -23,7 +22,6 @@ import java.util.UUID;
 @RequestMapping("${API_PREFIX}/posts")
 @Validated
 public class PostLikeController {
-    IPostService postService;
     IPostLikeService postLikeService;
 
     @PostMapping("/check-likes")
@@ -35,13 +33,13 @@ public class PostLikeController {
 
     @PostMapping("/{postId}/like")
     public ResponseObject<PostMetricDTO> likePost(@PathVariable("postId") @NotNull UUID postId) {
-        PostMetricDTO response = postService.like(postId);
+        PostMetricDTO response = postLikeService.like(postId);
         return new ResponseObject<>(HttpStatus.OK, response);
     }
 
     @DeleteMapping("/{postId}/unlike")
     public ResponseObject<PostMetricDTO> unlikePost(@PathVariable("postId") @NotNull UUID postId) {
-        PostMetricDTO response = postService.unlike(postId);
+        PostMetricDTO response = postLikeService.unlike(postId);
         return new ResponseObject<>(HttpStatus.OK, response);
     }
 

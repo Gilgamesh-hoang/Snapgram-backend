@@ -19,7 +19,6 @@ public class SnapgramBackendApplication {
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
-
         };
     }
 
@@ -31,7 +30,7 @@ public class SnapgramBackendApplication {
 //        @Autowired
 //        PostRepository postRepository;
 //        @Autowired
-//        TimelineRepository timelineRepository;
+//        NewsfeedRepository timelineRepository;
 //        List<Timeline> timelines = new ArrayList<>();
 //        List<User> all = userRepository.findAll();
 //        System.out.println("User count: " + all.size());

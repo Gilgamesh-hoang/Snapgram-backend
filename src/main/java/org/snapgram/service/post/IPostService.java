@@ -2,7 +2,6 @@ package org.snapgram.service.post;
 
 import org.snapgram.dto.request.PostRequest;
 import org.snapgram.dto.response.PostDTO;
-import org.snapgram.dto.response.PostMetricDTO;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -29,10 +28,6 @@ public interface IPostService {
     void savePost(UUID postId);
 
     void unsavedPost(UUID postId);
-
-    PostMetricDTO like(UUID postId);
-
-    PostMetricDTO unlike(UUID postId);
 
     boolean isExist(UUID postId);
 
