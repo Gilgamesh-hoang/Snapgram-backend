@@ -1,18 +1,22 @@
-package org.snapgram.entity.database;
+package org.snapgram.entity.database.post;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.snapgram.entity.database.generator.UUIDGenerator;
+import org.snapgram.enums.MediaType;
 
 import java.util.UUID;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
-@Table(name = "message_recipient")
-public class MessageRecipient {
+@Table(name = "post_media")
+public class PostMedia {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -21,23 +25,22 @@ public class MessageRecipient {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "message_id", nullable = false)
-    private Message message;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
 
-    @ManyToOne
-    @JoinColumn(name = "recipient_id", nullable = false)
-    private User recipient;
+    @Column(length = 255, nullable = false)
+    private String url;
 
-    @ManyToOne
-    @JoinColumn(name = "recipient_group_id", nullable = false)
-    private Participant recipientGroup;
+    @Column(name = "cloudinary_public_id",length = 255)
+    private String cloudinaryPublicId;
 
-    @Column(name = "is_read", columnDefinition = "TINYINT(1) DEFAULT 0")
-    private Boolean isRead = false;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MediaType type;
+
 
     @Column(name = "is_deleted",  columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean isDeleted = false;
-
-    // getters and setters
 }
+

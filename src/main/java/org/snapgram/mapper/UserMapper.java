@@ -7,7 +7,7 @@ import org.snapgram.dto.request.SignupRequest;
 import org.snapgram.dto.response.CreatorDTO;
 import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.dto.response.UserDTO;
-import org.snapgram.entity.database.User;
+import org.snapgram.entity.database.user.User;
 import org.snapgram.entity.elasticsearch.UserDocument;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 

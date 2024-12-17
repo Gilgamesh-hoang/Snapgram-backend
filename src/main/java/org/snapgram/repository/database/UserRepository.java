@@ -1,6 +1,6 @@
 package org.snapgram.repository.database;
 
-import org.snapgram.entity.database.User;
+import org.snapgram.entity.database.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

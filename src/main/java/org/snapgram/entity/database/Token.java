@@ -10,6 +10,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.snapgram.entity.database.generator.UUIDGenerator;
+import org.snapgram.entity.database.user.User;
 
 import java.util.Date;
 import java.util.UUID;

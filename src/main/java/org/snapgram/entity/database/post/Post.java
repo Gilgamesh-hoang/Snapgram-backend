@@ -1,4 +1,4 @@
-package org.snapgram.entity.database;
+package org.snapgram.entity.database.post;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.snapgram.entity.database.user.User;
 import org.snapgram.entity.database.generator.UUIDGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;

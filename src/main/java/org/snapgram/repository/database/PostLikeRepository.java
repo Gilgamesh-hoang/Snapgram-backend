@@ -1,9 +1,9 @@
 package org.snapgram.repository.database;
 
 import io.lettuce.core.dynamic.annotation.Param;
-import org.snapgram.entity.database.Post;
-import org.snapgram.entity.database.PostLike;
-import org.snapgram.entity.database.User;
+import org.snapgram.entity.database.post.Post;
+import org.snapgram.entity.database.post.PostLike;
+import org.snapgram.entity.database.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

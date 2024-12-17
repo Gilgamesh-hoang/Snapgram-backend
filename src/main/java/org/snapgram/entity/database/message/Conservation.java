@@ -1,8 +1,7 @@
-package org.snapgram.entity.database;
+package org.snapgram.entity.database.message;
 
 import jakarta.persistence.*;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -13,12 +12,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-@Data
 @Entity
-@NoArgsConstructor
-@Table(name = "post_like")
+@Table(name = "conservation")
+@Data
 @EntityListeners(AuditingEntityListener.class)
-public class PostLike {
+public class Conservation {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -27,21 +25,24 @@ public class PostLike {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    @Column(length = 255, nullable = false)
+    private String subject;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ConservationType type;
 
     @Column(name = "created_at", updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreatedDate
     @Temporal(TemporalType.TIMESTAMP)
     private Timestamp createdAt;
 
-    public PostLike(Post post, User user) {
-        this.post = post;
-        this.user = user;
+    @Column(name = "is_deleted", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    private Boolean isDeleted = false;
+
+    public enum ConservationType {
+        SINGLE, GROUP
     }
+
+    // getters and setters
 }

@@ -3,7 +3,7 @@ package org.snapgram.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.snapgram.dto.response.CommentDTO;
-import org.snapgram.entity.database.Comment;
+import org.snapgram.entity.database.comment.Comment;
 
 import java.util.List;
 

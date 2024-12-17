@@ -1,7 +1,7 @@
 package org.snapgram.repository.database;
 
 import org.snapgram.entity.database.Token;
-import org.snapgram.entity.database.User;
+import org.snapgram.entity.database.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

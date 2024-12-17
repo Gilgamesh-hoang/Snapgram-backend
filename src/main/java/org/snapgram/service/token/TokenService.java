@@ -7,7 +7,7 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.response.TokenDTO;
 import org.snapgram.entity.database.Token;
-import org.snapgram.entity.database.User;
+import org.snapgram.entity.database.user.User;
 import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.repository.database.TokenRepository;
 import org.snapgram.service.jwt.JwtHelper;

@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.AffinityDTO;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.entity.database.Follow;
-import org.snapgram.entity.database.User;
+import org.snapgram.entity.database.user.User;
 import org.snapgram.kafka.producer.AffinityProducer;
 import org.snapgram.repository.database.FollowRepository;
 import org.snapgram.service.post.IPostService;

@@ -3,7 +3,7 @@ package org.snapgram.service.user;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.response.UserDTO;
-import org.snapgram.entity.database.User;
+import org.snapgram.entity.database.user.User;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.repository.database.UserRepository;
 import org.springframework.stereotype.Service;

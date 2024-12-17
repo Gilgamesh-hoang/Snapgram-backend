@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.snapgram.entity.database.Follow;
-import org.snapgram.entity.database.User;
+import org.snapgram.entity.database.user.User;
 import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.kafka.producer.NewsfeedProducer;
 import org.snapgram.repository.database.FollowRepository;

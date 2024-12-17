@@ -3,7 +3,7 @@ package org.snapgram.service.user;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.snapgram.entity.database.User;
+import org.snapgram.entity.database.user.User;
 import org.snapgram.entity.elasticsearch.UserDocument;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.mapper.UserMapper;

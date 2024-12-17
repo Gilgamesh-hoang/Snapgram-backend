@@ -1,10 +1,13 @@
-package org.snapgram.entity.database;
-
+package org.snapgram.entity.database.post;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.snapgram.entity.database.user.User;
 import org.snapgram.entity.database.generator.UUIDGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -12,11 +15,14 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-@Entity
-@Table(name = "conservation")
 @Data
+@Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+@Table(name = "saved")
 @EntityListeners(AuditingEntityListener.class)
-public class Conservation {
+public class Saved {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -25,24 +31,18 @@ public class Conservation {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @Column(length = 255, nullable = false)
-    private String subject;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ConservationType type;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @Column(name = "created_at", updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "saved_at", updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreatedDate
     @Temporal(TemporalType.TIMESTAMP)
-    private Timestamp createdAt;
+    private Timestamp savedAt;
 
-    @Column(name = "is_deleted", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
-    private Boolean isDeleted = false;
-
-    public enum ConservationType {
-        SINGLE, GROUP
-    }
-
-    // getters and setters
 }
+

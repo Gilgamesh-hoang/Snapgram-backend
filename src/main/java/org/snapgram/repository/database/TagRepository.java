@@ -1,6 +1,6 @@
 package org.snapgram.repository.database;
 
-import org.snapgram.entity.database.Tag;
+import org.snapgram.entity.database.post.Tag;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;

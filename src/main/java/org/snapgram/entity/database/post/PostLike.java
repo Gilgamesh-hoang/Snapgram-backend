@@ -1,13 +1,12 @@
-package org.snapgram.entity.database;
+package org.snapgram.entity.database.post;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.snapgram.entity.database.user.User;
 import org.snapgram.entity.database.generator.UUIDGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -17,12 +16,10 @@ import java.util.UUID;
 
 @Data
 @Entity
-@Table(name = "comment_like")
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "post_like")
 @EntityListeners(AuditingEntityListener.class)
-public class CommentLike {
+public class PostLike {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -31,11 +28,11 @@ public class CommentLike {
     @JdbcTypeCode(SqlTypes.CHAR)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "comment_id", nullable = false)
-    private Comment comment;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
@@ -44,5 +41,8 @@ public class CommentLike {
     @Temporal(TemporalType.TIMESTAMP)
     private Timestamp createdAt;
 
+    public PostLike(Post post, User user) {
+        this.post = post;
+        this.user = user;
+    }
 }
-

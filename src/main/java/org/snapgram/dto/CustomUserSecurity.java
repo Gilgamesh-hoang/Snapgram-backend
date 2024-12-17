@@ -2,7 +2,7 @@ package org.snapgram.dto;
 
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
-import org.snapgram.entity.database.User;
+import org.snapgram.entity.database.user.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

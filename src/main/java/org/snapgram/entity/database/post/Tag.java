@@ -1,4 +1,4 @@
-package org.snapgram.entity.database;
+package org.snapgram.entity.database.post;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

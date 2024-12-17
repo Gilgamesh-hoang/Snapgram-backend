@@ -1,6 +1,6 @@
 package org.snapgram.service.tag;
 
-import org.snapgram.entity.database.Tag;
+import org.snapgram.entity.database.post.Tag;
 
 import java.util.List;
 

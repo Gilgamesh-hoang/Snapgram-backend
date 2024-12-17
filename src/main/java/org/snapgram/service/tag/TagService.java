@@ -3,7 +3,7 @@ package org.snapgram.service.tag;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.snapgram.entity.database.Tag;
+import org.snapgram.entity.database.post.Tag;
 import org.snapgram.repository.database.TagRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
