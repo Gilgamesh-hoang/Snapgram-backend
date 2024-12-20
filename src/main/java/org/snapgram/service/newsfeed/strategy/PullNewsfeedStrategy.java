@@ -40,7 +40,7 @@ public class PullNewsfeedStrategy implements NewsfeedStrategy {
         redisProducer.sendDeleteItemsInSet(RedisKeyUtil.USERS_INACTIVE, List.of(userId));
 
         // Get last active timestamp
-        Timestamp lastTime = redisService.getElementFromMap(RedisKeyUtil.GET_TIMELINE_LATEST, userId, Timestamp.class);
+        Timestamp lastTime = redisService.getEntryFromMap(RedisKeyUtil.GET_TIMELINE_LATEST, userId, Timestamp.class);
 
         // Fetch initial posts for first 2 pages
         List<PostDTO> results = fetchInitialPosts(userId, lastTime, pageable.getPageSize());

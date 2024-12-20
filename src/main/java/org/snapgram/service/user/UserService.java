@@ -9,6 +9,7 @@ import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.ChangePasswordRequest;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
+import org.snapgram.dto.response.CreatorDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.dto.response.UserInfoDTO;
 import org.snapgram.entity.database.user.User;
@@ -48,7 +49,7 @@ public class UserService implements IUserService {
     MediaUploader uploader;
 
     @Override
-    public List<UserDTO> findRandomUsers(int number, List<UUID> exceptIds) {
+    public List<UserDTO> getRandomUsers(int number, List<UUID> exceptIds) {
         List<UUID> ids = userElastic.findRandomUsers(number, exceptIds).stream().map(UserDocument::getId).toList();
         return userRepository.findAllById(ids).stream().map(userMapper::toDTO).toList();
     }
@@ -119,7 +120,7 @@ public class UserService implements IUserService {
 
 
     @Override
-    public UserDTO findByEmail(String email) {
+    public UserDTO getByEmail(String email) {
         User user = findUserEntityByEmail(email);
         if (user == null)
             return null;
@@ -132,11 +133,19 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserDTO findById(UUID id) {
+    public UserDTO getById(UUID id) {
         User user = findUserEntityById(id);
         if (user == null)
             return null;
         return userMapper.toDTO(user);
+    }
+
+    @Override
+    public CreatorDTO getCreatorById(UUID id) {
+        User user = findUserEntityById(id);
+        if (user == null)
+            return null;
+        return userMapper.toCreatorDTO(user);
     }
 
     private User findUserEntityById(UUID id) {
@@ -145,7 +154,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public UserDTO findByNickname(String nickname) {
+    public UserDTO getByNickname(String nickname) {
         return userMapper.toDTO(findUserEntityByNickname(nickname));
     }
 
@@ -310,7 +319,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public List<UserDTO> findFriendsByUserId(UUID userId) {
+    public List<UserDTO> getFriendsByUserId(UUID userId) {
         return userRepository.findFollowers(userId).stream().map(userMapper::toDTO).toList();
     }
 

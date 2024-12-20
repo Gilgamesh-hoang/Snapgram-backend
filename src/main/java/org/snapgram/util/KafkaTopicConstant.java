@@ -19,4 +19,5 @@ public class KafkaTopicConstant {
     public final String DELETE_MAP_ITEMS_TOPIC = "delete-map-items";
     public final String DELETE_ITEM_IN_SET_TOPIC = "delete-item-in-set";
     public final String AFFINITY_TOPIC = "affinity";
+    public final String NOTIFICATION_TOPIC = "notification";
 }

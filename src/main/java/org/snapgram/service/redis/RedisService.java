@@ -44,14 +44,23 @@ public class RedisService implements IRedisService {
     }
 
     @Override
-    public <T> void saveList(String key, List<T> list) {
-        for (T item : list) {
-            redisTemplate.opsForList().rightPush(key, item);
+    public <T> void saveList(String key, List<T> list, Integer index) {
+        if (index == null) {
+            redisTemplate.opsForList().rightPushAll(key, list.toArray());
+        } else {
+            for (T item : list) {
+                redisTemplate.opsForList().set(key, index, item);
+                index++;
+            }
         }
     }
 
     @Override
     public <T> List<T> getList(String key, int start, int end, Class<T> clazz) {
+        if (!redisTemplate.hasKey(key)) {
+            return null;
+        }
+
         long size = redisTemplate.opsForList().size(key);
         if (size == 0) {
             return null;
@@ -85,7 +94,7 @@ public class RedisService implements IRedisService {
 
 
     @Override
-    public void addElementsToMap(String key, Map<Object, Object> map) {
+    public void addEntriesToMap(String key, Map<Object, Object> map) {
         redisTemplate.opsForHash().putAll(key, map);
     }
 
@@ -93,7 +102,7 @@ public class RedisService implements IRedisService {
         return redisTemplate.opsForHash().entries(key);
     }
 
-    public Map<Object, Object> popAllElementsFromMapWithLock(String key) {
+    public Map<Object, Object> popAllEntriesFromMapWithLock(String key) {
         String lockKey = key + ":lock";
         RLock lock = redissonClient.getLock(lockKey);
         try {
@@ -134,7 +143,7 @@ public class RedisService implements IRedisService {
 
 
     @Override
-    public void deleteElementsFromMap(String key, List<Object> fields) {
+    public void deleteEntriesFromMap(String key, List<Object> fields) {
         redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
             StringRedisConnection stringRedisConn = (StringRedisConnection) connection;
             for (Object field : fields) {
@@ -145,7 +154,7 @@ public class RedisService implements IRedisService {
     }
 
     @Override
-    public <T> T getElementFromMap(String key, Object hashKey, Class<T> clazz) {
+    public <T> T getEntryFromMap(String key, Object hashKey, Class<T> clazz) {
         hashKey = hashKey.toString();
         Object data = redisTemplate.opsForHash().get(key, hashKey);
         if (data == null) {

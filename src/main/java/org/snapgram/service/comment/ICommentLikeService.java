@@ -6,9 +6,9 @@ import java.util.UUID;
 public interface ICommentLikeService {
     boolean isCommentLikedByUser(UUID commentId, UUID userId);
 
-    void like(UUID commentId);
+    int like(UUID commentId);
 
-    void unlike(UUID commentId);
+    int unlike(UUID commentId);
 
     int countByComment(UUID commentId);
 

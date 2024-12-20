@@ -1,5 +1,6 @@
 package org.snapgram.service.post;
 
+import org.snapgram.dto.PostLikeDTO;
 import org.snapgram.dto.response.PostMetricDTO;
 
 import java.util.List;
@@ -7,6 +8,8 @@ import java.util.UUID;
 
 public interface IPostLikeService {
     boolean isPostLikedByUser(UUID postId, UUID userId);
+
+    PostLikeDTO getPostLike(UUID postId, UUID userId);
 
     PostMetricDTO like(UUID postId);
 

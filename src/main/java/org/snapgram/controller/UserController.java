@@ -122,7 +122,7 @@ public class UserController {
 
         // Generate friend suggestions
         users = friendSuggestionService.recommendFriends(user.getId());
-        redisProducer.sendSaveList(redisKey, users, 5, TimeUnit.DAYS);
+        redisProducer.sendSaveList(redisKey, users, 5L, TimeUnit.DAYS);
 
         // Get the sublist of users based on the pagination parameters
         users = users.subList(start, Math.min(users.size(), end + 1));
@@ -131,7 +131,7 @@ public class UserController {
 
     @GetMapping("/me")
     public ResponseObject<UserDTO> getCurrentUser(@AuthenticationPrincipal CustomUserSecurity user) {
-        return new ResponseObject<>(HttpStatus.OK, userService.findByEmail(user.getEmail()));
+        return new ResponseObject<>(HttpStatus.OK, userService.getByEmail(user.getEmail()));
     }
 
 

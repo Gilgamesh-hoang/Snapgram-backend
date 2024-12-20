@@ -4,6 +4,7 @@ import org.snapgram.dto.GooglePojo;
 import org.snapgram.dto.request.ChangePasswordRequest;
 import org.snapgram.dto.request.ProfileRequest;
 import org.snapgram.dto.request.SignupRequest;
+import org.snapgram.dto.response.CreatorDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.dto.response.UserInfoDTO;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,11 +18,13 @@ import java.util.UUID;
  */
 public interface IUserService {
 
-    UserDTO findByEmail(String email);
+    UserDTO getByEmail(String email);
 
-    UserDTO findById(UUID id);
+    UserDTO getById(UUID id);
 
-    UserDTO findByNickname(String nickname);
+    CreatorDTO getCreatorById(UUID id);
+
+    UserDTO getByNickname(String nickname);
 
     void deleteInactiveUsers(int days);
 
@@ -77,9 +80,9 @@ public interface IUserService {
     String generateForgotPasswordCode(String email);
 
 
-    List<UserDTO> findFriendsByUserId(UUID userId);
+    List<UserDTO> getFriendsByUserId(UUID userId);
 
-    List<UserDTO> findRandomUsers(int number, List<UUID> exceptIds);
+    List<UserDTO> getRandomUsers(int number, List<UUID> exceptIds);
 
     UserInfoDTO editUserInfo(UUID id, ProfileRequest request, MultipartFile avatar);
 

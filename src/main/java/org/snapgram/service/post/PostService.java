@@ -141,7 +141,7 @@ public class PostService implements IPostService {
         PostDTO result = postMapper.toDTO(postEntity);
 
         // save to redis
-        redisProducer.sendSaveValue(RedisKeyUtil.getPostKey(postEntity.getId()), result, 1, TimeUnit.DAYS);
+        redisProducer.sendSaveValue(RedisKeyUtil.getPostKey(postEntity.getId()), result, 1L, TimeUnit.DAYS);
 
         return result;
     }
@@ -167,7 +167,7 @@ public class PostService implements IPostService {
         PostDTO result = postMapper.toDTO(postEntity);
 
         // save to redis
-        redisProducer.sendSaveValue(RedisKeyUtil.getPostKey(postEntity.getId()), result, 1, TimeUnit.DAYS);
+        redisProducer.sendSaveValue(RedisKeyUtil.getPostKey(postEntity.getId()), result, 1L, TimeUnit.DAYS);
 
         return result;
     }
@@ -277,20 +277,20 @@ public class PostService implements IPostService {
         //select in database
         Example<Post> example = Example.of(
                 Post.builder().user(
-                        User.builder().id(userService.findByNickname(nickname).getId()).isDeleted(false).isActive(true).build()
+                        User.builder().id(userService.getByNickname(nickname).getId()).isDeleted(false).isActive(true).build()
                 ).isDeleted(false).build()
         );
         Page<Post> posts = postRepository.findAll(example, pageable);
         results = postMapper.toDTOs(posts.getContent());
 
         // save to redis
-        redisProducer.sendSaveList(redisKey, results, 1, TimeUnit.MINUTES);
+        redisProducer.sendSaveList(redisKey, results, 1L, TimeUnit.MINUTES);
         return results;
     }
 
     @Override
     public List<PostDTO> getPostsByUser(UUID userId, Pageable pageable) {
-        UserDTO user = userService.findById(userId);
+        UserDTO user = userService.getById(userId);
         return getPostsByUser(user.getNickname(), pageable);
     }
 
@@ -307,7 +307,7 @@ public class PostService implements IPostService {
             result = postMapper.toDTO(post);
         }
         // save to redis
-        redisProducer.sendSaveValue(redisKey, result, 1, TimeUnit.MINUTES);
+        redisProducer.sendSaveValue(redisKey, result, 1L, TimeUnit.MINUTES);
         return result;
     }
 

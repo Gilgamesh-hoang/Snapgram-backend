@@ -28,16 +28,20 @@ public class RedisProducer {
         kafkaTemplate.send(KafkaTopicConstant.DELETE_MAP_ITEMS_TOPIC, message);
     }
 
-    public <T> void sendSaveValue(String redisKey, T obj, long timeout, TimeUnit timeUnit) {
+    public <T> void sendSaveValue(String redisKey, T obj, Long timeout, TimeUnit timeUnit) {
         SaveRedisMessage message = new SaveRedisMessage(redisKey, obj, timeout, timeUnit);
         kafkaTemplate.send(KafkaTopicConstant.SAVE_VALUE_TO_REDIS_TOPIC, message);
     }
 
-    public <T> void sendSaveList(String redisKey, List<T> obj, long timeout, TimeUnit timeUnit) {
+    public <T> void sendSaveList(String redisKey, List<T> obj, Long timeout, TimeUnit timeUnit) {
         SaveRedisMessage message = new SaveRedisMessage(redisKey, obj, timeout, timeUnit);
         kafkaTemplate.send(KafkaTopicConstant.SAVE_LIST_TO_REDIS_TOPIC, message);
     }
-    public <T> void sendSaveSet(String redisKey, Set<T> obj, long timeout, TimeUnit timeUnit) {
+    public <T> void sendSaveList(String redisKey, List<T> obj, Long timeout, TimeUnit timeUnit, Integer index) {
+        SaveRedisMessage message = new SaveRedisMessage(redisKey, obj, timeout, timeUnit, index);
+        kafkaTemplate.send(KafkaTopicConstant.SAVE_LIST_TO_REDIS_TOPIC, message);
+    }
+    public <T> void sendSaveSet(String redisKey, Set<T> obj, Long timeout, TimeUnit timeUnit) {
         SaveRedisMessage message = new SaveRedisMessage(redisKey, obj, timeout, timeUnit);
         kafkaTemplate.send(KafkaTopicConstant.SAVE_SET_TO_REDIS_TOPIC, message);
     }

@@ -111,12 +111,12 @@ public class TokenService implements ITokenService {
         } else {
             jid = jwtHelper.getJidFromAccessToken(token);
         }
-        return redisService.getElementFromMap(RedisKeyUtil.JWT_BLACKLIST, jid, TokenDTO.class);
+        return redisService.getEntryFromMap(RedisKeyUtil.JWT_BLACKLIST, jid, TokenDTO.class);
     }
 
     @Override
     public TokenDTO getTokenFromBlacklist(String jid) {
-        return redisService.getElementFromMap(RedisKeyUtil.JWT_BLACKLIST, jid, TokenDTO.class);
+        return redisService.getEntryFromMap(RedisKeyUtil.JWT_BLACKLIST, jid, TokenDTO.class);
     }
 
     @Override

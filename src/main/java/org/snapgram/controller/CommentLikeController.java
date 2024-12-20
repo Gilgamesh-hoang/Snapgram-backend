@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.response.ResponseObject;
-import org.snapgram.service.comment.ICommentService;
+import org.snapgram.service.comment.ICommentLikeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -21,7 +21,7 @@ import java.util.UUID;
 @RequestMapping("${API_PREFIX}/comments")
 @Validated
 public class CommentLikeController {
-    ICommentService commentService;
+    ICommentLikeService commentLikeService;
 
     @PostMapping("/liked-by-user/filter")
     public ResponseObject<List<UUID>> filterLiked(@RequestBody @NotNull List<UUID> commentIds,
@@ -29,19 +29,19 @@ public class CommentLikeController {
         if (commentIds.isEmpty()) {
             return new ResponseObject<>(HttpStatus.OK, List.of());
         }
-        List<UUID> commentLikedIds = commentService.filterLiked(user.getId(), commentIds);
+        List<UUID> commentLikedIds = commentLikeService.filterLiked(user.getId(), commentIds);
         return new ResponseObject<>(HttpStatus.OK, commentLikedIds);
     }
 
     @PostMapping("/{commentId}/like")
     public ResponseObject<Integer> likeComment(@PathVariable("commentId") @NotNull UUID commentId) {
-        int response = commentService.like(commentId);
+        int response = commentLikeService.like(commentId);
         return new ResponseObject<>(HttpStatus.OK, response);
     }
 
     @DeleteMapping("/{commentId}/unlike")
     public ResponseObject<Integer> unlikeComment(@PathVariable("commentId") @NotNull UUID commentId) {
-        int response = commentService.unlike(commentId);
+        int response = commentLikeService.unlike(commentId);
         return new ResponseObject<>(HttpStatus.OK, response);
     }
 

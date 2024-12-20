@@ -48,7 +48,7 @@ public class HybridFriendSuggestionService implements FriendSuggestionService {
             // If there are less than 30 results, add random users
             int missingNum = Math.abs(combineResults.size() - 30);
             if (missingNum > 0) {
-                List<UserDTO> randomUsers = userService.findRandomUsers(missingNum, combineResults.stream().map(UserDTO::getId).toList());
+                List<UserDTO> randomUsers = userService.getRandomUsers(missingNum, combineResults.stream().map(UserDTO::getId).toList());
                 combineResults.addAll(randomUsers);
             }
             return combineResults;
@@ -84,7 +84,7 @@ public class HybridFriendSuggestionService implements FriendSuggestionService {
 
         // Convert the user IDs to UserDTO objects
         return results.keySet().stream()
-                .map(userService::findById)
+                .map(userService::getById)
                 .toList();
     }
 

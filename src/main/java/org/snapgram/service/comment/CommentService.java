@@ -3,12 +3,14 @@ package org.snapgram.service.comment;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.snapgram.dto.CreateNotifyDTO;
 import org.snapgram.dto.request.CommentRequest;
 import org.snapgram.dto.request.ReplyCommentRequest;
 import org.snapgram.dto.response.CommentDTO;
 import org.snapgram.entity.database.comment.Comment;
 import org.snapgram.entity.database.post.Post;
 import org.snapgram.entity.database.user.User;
+import org.snapgram.enums.NotificationType;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.kafka.producer.PostProducer;
 import org.snapgram.kafka.producer.RedisProducer;
@@ -16,10 +18,12 @@ import org.snapgram.mapper.CommentMapper;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.repository.database.CommentRepository;
 import org.snapgram.service.follow.IAffinityService;
+import org.snapgram.service.notification.INotificationService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.util.RedisKeyUtil;
+import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -44,6 +48,7 @@ public class CommentService implements ICommentService {
     RedisProducer redisProducer;
     PostProducer postProducer;
     IAffinityService affinityService;
+    INotificationService notificationService;
 
     @Override
     public List<CommentDTO> getCommentsByPost(UUID postId, Pageable pageable) {
@@ -60,7 +65,7 @@ public class CommentService implements ICommentService {
                 .isDeleted(false)
                 .build());
         comments = fetchCommentsFromDatabase(example, pageable);
-        redisProducer.sendSaveList(redisKey, comments, 1, TimeUnit.DAYS);
+        redisProducer.sendSaveList(redisKey, comments, 1L, TimeUnit.DAYS);
         return comments;
     }
 
@@ -129,32 +134,8 @@ public class CommentService implements ICommentService {
     }
 
     @Override
-    public int like(UUID commentId) {
-        return updateLikeCount(commentId, commentLikeService::like);
-    }
-
-    private int updateLikeCount(UUID commentId, Consumer<UUID> action) {
-        Comment comment = validateComment(commentId);
-
-        // Create a Redis key for the post comments
-        String redisKey = RedisKeyUtil.getPostCommentsKey(comment.getPost().getId(), 0, 0);
-        // Delete the Redis cache for the post comments
-        redisProducer.sendDeleteByKey(redisKey.substring(0, redisKey.indexOf("page")));
-
-        action.accept(commentId);
-        comment.setLikeCount(commentLikeService.countByComment(commentId));
-        commentRepository.save(comment);
-        return comment.getLikeCount();
-    }
-
-    @Override
-    public int unlike(UUID commentId) {
-        return updateLikeCount(commentId, commentLikeService::unlike);
-    }
-
-    @Override
-    public List<UUID> filterLiked(UUID id, List<UUID> commentIds) {
-        return commentLikeService.filterLiked(id, commentIds);
+    public CommentDTO getCommentById(UUID commentId) {
+        return commentMapper.toDTO(validateComment(commentId));
     }
 
     private Comment validateComment(UUID commentId) {
@@ -189,6 +170,14 @@ public class CommentService implements ICommentService {
 
         CompletableFuture.runAsync(() -> handleAsyncCommentCreation(postId, null));
 
+        notificationService.createNotification(CreateNotifyDTO.builder()
+                .type(NotificationType.COMMENT_POST)
+                .entityId(postId)
+                .actorId(comment.getUser().getId())
+                .build());
+
+        affinityService.increaseAffinityByComment(postId);
+
         return buildCommentResponse(comment, currentUser);
     }
 
@@ -201,16 +190,22 @@ public class CommentService implements ICommentService {
 
         commentRepository.saveAndFlush(comment);
 
-        affinityService.increaseAffinityByComment(postId);
-
         CompletableFuture.runAsync(() -> handleAsyncCommentCreation(postId, parentComment.getId()));
+
+        notificationService.createNotification(CreateNotifyDTO.builder()
+                .type(NotificationType.REPLY_COMMENT)
+                .entityId(postId)
+                .actorId(comment.getUser().getId())
+                .build());
+
+        affinityService.increaseAffinity(parentComment.getUser().getId());
 
         return buildCommentResponse(comment, currentUserId);
     }
 
     private CommentDTO buildCommentResponse(Comment comment, UUID currentUser) {
         CommentDTO result = commentMapper.toDTO(comment);
-        result.setCreator(userMapper.toCreatorDTO(userService.findById(currentUser)));
+        result.setCreator(userMapper.toCreatorDTO(userService.getById(currentUser)));
         return result;
     }
 

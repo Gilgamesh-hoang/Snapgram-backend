@@ -22,14 +22,14 @@ public class FoafAlgorithm {
     // Method implementing the Friends-of-a-Friend (FOAF) algorithm
     public Map<UUID, Double> getInstance(UUID userId) {
         // Get the direct friends of the user
-        List<UserDTO> directFriends = userService.findFriendsByUserId(userId);
+        List<UserDTO> directFriends = userService.getFriendsByUserId(userId);
         // Map to store the FOAF candidates and their scores
         Map<UUID, Double> foafCandidates = new ConcurrentHashMap<>();
 
         // For each direct friend, asynchronously get their friends and update the scores of the candidates
         List<CompletableFuture<Void>> futures = directFriends.stream()
                 .map(friend -> CompletableFuture.runAsync(() -> {
-                    List<UserDTO> friendsOfFriend = userService.findFriendsByUserId(friend.getId());
+                    List<UserDTO> friendsOfFriend = userService.getFriendsByUserId(friend.getId());
                     for (UserDTO foaf : friendsOfFriend) {
                         if (!foaf.getId().equals(userId) && !directFriends.contains(foaf)) {
                             foafCandidates.compute(foaf.getId(), (key, val) -> (val == null) ? 1 : val + 1);

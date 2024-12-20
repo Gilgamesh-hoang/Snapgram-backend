@@ -24,10 +24,10 @@ public class UpdateAffinityTask {
     IRedisService redisService;
     IAffinityService affinityService;
 
-    @Scheduled(fixedRate = 10000)  // Chạy mỗi 10 giây (fixed rate)
+//    @Scheduled(fixedRate = 10000)  // Chạy mỗi 10 giây (fixed rate)
     @Transactional
     public void fetchAndDeleteHash() {
-        Map<Object, Object> affinities = redisService.popAllElementsFromMapWithLock(RedisKeyUtil.AFFINITY);
+        Map<Object, Object> affinities = redisService.popAllEntriesFromMapWithLock(RedisKeyUtil.AFFINITY);
         for (Map.Entry<Object, Object> entry : affinities.entrySet()) {
             String[] ids = entry.getKey().toString().split(AppConstant.AFFINITY_SEPARATOR);
             UUID followerId = UUID.fromString(ids[0]);

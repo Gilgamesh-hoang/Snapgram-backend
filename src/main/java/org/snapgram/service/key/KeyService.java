@@ -59,7 +59,7 @@ public class KeyService implements IKeyService {
 
     @Override
     public KeyPair getKeyPairByUser(UUID userId) {
-        KeyPair key = redisService.getElementFromMap(RedisKeyUtil.ASYM_KEYPAIR, userId.toString(), KeyPair.class);
+        KeyPair key = redisService.getEntryFromMap(RedisKeyUtil.ASYM_KEYPAIR, userId.toString(), KeyPair.class);
 
         if (key != null) {
             CompletableFuture<String> privateAT = encoder.decode(key.getPrivateKeyAT());

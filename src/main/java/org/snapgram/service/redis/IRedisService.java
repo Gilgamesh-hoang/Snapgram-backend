@@ -12,17 +12,17 @@ public interface IRedisService {
 
     Map<Object, Object> getMap(String key);
 
-    void addElementsToMap(String key, Map<Object, Object> map);
+    void addEntriesToMap(String key, Map<Object, Object> map);
 
-    Map<Object, Object> popAllElementsFromMapWithLock(String key);
+    Map<Object, Object> popAllEntriesFromMapWithLock(String key);
 
     void incrementHashValue(String key, Object field, long value);
 
-    void deleteElementsFromMap(String key, List<Object> fields);
+    void deleteEntriesFromMap(String key, List<Object> fields);
 
-    <T> T getElementFromMap(String key, Object hashKey, Class<T> clazz);
+    <T> T getEntryFromMap(String key, Object hashKey, Class<T> clazz);
 
-    <T> void saveList(String key, List<T> list);
+    <T> void saveList(String key, List<T> list, Integer index);
 
     <T> List<T> getList(String key, int start, int end, Class<T> clazz);
 
@@ -34,10 +34,10 @@ public interface IRedisService {
 
     <T> void saveSet(String key, Set<T> set);
 
+    void deleteItemsFromSet(String key, List<Object> items);
+
     void setTTL(String key, long timeout, TimeUnit timeUnit);
 
     void deleteByPattern(String pattern);
 
-
-    void deleteItemsFromSet(String key, List<Object> items);
 }

@@ -5,14 +5,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.AffinityDTO;
+import org.snapgram.dto.CreateNotifyDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.Follow;
 import org.snapgram.entity.database.user.User;
-import org.snapgram.kafka.producer.RedisProducer;
+import org.snapgram.enums.NotificationType;
 import org.snapgram.kafka.producer.NewsfeedProducer;
+import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.mapper.FollowMapper;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.repository.database.FollowRepository;
+import org.snapgram.service.notification.INotificationService;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.RedisKeyUtil;
 import org.springframework.data.domain.Example;
@@ -37,6 +40,7 @@ public class FollowService implements IFollowService {
     IRedisService redisService;
     NewsfeedProducer newsfeedProducer;
     RedisProducer redisProducer;
+    INotificationService notificationService;
 
     @Override
     public int countFollowers(UUID userId) {
@@ -135,6 +139,12 @@ public class FollowService implements IFollowService {
 
         String followersKey = RedisKeyUtil.getUserFollowersKey(followeeId, 0, 0);
         redisProducer.sendDeleteByKey(followersKey.substring(0, followersKey.indexOf("page")));
+
+        notificationService.createNotification(CreateNotifyDTO.builder()
+                .type(NotificationType.FOLLOW_USER)
+                .entityId(follow.getFollowee().getId())
+                .actorId(follow.getFollower().getId())
+                .build());
     }
 
     @Override
@@ -201,7 +211,7 @@ public class FollowService implements IFollowService {
         List<UserDTO> result = userMapper.toDTOs(follows);
 
         // Cache the result in Redis
-        redisService.saveList(redisKey, result);
+        redisService.saveList(redisKey, result, null);
         redisService.setTTL(redisKey, 1, result.isEmpty() ? TimeUnit.MINUTES : TimeUnit.DAYS);
         return result;
     }

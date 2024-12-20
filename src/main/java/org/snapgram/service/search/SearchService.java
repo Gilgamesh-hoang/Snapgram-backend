@@ -81,7 +81,7 @@ public class SearchService implements ISearchService {
                 .stream().map(userMapper::toDTO).collect(Collectors.toSet());
 
         // Cache the results in Redis asynchronously
-        redisProducer.sendSaveSet(redisKey, results,5, TimeUnit.MINUTES);
+        redisProducer.sendSaveSet(redisKey, results,5L, TimeUnit.MINUTES);
 
         return results;
     }

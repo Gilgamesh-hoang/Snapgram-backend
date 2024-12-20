@@ -47,7 +47,7 @@ public class PushNewsfeedStrategy implements NewsfeedStrategy {
         List<UUID> postIds = newsfeedRepository.findAll(example).stream().map(Timeline::getPostId).toList();
 
         if (postIds.isEmpty()) {
-            redisProducer.sendSaveList(redisKey, List.of(), 30, TimeUnit.SECONDS);
+            redisProducer.sendSaveList(redisKey, List.of(), 30L, TimeUnit.SECONDS);
             return new ArrayList<>();
         }
 
@@ -58,7 +58,7 @@ public class PushNewsfeedStrategy implements NewsfeedStrategy {
 
         // Paginate results
         List<PostDTO> paginatedResults = paginateResults(rankedPosts, page, size);
-        redisProducer.sendSaveList(redisKey, paginatedResults, 1, TimeUnit.MINUTES);
+        redisProducer.sendSaveList(redisKey, paginatedResults, 1L, TimeUnit.MINUTES);
 //            timelineRepository.deleteAllByUserIdAndPostIds(userId, paginatedResults.stream().map(PostDTO::getId).toList();
 
         return paginatedResults;

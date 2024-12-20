@@ -35,7 +35,7 @@ public class RandomWalkAlgorithm {
                 // Get the friends of the current node
                 List<UserDTO> friends = null;
                 if (!cache.containsKey(currentNode)) {
-                    friends = userService.findFriendsByUserId(currentNode);
+                    friends = userService.getFriendsByUserId(currentNode);
                     cache.put(currentNode, friends);
                 } else {
                     friends = cache.get(currentNode);

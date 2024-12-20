@@ -23,9 +23,5 @@ public interface ICommentService {
 
     int deleteComment(UUID currentUserId, UUID commentId);
 
-    int like(UUID commentId);
-
-    int unlike(UUID commentId);
-
-    List<UUID> filterLiked(UUID id, List<UUID> commentIds);
+    CommentDTO getCommentById(UUID commentId);
 }

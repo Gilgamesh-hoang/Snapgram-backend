@@ -40,7 +40,7 @@ public class AsyncKeyService {
             key.setPrivateKeyRT(privateRT.get());
             HashMap<Object, Object> map = new HashMap<>();
             map.put(userId, key);
-            redisService.addElementsToMap(RedisKeyUtil.ASYM_KEYPAIR, map);
+            redisService.addEntriesToMap(RedisKeyUtil.ASYM_KEYPAIR, map);
             return CompletableFuture.completedFuture(null);
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();

@@ -51,7 +51,7 @@ public class PostSaveService implements IPostSaveService {
         Example<Saved> example = Example.of(Saved.builder().user(User.builder().id(userId).build()).build());
         List<Saved> savedPosts = postSaveRepository.findAll(example, pageable).getContent();
         results = postMapper.toDTOs(savedPosts.stream().map(Saved::getPost).toList());
-        redisProducer.sendSaveList(redisKey, results, 5,  TimeUnit.MINUTES);
+        redisProducer.sendSaveList(redisKey, results, 5L,  TimeUnit.MINUTES);
         return results;
     }
 

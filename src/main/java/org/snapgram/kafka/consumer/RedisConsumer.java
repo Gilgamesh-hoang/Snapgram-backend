@@ -27,19 +27,19 @@ public class RedisConsumer {
 
     @KafkaListener(topics = KafkaTopicConstant.DELETE_MAP_ITEMS_TOPIC)
     public void deleteElementsRedis(DeleteRedisMessage message) {
-        redisService.deleteElementsFromMap(message.redisKey(), (List<Object>) message.obj());
+        redisService.deleteEntriesFromMap(message.redisKey(), (List<Object>) message.obj());
     }
 
     @KafkaListener(topics = KafkaTopicConstant.SAVE_VALUE_TO_REDIS_TOPIC)
     public void saveValueToRedis(SaveRedisMessage message) {
-        redisService.saveValue(message.redisKey(), message.obj());
+        redisService.saveValue(message.redisKey, message.obj);
         boolean isNone;
-        if (message.obj() instanceof String string) {
+        if (message.obj instanceof String string) {
             isNone = StringUtils.isBlank(string);
         } else {
-            isNone = message.obj() == null;
+            isNone = message.obj == null;
         }
-        setTTL(message.redisKey(), message.timeout(), message.timeUnit(), isNone);
+        setTTL(message.redisKey, message.timeout, message.timeUnit, isNone);
     }
 
     private void setTTL(String key, Long timeout, TimeUnit timeUnit, boolean isNone) {
@@ -58,11 +58,11 @@ public class RedisConsumer {
     @KafkaListener(topics = KafkaTopicConstant.SAVE_LIST_TO_REDIS_TOPIC)
     private void saveListToRedis(SaveRedisMessage message) {
         try {
-            if (message.obj() instanceof List<?> list) {
-                redisService.saveList(message.redisKey(), list);
-                setTTL(message.redisKey(), message.timeout(), message.timeUnit(), list.isEmpty());
+            if (message.obj instanceof List<?> list) {
+                redisService.saveList(message.redisKey, list, message.index);
+                setTTL(message.redisKey, message.timeout, message.timeUnit, list.isEmpty());
             } else {
-                log.error("Invalid data type for list saving in Redis. Expected List but found: {}", message.obj().getClass());
+                log.error("Invalid data type for list saving in Redis. Expected List but found: {}", message.obj.getClass());
             }
         } catch (Exception e) {
             log.error("Error saving list to Redis: ", e);
@@ -74,18 +74,18 @@ public class RedisConsumer {
         try {
             Set<Object> set = null;
 
-            if (message.obj() instanceof List<?> list) {
+            if (message.obj instanceof List<?> list) {
                 set = new HashSet<>(list);
-            } else if (message.obj() instanceof Set<?> existingSet) {
+            } else if (message.obj instanceof Set<?> existingSet) {
                 set = new HashSet<>(existingSet);
             } else {
                 log.error("Invalid data type for set saving in Redis. Expected List or Set but found: {}",
-                        message.obj().getClass());
+                        message.obj.getClass());
                 return;
             }
 
-            redisService.saveSet(message.redisKey(), set);
-            setTTL(message.redisKey(), message.timeout(), message.timeUnit(), set.isEmpty());
+            redisService.saveSet(message.redisKey, set);
+            setTTL(message.redisKey, message.timeout, message.timeUnit, set.isEmpty());
         } catch (Exception e) {
             log.error("Error saving set to Redis: ", e);
         }
@@ -95,14 +95,14 @@ public class RedisConsumer {
     @KafkaListener(topics = KafkaTopicConstant.SAVE_MAP_TO_REDIS_TOPIC)
     private void saveMapToRedis(SaveRedisMessage message) {
         try {
-            if (!(message.obj() instanceof Map<?, ?>)) {
-                log.error("Invalid data type for map saving in Redis. Expected map but found: {}", message.obj().getClass());
+            if (!(message.obj instanceof Map<?, ?>)) {
+                log.error("Invalid data type for map saving in Redis. Expected map but found: {}", message.obj.getClass());
             }
 
-            Map<Object, Object> map = (Map<Object, Object>) message.obj();
-            redisService.addElementsToMap(message.redisKey(), map);
+            Map<Object, Object> map = (Map<Object, Object>) message.obj;
+            redisService.addEntriesToMap(message.redisKey, map);
 
-            setTTL(message.redisKey(), message.timeout(), message.timeUnit(), map.isEmpty());
+            setTTL(message.redisKey, message.timeout, message.timeUnit, map.isEmpty());
         } catch (Exception e) {
             log.error("Error saving list to Redis: ", e);
         }
