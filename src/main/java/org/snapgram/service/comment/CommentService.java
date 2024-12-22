@@ -17,13 +17,13 @@ import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.mapper.CommentMapper;
 import org.snapgram.mapper.UserMapper;
 import org.snapgram.repository.database.CommentRepository;
+import org.snapgram.service.banned.BannedWordsService;
 import org.snapgram.service.follow.IAffinityService;
 import org.snapgram.service.notification.INotificationService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.util.RedisKeyUtil;
-import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 @Service
 @RequiredArgsConstructor
@@ -44,11 +43,11 @@ public class CommentService implements ICommentService {
     IUserService userService;
     UserMapper userMapper;
     IRedisService redisService;
-    ICommentLikeService commentLikeService;
     RedisProducer redisProducer;
     PostProducer postProducer;
     IAffinityService affinityService;
     INotificationService notificationService;
+    BannedWordsService bannedService;
 
     @Override
     public List<CommentDTO> getCommentsByPost(UUID postId, Pageable pageable) {
@@ -165,7 +164,7 @@ public class CommentService implements ICommentService {
 
         validatePostExists(postId);
 
-        Comment comment = buildComment(postId, currentUser, request.getContent(), 0, null);
+        Comment comment = buildComment(postId, currentUser, bannedService.removeBannedWords(request.getContent()), 0, null);
         commentRepository.saveAndFlush(comment);
 
         CompletableFuture.runAsync(() -> handleAsyncCommentCreation(postId, null));
@@ -185,7 +184,7 @@ public class CommentService implements ICommentService {
     public CommentDTO createComment(UUID currentUserId, ReplyCommentRequest request) {
         Comment parentComment = validateParentComment(request.getParentCommentId());
         UUID postId = parentComment.getPost().getId();
-        Comment comment = buildComment(postId, currentUserId, request.getContent(), 1,
+        Comment comment = buildComment(postId, currentUserId, bannedService.removeBannedWords(request.getContent()), 1,
                 parentComment.getId());
 
         commentRepository.saveAndFlush(comment);

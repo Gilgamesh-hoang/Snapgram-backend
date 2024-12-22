@@ -18,6 +18,7 @@ import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.kafka.producer.NewsfeedProducer;
 import org.snapgram.mapper.PostMapper;
 import org.snapgram.repository.database.PostRepository;
+import org.snapgram.service.banned.BannedWordsService;
 import org.snapgram.service.cloudinary.ICloudinarySignatureService;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.tag.ITagService;
@@ -55,9 +56,10 @@ public class PostService implements IPostService {
     NewsfeedProducer newsfeedProducer;
     IPostSaveService postSaveService;
     ICloudinarySignatureService signatureService;
+    BannedWordsService bannedService;
 
     private Post savePost(PostRequest request) {
-        request.setCaption(request.getCaption().trim());
+        request.setCaption(bannedService.removeBannedWords(request.getCaption().trim()));
         request.getTags().replaceAll(String::trim);
 
         CustomUserSecurity user = UserSecurityHelper.getCurrentUser();
@@ -195,7 +197,7 @@ public class PostService implements IPostService {
             tagEntities = tagService.saveAll(tags);
         }
         postEntity.setTags(tagEntities);
-        postEntity.setCaption(request.getCaption());
+        postEntity.setCaption(bannedService.removeBannedWords(request.getCaption().trim()));
 
         // If there are any media to remove, remove them asynchronously
         if (request.getRemoveMedia() != null && !request.getRemoveMedia().isEmpty()) {
