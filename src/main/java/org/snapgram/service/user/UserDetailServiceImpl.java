@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 @FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class UserDetailServiceImpl implements UserDetailsService {
-
     UserRepository userRepo;
 
     @Override

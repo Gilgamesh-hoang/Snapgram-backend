@@ -49,7 +49,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'io.socket:socket.io-server:4.1.2'
     implementation 'com.hankcs:aho-corasick-double-array-trie:1.2.3'
-
+    implementation 'com.corundumstudio.socketio:netty-socketio:2.0.11'
     compileOnly 'org.projectlombok:lombok'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'

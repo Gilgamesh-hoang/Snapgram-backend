@@ -76,7 +76,7 @@ public class PostLikeService implements IPostLikeService {
                     .actorId(user.getId())
                     .build());
 
-            affinityService.increaseAffinityByLike(postId);
+            affinityService.increaseAffinityByLike(user.getId(), postId);
         }
 
         return buildPostMetricDTO(post);

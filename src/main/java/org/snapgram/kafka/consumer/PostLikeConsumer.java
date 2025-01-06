@@ -20,7 +20,6 @@ public class PostLikeConsumer {
 
     @KafkaListener(topics = KafkaTopicConstant.POST_LIKE_UPDATE_TOPIC)
     public void handleUpdateCommentCount(PostLikeUpdateMessage message) {
-        log.info("Received message: {}", message);
         switch (message.getAction()) {
             case INCREMENT:
                 redisService.incrementHashValue(RedisKeyUtil.POST_LIKE_COUNT, message.getPostId().toString(), 1);

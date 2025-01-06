@@ -15,6 +15,7 @@ import org.snapgram.service.comment.ICommentService;
 import org.snapgram.service.user.IUserService;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.UUID;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -36,13 +37,17 @@ public class LikeCommentNotification extends NotificationTemplate {
     @Override
     public NotificationDTO generateNotification(NotificationResultDTO notify) {
         CommentDTO comment = commentService.getCommentById(notify.getNotificationEntity().getEntityId());
+        UUID postId = commentService.getPostIdByComment(comment.getId());
         return NotificationDTO.builder()
                 .id(notify.getNotificationEntity().getId())
+                .recipientId(notify.getRecipientId())
+                .entityId(comment.getId())
                 .actor(userService.getCreatorById(notify.getActorId()))
                 .type(notify.getNotificationEntity().getType())
                 .isRead(notify.isRead())
                 .createdAt(notify.getNotificationEntity().getCreatedAt())
-                .content(comment.getContent())
+                .content(cutContent(comment.getContent()))
+                .options(Map.of("postId", postId))
                 .build();
     }
 

@@ -29,20 +29,19 @@ public class AffinityService implements IAffinityService {
 
     @Override
     @Async
-    public void increaseAffinityByLike(UUID postId) {
-        processWithPost(postId);
+    public void increaseAffinityByLike(UUID currentUserId, UUID postId) {
+        processWithPost(currentUserId, postId);
     }
 
     @Override
     @Async
-    public void increaseAffinityByComment(UUID postId) {
-        processWithPost(postId);
+    public void increaseAffinityByComment(UUID currentUserId, UUID postId) {
+        processWithPost(currentUserId, postId);
     }
 
-    private void processWithPost(UUID postId) {
+    private void processWithPost(UUID currentUserId, UUID postId) {
         PostDTO post = postService.getPostById(postId);
         if (post != null) {
-            UUID currentUserId = UserSecurityHelper.getCurrentUser().getId();
             affinityProducer.sendAffinityMessage(currentUserId, post.getCreator().getId());
         }
     }

@@ -5,9 +5,9 @@ import org.snapgram.dto.AffinityDTO;
 import java.util.UUID;
 
 public interface IAffinityService {
-   void increaseAffinityByLike(UUID postId);
+   void increaseAffinityByLike(UUID currentUserId, UUID postId);
 
-   void increaseAffinityByComment(UUID postId);
+   void increaseAffinityByComment(UUID currentUserId, UUID postId);
 
    void increaseAffinity(UUID otherUserId);
 

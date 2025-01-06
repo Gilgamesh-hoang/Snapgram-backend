@@ -7,6 +7,7 @@ import org.snapgram.dto.CreateNotifyDTO;
 import org.snapgram.dto.request.CommentRequest;
 import org.snapgram.dto.request.ReplyCommentRequest;
 import org.snapgram.dto.response.CommentDTO;
+import org.snapgram.dto.response.PostDTO;
 import org.snapgram.entity.database.comment.Comment;
 import org.snapgram.entity.database.post.Post;
 import org.snapgram.entity.database.user.User;
@@ -137,6 +138,18 @@ public class CommentService implements ICommentService {
         return commentMapper.toDTO(validateComment(commentId));
     }
 
+    @Override
+    public UUID getPostIdByComment(UUID commentId) {
+        Comment comment = validateComment(commentId);
+        return comment.getPost().getId();
+    }
+
+    @Override
+    public PostDTO getPostByComment(UUID commentId) {
+        Comment comment = validateComment(commentId);
+        return postService.getPostById(comment.getPost().getId());
+    }
+
     private Comment validateComment(UUID commentId) {
         Example<Comment> example = Example.of(Comment.builder()
                 .id(commentId)
@@ -171,11 +184,11 @@ public class CommentService implements ICommentService {
 
         notificationService.createNotification(CreateNotifyDTO.builder()
                 .type(NotificationType.COMMENT_POST)
-                .entityId(postId)
+                .entityId(comment.getId())
                 .actorId(comment.getUser().getId())
                 .build());
 
-        affinityService.increaseAffinityByComment(postId);
+        affinityService.increaseAffinityByComment(currentUser, postId);
 
         return buildCommentResponse(comment, currentUser);
     }
@@ -193,7 +206,7 @@ public class CommentService implements ICommentService {
 
         notificationService.createNotification(CreateNotifyDTO.builder()
                 .type(NotificationType.REPLY_COMMENT)
-                .entityId(postId)
+                .entityId(comment.getId())
                 .actorId(comment.getUser().getId())
                 .build());
 

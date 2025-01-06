@@ -7,6 +7,7 @@ import org.snapgram.dto.AffinityDTO;
 import org.snapgram.dto.response.PostDTO;
 import org.snapgram.dto.response.UserDTO;
 import org.snapgram.entity.database.timeline.Timeline;
+import org.snapgram.exception.MultiThreadException;
 import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.repository.database.NewsfeedRepository;
 import org.snapgram.service.follow.IFollowService;
@@ -100,7 +101,7 @@ public class PushNewsfeedStrategy implements NewsfeedStrategy {
             }
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException("Failed to rank posts", e);
+            throw new MultiThreadException("Failed to rank posts", e);
         } finally {
             executor.shutdown();
         }

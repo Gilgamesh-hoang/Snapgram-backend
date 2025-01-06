@@ -18,7 +18,6 @@ public class PostLikeProducer {
 
     public void sendUpdateLike(PostLikeUpdateMessage message) {
         kafkaTemplate.send(KafkaTopicConstant.POST_LIKE_UPDATE_TOPIC, message);
-        log.info("Sending message: {}", message);
     }
 
 }

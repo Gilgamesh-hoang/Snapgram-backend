@@ -3,6 +3,7 @@ package org.snapgram.service.comment;
 import org.snapgram.dto.request.CommentRequest;
 import org.snapgram.dto.request.ReplyCommentRequest;
 import org.snapgram.dto.response.CommentDTO;
+import org.snapgram.dto.response.PostDTO;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -24,4 +25,8 @@ public interface ICommentService {
     int deleteComment(UUID currentUserId, UUID commentId);
 
     CommentDTO getCommentById(UUID commentId);
+
+    UUID getPostIdByComment(UUID commentId);
+
+    PostDTO getPostByComment(UUID commentId);
 }

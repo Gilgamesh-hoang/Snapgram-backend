@@ -67,7 +67,7 @@ public class JwtHelper {
             } else
                 return getEmailFromToken(token, getAccessTokenPublicKeyByUser(email));
         } catch (Exception e) {
-            throw new ResourceNotFoundException("Failed to parse payload");
+            throw new ResourceNotFoundException("Failed to parse payload", e);
         }
     }
 

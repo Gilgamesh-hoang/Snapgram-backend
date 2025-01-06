@@ -32,6 +32,7 @@ public class FollowUserNotification extends NotificationTemplate {
     public NotificationDTO generateNotification(NotificationResultDTO notify) {
         return NotificationDTO.builder()
                 .id(notify.getNotificationEntity().getId())
+                .recipientId(notify.getRecipientId())
                 .actor(userService.getCreatorById(notify.getActorId()))
                 .type(notify.getNotificationEntity().getType())
                 .isRead(notify.isRead())

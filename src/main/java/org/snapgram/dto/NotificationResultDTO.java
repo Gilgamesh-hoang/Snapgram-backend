@@ -14,5 +14,6 @@ public class NotificationResultDTO {
     private NotificationEntity notificationEntity;
     private boolean isRead;
     private UUID actorId;
+    private UUID recipientId;
 
 }

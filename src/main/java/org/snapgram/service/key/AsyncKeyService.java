@@ -3,6 +3,7 @@ package org.snapgram.service.key;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.KeyPair;
 import org.snapgram.exception.KeyGenerationException;
 import org.snapgram.service.redis.IRedisService;
@@ -21,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AsyncKeyService {
@@ -39,8 +41,9 @@ public class AsyncKeyService {
             key.setPrivateKeyAT(privateAT.get());
             key.setPrivateKeyRT(privateRT.get());
             HashMap<Object, Object> map = new HashMap<>();
-            map.put(userId, key);
+            map.put(userId.toString(), key);
             redisService.addEntriesToMap(RedisKeyUtil.ASYM_KEYPAIR, map);
+            log.info("Key pair saved for user: {}", userId);
             return CompletableFuture.completedFuture(null);
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt();

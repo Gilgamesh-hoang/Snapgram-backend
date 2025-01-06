@@ -1,10 +1,14 @@
 package org.snapgram.kafka.consumer;
 
-import jakarta.validation.constraints.NotNull;
+import com.corundumstudio.socketio.SocketIOClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.snapgram.socket.UserSocketManager;
+import org.snapgram.dto.response.NotificationDTO;
 import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.KafkaTopicConstant;
 import org.snapgram.util.RedisKeyUtil;
@@ -12,6 +16,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -22,11 +27,29 @@ import java.util.UUID;
 @Validated
 public class NotificationConsumer {
     IRedisService redisService;
+    UserSocketManager userSocketManager;
+    ObjectMapper objectMapper;
+
 
     @KafkaListener(topics = KafkaTopicConstant.NOTIFICATION_TOPIC)
-    public void handleNotificationMessage(@NotNull String message) {
-        log.info("Received notification message for user: {}", message);
-        UUID recipientId = UUID.fromString(message);
+    public void handleNotificationMessage(List<Map<String, Object>> message) throws JsonProcessingException {
+        List<NotificationDTO> notifications = message.stream()
+                .map(notification -> objectMapper.convertValue(notification, NotificationDTO.class))
+                .toList();
+
+        if (notifications.isEmpty()) {
+            return;
+        }
+
+        UUID recipientId = notifications.get(0).getRecipientId();
         redisService.addEntriesToMap(RedisKeyUtil.READ_NOTIFICATION, Map.of(recipientId.toString(), false));
+
+        SocketIOClient socket = userSocketManager.getUserSocket(recipientId);
+        if (socket == null) {
+            return;
+        }
+        // Convert notification to JSON string
+        String notificationMessage = objectMapper.writeValueAsString(notifications);
+        socket.sendEvent("notification", notificationMessage);
     }
 }

@@ -5,7 +5,6 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.snapgram.dto.CreateNotifyDTO;
 import org.snapgram.dto.NotificationResultDTO;
-import org.snapgram.dto.response.CommentDTO;
 import org.snapgram.dto.response.NotificationDTO;
 import org.snapgram.kafka.producer.NotificationProducer;
 import org.snapgram.repository.database.NotificationEntityRepository;
@@ -15,6 +14,7 @@ import org.snapgram.service.comment.ICommentService;
 import org.snapgram.service.user.IUserService;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.UUID;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -35,14 +35,18 @@ public class ReplyCommentNotification extends NotificationTemplate {
 
     @Override
     public NotificationDTO generateNotification(NotificationResultDTO notify) {
-        CommentDTO comment = commentService.getCommentById(notify.getNotificationEntity().getEntityId());
+        UUID commentId = notify.getNotificationEntity().getEntityId();
+        UUID postId = commentService.getPostIdByComment(commentId);
         return NotificationDTO.builder()
                 .id(notify.getNotificationEntity().getId())
+                .recipientId(notify.getRecipientId())
+                .entityId(commentId)
                 .actor(userService.getCreatorById(notify.getActorId()))
                 .type(notify.getNotificationEntity().getType())
                 .isRead(notify.isRead())
+                .content(cutContent(commentService.getCommentById(commentId).getContent()))
                 .createdAt(notify.getNotificationEntity().getCreatedAt())
-                .content(comment.getContent())
+                .options(Map.of("postId", postId))
                 .build();
     }
 

@@ -33,15 +33,28 @@ public abstract class NotificationTemplate {
     NotificationProducer producer;
 
     public NotificationDTO createNotification(CreateNotifyDTO notification) {
+        UUID actorId = notification.getActorId();
+        UUID recipientId = getRecipientId(notification);
+        if (actorId.equals(recipientId)) {
+            return null;
+        }
+
         NotificationEntity entity = getOrCreateNotificationEntity(notification.getEntityId(), notification.getType());
-        NotificationRecipient recipient = getOrCreateNotificationRecipient(entity.getId(), getRecipientId(notification));
-        NotificationTrigger trigger = updateNotificationTrigger(entity.getId(), notification.getActorId());
-        producer.sendNotificationMessage(recipient.getRecipient().getId());
-        return generateNotification(NotificationResultDTO.builder()
+        NotificationRecipient recipient = getOrCreateNotificationRecipient(entity.getId(), recipientId);
+        NotificationTrigger trigger = updateNotificationTrigger(entity.getId(), actorId);
+
+        NotificationDTO result = generateNotification(NotificationResultDTO.builder()
                 .notificationEntity(entity)
+                .recipientId(recipient.getRecipient().getId())
                 .isRead(recipient.getIsRead())
                 .actorId(trigger.getActor().getId())
                 .build());
+        producer.sendNotificationMessage(result);
+        return result;
+    }
+
+    protected String cutContent(String content) {
+        return content.length() > 150 ? content.substring(0, 150) + "..." : content;
     }
 
     public abstract NotificationDTO generateNotification(NotificationResultDTO notify);

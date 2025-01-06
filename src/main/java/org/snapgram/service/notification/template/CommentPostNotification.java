@@ -16,6 +16,7 @@ import org.snapgram.service.post.IPostService;
 import org.snapgram.service.user.IUserService;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.UUID;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -40,19 +41,26 @@ public class CommentPostNotification extends NotificationTemplate {
 
     @Override
     public NotificationDTO generateNotification(NotificationResultDTO notify) {
-        PostDTO post = postService.getPostById(notify.getNotificationEntity().getEntityId());
+        UUID commentId = notify.getNotificationEntity().getEntityId();
+        CommentDTO comment = commentService.getCommentById(commentId);
+        UUID postId = commentService.getPostIdByComment(commentId);
         return NotificationDTO.builder()
                 .id(notify.getNotificationEntity().getId())
+                .recipientId(notify.getRecipientId())
+                .entityId(commentId)
                 .actor(userService.getCreatorById(notify.getActorId()))
                 .type(notify.getNotificationEntity().getType())
                 .isRead(notify.isRead())
                 .createdAt(notify.getNotificationEntity().getCreatedAt())
-                .content(post.getCaption())
+                .content(cutContent(comment.getContent()))
+                .options(Map.of("postId", postId))
                 .build();
+
     }
 
     @Override
     protected UUID getRecipientId(CreateNotifyDTO notification) {
-        return postService.getPostById(notification.getEntityId()).getCreator().getId();
+        PostDTO post = commentService.getPostByComment(notification.getEntityId());
+        return post.getCreator().getId();
     }
 }

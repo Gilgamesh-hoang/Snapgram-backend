@@ -18,6 +18,7 @@ import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.RedisKeyUtil;
 import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,18 +39,14 @@ public class NotificationService implements INotificationService {
     NotificationTemplateFactory factory;
 
     @Override
-//    @Async
+    @Async
     @Transactional
     public void createNotification(CreateNotifyDTO notification) {
-        UUID currentUserId = UserSecurityHelper.getCurrentUser().getId();
-        if (currentUserId.equals(notification.getActorId())) {
-            return;
-        }
 
         NotificationTemplate template = factory.getTemplate(notification.getType());
-        template.createNotification(notification);
+        NotificationDTO res = template.createNotification(notification);
 
-        String redisKey = RedisKeyUtil.getNotificationKey(UserSecurityHelper.getCurrentUser().getId(), 0, 0);
+        String redisKey = RedisKeyUtil.getNotificationKey(res.getRecipientId(), 0, 0);
         redisProducer.sendDeleteByKey(redisKey.substring(0, redisKey.indexOf("page")));
     }
 
@@ -86,6 +83,7 @@ public class NotificationService implements INotificationService {
                         }
                     })
                     .filter(Objects::nonNull)
+                    .sorted(Comparator.comparing(NotificationDTO::getCreatedAt).reversed())
                     .toList();
         } finally {
             executor.shutdown();
@@ -99,11 +97,20 @@ public class NotificationService implements INotificationService {
     @Override
     @Transactional
     public void deleteNotification(UUID notificationId) {
+        UUID currentUserId = UserSecurityHelper.getCurrentUser().getId();
+        NotificationResultDTO notification = entityRepository.findNotificationById(notificationId);
+        if (notification == null) {
+            return;
+        }
+        if (!notification.getRecipientId().equals(currentUserId)) {
+            throw new IllegalArgumentException("You are not authorized to delete this notification");
+        }
+
         triggerRepository.deleteByNotificationEntity_Id(notificationId);
         recipientRepository.deleteByNotificationEntity_Id(notificationId);
         entityRepository.deleteById(notificationId);
 
-        String redisKey = RedisKeyUtil.getNotificationKey(UserSecurityHelper.getCurrentUser().getId(), 0, 0);
+        String redisKey = RedisKeyUtil.getNotificationKey(currentUserId, 0, 0);
         redisProducer.sendDeleteByKey(redisKey.substring(0, redisKey.indexOf("page")));
     }
 
@@ -112,6 +119,15 @@ public class NotificationService implements INotificationService {
     public void markAsRead(UUID currentUserId) {
         redisProducer.sendSaveMap(RedisKeyUtil.READ_NOTIFICATION, Map.of(currentUserId.toString(), true), null, null);
         recipientRepository.markAsRead(currentUserId);
+    }
+
+    @Override
+    public boolean isRead(UUID userId) {
+        try {
+            return redisService.getEntryFromMap(RedisKeyUtil.READ_NOTIFICATION, userId.toString(), Boolean.class);
+        } catch (NullPointerException e) {
+            return false;
+        }
     }
 
 }

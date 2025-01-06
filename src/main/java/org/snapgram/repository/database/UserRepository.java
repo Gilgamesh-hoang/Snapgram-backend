@@ -15,7 +15,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
             "ORDER BY FUNCTION('RAND') LIMIT :limit")
     List<User> findRandomUsers(@Param("limit") int limit, @Param("exceptIds") List<UUID> exceptIds);
 
-
     @Query("SELECT u FROM Follow f JOIN User u ON u.id = f.follower.id " +
             "WHERE u.isActive = true AND u.isDeleted = false " +
             "AND f.followee.id = :followedUserId")

@@ -9,6 +9,7 @@ import org.snapgram.enums.NotificationType;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -17,10 +18,13 @@ import java.util.UUID;
 @NoArgsConstructor
 public class NotificationDTO implements Serializable {
     private UUID id;
+    private UUID recipientId;
+    private UUID entityId;
     private CreatorDTO actor;
     private NotificationType type;
-    @JsonProperty("is_read")
+    @JsonProperty("isRead")
     private boolean isRead;
     private Timestamp createdAt;
     private String content;
+    private Map<String, Object> options;
 }

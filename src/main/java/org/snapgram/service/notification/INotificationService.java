@@ -13,4 +13,5 @@ public interface INotificationService {
     void deleteNotification(UUID notificationId);
     void markAsRead(UUID currentUserId);
 
+    boolean isRead(UUID userId);
 }

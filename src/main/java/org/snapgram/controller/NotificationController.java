@@ -37,6 +37,11 @@ public class NotificationController {
         return new ResponseObject<>(HttpStatus.OK, notificationService.getNotificationsByUser(user.getId(), pageable));
     }
 
+    @GetMapping("/is-read")
+    public ResponseObject<Boolean> getIsRead(@AuthenticationPrincipal CustomUserSecurity user) {
+        return new ResponseObject<>(HttpStatus.OK, notificationService.isRead(user.getId()));
+    }
+
     @PutMapping
     public ResponseObject<Void> markNotificationAsRead(@AuthenticationPrincipal CustomUserSecurity user) {
         notificationService.markAsRead(user.getId());

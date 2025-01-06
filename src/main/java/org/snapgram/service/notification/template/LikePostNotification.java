@@ -31,14 +31,17 @@ public class LikePostNotification extends NotificationTemplate {
 
     @Override
     public NotificationDTO generateNotification(NotificationResultDTO notify) {
-        PostLikeDTO postLike = postLikeService.getPostLike(notify.getNotificationEntity().getEntityId(), notify.getActorId());
+        UUID postId = notify.getNotificationEntity().getEntityId();
+        PostLikeDTO postLike = postLikeService.getPostLike(postId, notify.getActorId());
         return NotificationDTO.builder()
                 .id(notify.getNotificationEntity().getId())
+                .recipientId(notify.getRecipientId())
+                .entityId(postId)
                 .actor(postLike.getUser())
                 .type(notify.getNotificationEntity().getType())
                 .isRead(notify.isRead())
                 .createdAt(notify.getNotificationEntity().getCreatedAt())
-                .content(postLike.getPost().getCaption())
+                .content(cutContent(postLike.getPost().getCaption()))
                 .build();
     }
 
