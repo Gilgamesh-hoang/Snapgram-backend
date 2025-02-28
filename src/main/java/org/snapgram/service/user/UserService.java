@@ -113,8 +113,8 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public List<UserDTO> getUsersByUUIDs(UUID[] uuids) {
-        List<User> users = userRepository.findAllById(List.of(uuids));
+    public List<UserDTO> getUsersByIds(UUID[] ids) {
+        List<User> users = userRepository.findAllById(List.of(ids));
         return userMapper.toDTOs(users);
     }
 

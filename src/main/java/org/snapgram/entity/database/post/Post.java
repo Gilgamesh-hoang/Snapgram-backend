@@ -8,8 +8,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.snapgram.entity.database.user.User;
 import org.snapgram.entity.database.generator.UUIDGenerator;
+import org.snapgram.entity.database.user.User;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -50,7 +50,7 @@ public class Post {
     @Column(name = "comment_count", columnDefinition = "INT(11) DEFAULT 0")
     private Integer commentCount = 0;
 
-    @Column(name = "created_at", insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreatedDate
     @Temporal(TemporalType.TIMESTAMP)
     private Timestamp createdAt;
@@ -63,7 +63,7 @@ public class Post {
     )
     private List<Tag> tags = new ArrayList<>();
 
-    @Column(name = "update_at", insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "update_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @LastModifiedDate
     @Temporal(TemporalType.TIMESTAMP)
     private Timestamp updatedAt;

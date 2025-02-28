@@ -66,7 +66,7 @@ public class PushNewsfeedStrategy implements NewsfeedStrategy {
     }
 
     private List<PostDTO> rankPosts(List<PostDTO> posts, List<AffinityDTO> affinities) {
-        // Group posts by creator ID to reduce repetition
+        // Conversation posts by creator ID to reduce repetition
         Map<UUID, List<PostDTO>> postsByCreator = posts.stream()
                 .collect(Collectors.groupingBy(post -> post.getCreator().getId()));
 

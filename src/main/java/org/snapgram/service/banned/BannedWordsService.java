@@ -84,7 +84,7 @@ public class BannedWordsService {
     public static void main(String[] args) {
         BannedWordsService bannedWordsService = new BannedWordsService();
         bannedWordsService.loadBannedWords();
-        System.out.println(bannedWordsService.removeBannedWords("Hello, I VCC is the best CCMNR con hèn mọn"));
+        bannedWordsService.removeBannedWords("Hello, I VCC is the best CCMNR con hèn mọn");
 
     }
 }

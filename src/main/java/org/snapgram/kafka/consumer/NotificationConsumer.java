@@ -44,12 +44,12 @@ public class NotificationConsumer {
         UUID recipientId = notifications.get(0).getRecipientId();
         redisService.addEntriesToMap(RedisKeyUtil.READ_NOTIFICATION, Map.of(recipientId.toString(), false));
 
-        SocketIOClient socket = userSocketManager.getUserSocket(recipientId);
-        if (socket == null) {
+        List<SocketIOClient> sockets = userSocketManager.getUserSockets(recipientId);
+        if (sockets.isEmpty()) {
             return;
         }
         // Convert notification to JSON string
         String notificationMessage = objectMapper.writeValueAsString(notifications);
-        socket.sendEvent("notification", notificationMessage);
+        sockets.forEach(socket -> socket.sendEvent("notification", notificationMessage));
     }
 }

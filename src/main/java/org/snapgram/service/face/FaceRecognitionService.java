@@ -45,7 +45,7 @@ public class FaceRecognitionService implements IFaceRecognitionService {
                 int code = jsonNode.get("status_code").asInt();
                 if (code == FaceRecognitionConstant.STATUS_CODE_SUCCESS) {
                     UUID[] uuids = objectMapper.convertValue(jsonNode.get("data"), UUID[].class);
-                    return userService.getUsersByUUIDs(uuids);
+                    return userService.getUsersByIds(uuids);
                 }
                 return List.of();
             } else {

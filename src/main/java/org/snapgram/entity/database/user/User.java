@@ -52,4 +52,8 @@ public class User {
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "user", cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
     private UserInfo userInfo = new UserInfo();
+
+    public User(UUID id) {
+        this.id = id;
+    }
 }

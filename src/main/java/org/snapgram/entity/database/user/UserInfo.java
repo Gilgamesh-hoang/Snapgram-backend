@@ -43,7 +43,7 @@ public class UserInfo {
     @Column(nullable = false)
     private Gender gender;
 
-    @Column(name = "created_at", updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "created_at", updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreatedDate
     @Temporal(TemporalType.TIMESTAMP)
     private Timestamp createdAt;

@@ -5,26 +5,23 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.snapgram.enums.NotificationType;
+import org.snapgram.enums.MessageType;
 
-import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.Map;
 import java.util.UUID;
 
-@Data
 @Builder
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class NotificationDTO implements Serializable {
+public class MessageResponse {
     private UUID id;
-    private UUID recipientId;
-    private UUID entityId;
-    private CreatorDTO actor;
-    private NotificationType type;
+    private CreatorDTO sender;
+    private CreatorDTO recipient;
+    private String content;
+    private MessageType contentType;
     @JsonProperty("isRead")
     private boolean isRead;
     private Timestamp createdAt;
-    private String content;
-    private Map<String, Serializable> options;
+    private ConversationDTO conversation;
 }

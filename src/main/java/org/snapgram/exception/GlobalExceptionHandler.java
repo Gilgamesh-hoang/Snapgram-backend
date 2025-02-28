@@ -31,6 +31,17 @@ public class GlobalExceptionHandler {
         return request.getDescription(false).replace("uri=", "");
     }
 
+    @ExceptionHandler(UnauthorizedActionException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ResponseObject<ErrorResponse> handleUnauthorizedActionException(UnauthorizedActionException ex, WebRequest request) {
+        ErrorResponse error = ErrorResponse.builder()
+                .error("Unauthorized Action")
+                .path(getPath(request))
+                .message(ex.getMessage())
+                .build();
+        return new ResponseObject<>(HttpStatus.FORBIDDEN, error);
+    }
+
     @ExceptionHandler(KeyGenerationException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseObject<ErrorResponse> handleKeyPairGenerationException(KeyGenerationException ex, WebRequest request) {
@@ -41,6 +52,7 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseObject<>(HttpStatus.INTERNAL_SERVER_ERROR, error);
     }
+
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     @ResponseStatus(HttpStatus.PAYLOAD_TOO_LARGE)
     public ResponseObject<ErrorResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex, WebRequest request) {

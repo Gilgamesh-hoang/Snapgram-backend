@@ -17,7 +17,7 @@ public class NotificationQueue {
 
     public List<NotificationDTO> drainQueue() {
         List<NotificationDTO> notifications = queue.values().stream().toList();
-//        notificationQueue.clear();
+        queue.clear();
         return notifications;
     }
 }

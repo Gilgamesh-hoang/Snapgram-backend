@@ -57,7 +57,7 @@ public class RedisService implements IRedisService {
 
     @Override
     public <T> List<T> getList(String key, int start, int end, Class<T> clazz) {
-        if (!redisTemplate.hasKey(key)) {
+        if (Boolean.FALSE.equals(redisTemplate.hasKey(key))) {
             return null;
         }
 

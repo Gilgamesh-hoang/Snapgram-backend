@@ -36,6 +36,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -132,6 +133,11 @@ public class UserController {
     @GetMapping("/me")
     public ResponseObject<UserDTO> getCurrentUser(@AuthenticationPrincipal CustomUserSecurity user) {
         return new ResponseObject<>(HttpStatus.OK, userService.getByEmail(user.getEmail()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseObject<UserDTO> getUserById(@PathVariable("id") @NotNull UUID id) {
+        return new ResponseObject<>(HttpStatus.OK, userService.getById(id));
     }
 
 

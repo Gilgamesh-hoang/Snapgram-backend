@@ -12,7 +12,6 @@ import org.snapgram.repository.database.NotificationEntityRepository;
 import org.snapgram.repository.database.NotificationRecipientRepository;
 import org.snapgram.repository.database.NotificationTriggerRepository;
 import org.snapgram.service.comment.ICommentService;
-import org.snapgram.service.post.IPostService;
 import org.snapgram.service.user.IUserService;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +20,6 @@ import java.util.UUID;
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class CommentPostNotification extends NotificationTemplate {
-    IPostService postService;
     ICommentService commentService;
     IUserService userService;
 
@@ -29,11 +27,9 @@ public class CommentPostNotification extends NotificationTemplate {
                                    NotificationRecipientRepository recipientRepository,
                                    NotificationTriggerRepository triggerRepository,
                                    NotificationProducer producer,
-                                   IPostService postService,
                                    ICommentService commentService,
                                    IUserService userService) {
         super(entityRepository, recipientRepository, triggerRepository, producer);
-        this.postService = postService;
         this.commentService = commentService;
         this.userService = userService;
     }

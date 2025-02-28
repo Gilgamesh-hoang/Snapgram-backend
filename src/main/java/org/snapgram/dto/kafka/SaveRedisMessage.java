@@ -1,7 +1,6 @@
 package org.snapgram.dto.kafka;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 @Data
 public class SaveRedisMessage implements Serializable {
     private String redisKey;
-    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+//    @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
     private Object obj;
     private Long timeout;
     private TimeUnit timeUnit;

@@ -262,7 +262,8 @@ public class PostService implements IPostService {
 
     @Override
     public List<PostDTO> getPostsByUser(String nickname, Pageable pageable) {
-        int page, size;
+        int page;
+        int size;
         try {
             page = pageable.getPageNumber();
             size = pageable.getPageSize();

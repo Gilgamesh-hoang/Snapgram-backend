@@ -4,7 +4,6 @@ import com.corundumstudio.socketio.HandshakeData;
 import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.ConnectListener;
-import com.corundumstudio.socketio.listener.DataListener;
 import com.corundumstudio.socketio.listener.DisconnectListener;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.annotation.PostConstruct;
@@ -13,11 +12,14 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.snapgram.dto.CustomUserSecurity;
-import org.snapgram.entity.database.message.Message;
+import org.snapgram.dto.request.MessageRequest;
+import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.jwt.JwtService;
 import org.snapgram.service.key.IKeyService;
+import org.snapgram.service.message.MessageService;
 import org.snapgram.service.user.UserDetailServiceImpl;
+import org.snapgram.util.AppConstant;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -34,12 +36,13 @@ public class SocketModule {
     IKeyService keyService;
     UserDetailServiceImpl userDetailService;
     JwtService jwtService;
+    MessageService messageService;
 
     @PostConstruct
     public void initializeSocketHandlers() {
         socketServer.addConnectListener(onConnected());
         socketServer.addDisconnectListener(onDisconnected());
-        socketServer.addEventListener("send_message", Message.class, onMessageReceived());
+        socketServer.addEventListener(AppConstant.SEND_MESSAGE_EVENT, MessageRequest.class, messageService);
     }
 
     private ConnectListener onConnected() {
@@ -51,8 +54,13 @@ public class SocketModule {
             }
 
             UUID userId = authentication(jwt, client);
-            userSocketManager.addUserSocket(userId, client);
-            log.info("User [{}] connected with socket ID [{}]", userId, client.getSessionId());
+            if (userId != null) {
+                userSocketManager.addUserSocket(userId, client);
+                log.info("User [{}] connected with socket ID [{}]", userId, client.getSessionId());
+            }else {
+                rejectClient(client, "Authentication failed.");
+                return;
+            }
         };
     }
 
@@ -74,7 +82,7 @@ public class SocketModule {
             return userDetails.getId();
         } catch (IllegalArgumentException e) {
             rejectClient(client, "Unable to parse JWT Token: " + e.getMessage());
-        } catch (ExpiredJwtException e) {
+        } catch (ExpiredJwtException | ResourceNotFoundException e) {
             rejectClient(client, "JWT Token has expired: " + e.getMessage());
         }
         return null;
@@ -109,6 +117,7 @@ public class SocketModule {
 
     private void rejectClient(SocketIOClient client, String message) {
         log.warn(message);
+        client.sendEvent(AppConstant.ERROR_EVENT, message);
         client.disconnect();
     }
 
@@ -121,10 +130,4 @@ public class SocketModule {
         };
     }
 
-    private DataListener<Message> onMessageReceived() {
-        return (senderClient, message, ackSender) -> {
-            log.info("Message received: {}", message);
-            // Handle message logic here, e.g., broadcast to a room
-        };
-    }
 }

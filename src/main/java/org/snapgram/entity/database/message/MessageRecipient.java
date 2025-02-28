@@ -1,18 +1,23 @@
 package org.snapgram.entity.database.message;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import org.snapgram.entity.database.generator.UUIDGenerator;
-import org.snapgram.entity.database.user.User;
 
 import java.util.UUID;
 
 @Data
 @Entity
+@Builder
 @Table(name = "message_recipient")
+@AllArgsConstructor
+@NoArgsConstructor
 public class MessageRecipient {
 
     @Id
@@ -27,18 +32,14 @@ public class MessageRecipient {
     private Message message;
 
     @ManyToOne
-    @JoinColumn(name = "recipient_id", nullable = false)
-    private User recipient;
-
-    @ManyToOne
-    @JoinColumn(name = "recipient_group_id", nullable = false)
-    private Participant recipientGroup;
+    @JoinColumn(name = "participant_id")
+    private Participant participant;
 
     @Column(name = "is_read", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Builder.Default
     private Boolean isRead = false;
 
     @Column(name = "is_deleted",  columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Builder.Default
     private Boolean isDeleted = false;
-
-    // getters and setters
 }

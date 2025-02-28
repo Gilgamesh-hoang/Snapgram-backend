@@ -92,5 +92,5 @@ public interface IUserService {
 
     UserInfoDTO getUserInfo(String nickname);
 
-    List<UserDTO> getUsersByUUIDs(UUID[] uuids);
+    List<UserDTO> getUsersByIds(UUID[] ids);
 }

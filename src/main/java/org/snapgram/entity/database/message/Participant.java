@@ -1,7 +1,10 @@
 package org.snapgram.entity.database.message;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -11,9 +14,11 @@ import org.snapgram.entity.database.user.User;
 import java.util.UUID;
 
 @Data
-
+@Builder
 @Entity
-@Table(name = "participant")
+@Table(name = "message_participant")
+@AllArgsConstructor
+@NoArgsConstructor
 public class Participant {
 
     @Id
@@ -28,7 +33,7 @@ public class Participant {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "conservation_id", nullable = false)
-    private Conservation conservation;
+    @JoinColumn(name = "conversation_id", nullable = false)
+    private Conversation conversation;
 
 }

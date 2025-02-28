@@ -20,7 +20,6 @@ import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.UUID;
 
 @Service
@@ -69,11 +68,11 @@ public abstract class NotificationTemplate {
                 .build();
         return entityRepository.findOne(Example.of(notification))
                 .map(entity -> {
-                    entity.setCreatedAt(Timestamp.from(Instant.now()));
+                    entity.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                     return entityRepository.save(entity);
                 })
                 .orElseGet(() -> {
-                    notification.setCreatedAt(Timestamp.from(Instant.now()));
+                    notification.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                     return entityRepository.save(notification);
                 });
     }

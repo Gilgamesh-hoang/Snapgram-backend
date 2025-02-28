@@ -1,7 +1,5 @@
 package org.snapgram;
 
-import org.snapgram.kafka.producer.NotificationProducer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,48 +16,11 @@ public class SnapgramBackendApplication {
         SpringApplication.run(SnapgramBackendApplication.class, args);
     }
 
-    @Autowired
-    NotificationProducer notificationProducer;
-
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
-//            UUID id = UUID.randomUUID();
-//            NotificationDTO notification = NotificationDTO.builder()
-//                    .id(id)
-//                    .actor(CreatorDTO.builder()
-//                            .nickname("123")
-//                            .avatarUrl(null)
-//                            .build())
-//                    .type(NotificationType.COMMENT_POST)
-//                    .entityId(UUID.fromString("1ce28758-516a-3ec6-8663-d7ceeca86c6e"))
-//                    .createdAt(new Timestamp(2024, 1, 1, 0, 0, 0, 0))
-//                    .recipientId(UUID.fromString("f4aea8f0-967c-4700-aea8-f0967c8700b8"))
-//                    .content("This is a test notification1")
-//                    .options(Map.of("1","1"))
-//                    .build();
-//            notificationProducer.sendNotificationMessage(notification);
-//
-//            notification.setContent("This is a test notification2");
-//            notificationProducer.sendNotificationMessage(notification);
-//
-//            notification = NotificationDTO.builder()
-//                    .id(UUID.randomUUID())
-//                    .actor(CreatorDTO.builder()
-//                            .nickname("123")
-//                            .avatarUrl(null)
-//                            .build())
-//                    .type(NotificationType.COMMENT_POST)
-//                    .entityId(UUID.fromString("1ce28758-516a-3ec6-8663-d7ceeca86c6e"))
-//                    .createdAt(new Timestamp(2024, 1, 1, 2, 0, 0, 0))
-//                    .recipientId(UUID.fromString("f4aea8f0-967c-4700-aea8-f0967c8700b8"))
-//                    .content("This is a test notification3")
-//                    .options(Map.of("1","1"))
-//                    .build();
-//            notificationProducer.sendNotificationMessage(notification);
         };
     }
-
 //    void generateTimeline() {
 //        @Autowired
 //        UserRepository userRepository;

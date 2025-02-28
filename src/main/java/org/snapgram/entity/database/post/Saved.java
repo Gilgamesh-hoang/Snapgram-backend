@@ -39,7 +39,7 @@ public class Saved {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(name = "saved_at", updatable = false, insertable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "saved_at", updatable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     @CreatedDate
     @Temporal(TemporalType.TIMESTAMP)
     private Timestamp savedAt;
