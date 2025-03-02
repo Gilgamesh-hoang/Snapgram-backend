@@ -24,6 +24,7 @@ import org.snapgram.repository.database.MessageConversationRepository;
 import org.snapgram.repository.database.MessageParticipantRepository;
 import org.snapgram.repository.database.MessageRecipientRepository;
 import org.snapgram.repository.database.MessageRepository;
+import org.snapgram.service.follow.IAffinityService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.socket.UserSocketManager;
 import org.snapgram.util.AppConstant;
@@ -47,6 +48,7 @@ public class GroupStrategy extends MessageStrategy {
     MessageRepository messageRepository;
     MessageRecipientRepository recipientRepository;
     IUserService userService;
+    IAffinityService affinityService;
     MessageConversationRepository conversationRepository;
     ConversationMapper conversationMapper;
     MessageMapper messageMapper;
@@ -57,6 +59,7 @@ public class GroupStrategy extends MessageStrategy {
                          MessageRepository messageRepository,
                          MessageRecipientRepository recipientRepository,
                          IUserService userService,
+                         IAffinityService affinityService,
                          MessageConversationRepository conversationRepository,
                          ConversationMapper conversationMapper,
                          MessageMapper messageMapper) {
@@ -66,6 +69,7 @@ public class GroupStrategy extends MessageStrategy {
         this.messageRepository = messageRepository;
         this.recipientRepository = recipientRepository;
         this.userService = userService;
+        this.affinityService = affinityService;
         this.conversationRepository = conversationRepository;
         this.conversationMapper = conversationMapper;
         this.messageMapper = messageMapper;
@@ -86,6 +90,9 @@ public class GroupStrategy extends MessageStrategy {
         // Save the message and get the response
         MessageResponse response = saveMessage(request, participants, conversation);
 
+        // Increase affinity for each participant
+        increaseAffinity(participants);
+
         // Get the recipient's socket client
         List<SocketIOClient> recipientClients = userSocketManager.getUserSocketsByUserIds(participants.stream().map(p -> p.getUser().getId()).toList());
         // If the recipient is connected, send the message
@@ -100,6 +107,10 @@ public class GroupStrategy extends MessageStrategy {
         }
 
         return response;
+    }
+
+    private void increaseAffinity(List<Participant> participants) {
+        participants.forEach(participant -> affinityService.increaseAffinity(participant.getUser().getId()));
     }
 
     private MessageResponse saveMessage(@Valid MessageRequest request, List<Participant> participants, Conversation conversation) {

@@ -25,6 +25,7 @@ import org.snapgram.repository.database.MessageConversationRepository;
 import org.snapgram.repository.database.MessageParticipantRepository;
 import org.snapgram.repository.database.MessageRecipientRepository;
 import org.snapgram.repository.database.MessageRepository;
+import org.snapgram.service.follow.IAffinityService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.socket.UserSocketManager;
 import org.snapgram.util.AppConstant;
@@ -51,6 +52,7 @@ public class UserStrategy extends MessageStrategy {
     IUserService userService;
     ConversationMapper conversationMapper;
     MessageMapper messageMapper;
+    IAffinityService affinityService;
 
     public UserStrategy(MessageParticipantRepository participantRepository,
                         UserSocketManager userSocketManager,
@@ -59,6 +61,7 @@ public class UserStrategy extends MessageStrategy {
                         MessageConversationRepository conversationRepository,
                         MessageRecipientRepository recipientRepository,
                         IUserService userService,
+                        IAffinityService affinityService,
                         ConversationMapper conversationMapper,
                         MessageMapper messageMapper) {
         super(participantRepository);
@@ -68,6 +71,7 @@ public class UserStrategy extends MessageStrategy {
         this.conversationRepository = conversationRepository;
         this.recipientRepository = recipientRepository;
         this.userService = userService;
+        this.affinityService = affinityService;
         this.conversationMapper = conversationMapper;
         this.messageMapper = messageMapper;
     }
@@ -108,6 +112,9 @@ public class UserStrategy extends MessageStrategy {
 
         // Retrieve the recipient's ID from the response
         UUID recipientId = response.getRecipient().getId();
+
+        // Increase affinity between sender and recipient
+        affinityService.increaseAffinity(recipientId);
         // Get the recipient's socket client
         List<SocketIOClient> recipientClients = userSocketManager.getUserSockets(recipientId);
         // If the recipient is connected, send the message
