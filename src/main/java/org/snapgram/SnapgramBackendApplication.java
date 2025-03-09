@@ -16,10 +16,12 @@ public class SnapgramBackendApplication {
         SpringApplication.run(SnapgramBackendApplication.class, args);
     }
 
+
     @Bean
     public CommandLineRunner commandLineRunner() {
         return args -> {
         };
+
     }
 //    void generateTimeline() {
 //        @Autowired

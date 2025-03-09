@@ -28,8 +28,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("${API_PREFIX}/timeline")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class TimelineController {
-    INewsfeedService timelineService;
+public class NewsFeedController {
+    INewsfeedService newsfeedService;
     RedisProducer redisProducer;
 
     @GetMapping
@@ -39,12 +39,12 @@ public class TimelineController {
             @RequestParam(value = "pageSize", defaultValue = "20") @Min(0) @Max(30) Integer pageSize
     ) {
         Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
-        List<PostDTO> timelinesByUser = timelineService.getNewsfeedByUser(user.getId(), pageable);
+        List<PostDTO> newsfeedByUser = newsfeedService.getNewsfeedByUser(user.getId(), pageable);
 
         redisProducer.sendSaveMap(RedisKeyUtil.GET_TIMELINE_LATEST,
                 Map.of(user.getId(), new Timestamp(System.currentTimeMillis())));
 
-        return new ResponseObject<>(HttpStatus.OK, timelinesByUser);
+        return new ResponseObject<>(HttpStatus.OK, newsfeedByUser);
     }
 
 }

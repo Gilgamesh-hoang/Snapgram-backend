@@ -12,6 +12,7 @@ import org.snapgram.entity.database.comment.Comment;
 import org.snapgram.entity.database.post.Post;
 import org.snapgram.entity.database.user.User;
 import org.snapgram.enums.NotificationType;
+import org.snapgram.enums.SentimentType;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.kafka.producer.PostProducer;
 import org.snapgram.kafka.producer.RedisProducer;
@@ -23,11 +24,13 @@ import org.snapgram.service.follow.IAffinityService;
 import org.snapgram.service.notification.INotificationService;
 import org.snapgram.service.post.IPostService;
 import org.snapgram.service.redis.IRedisService;
+import org.snapgram.service.sentiment.ISentimentService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.util.RedisKeyUtil;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -49,6 +52,7 @@ public class CommentService implements ICommentService {
     IAffinityService affinityService;
     INotificationService notificationService;
     BannedWordsService bannedService;
+    ISentimentService sentimentService;
 
     @Override
     public List<CommentDTO> getCommentsByPost(UUID postId, Pageable pageable) {
@@ -83,6 +87,7 @@ public class CommentService implements ICommentService {
     }
 
     @Override
+    @Transactional
     public CommentDTO editComment(UUID currentUserId, UUID commentId, String content) {
         Example<Comment> example = Example.of(Comment.builder()
                 .id(commentId)
@@ -94,6 +99,11 @@ public class CommentService implements ICommentService {
                 () -> new ResourceNotFoundException("Comment not found"));
         // Set the new content of the comment
         comment.setContent(content);
+
+        // Analyze the sentiment of the new content
+        SentimentType type = sentimentService.analyzeSentiment(content);
+        comment.setSentiment(type);
+
         commentRepository.save(comment);
 
         // Create a Redis key for the post comments
@@ -155,6 +165,7 @@ public class CommentService implements ICommentService {
                 .id(commentId)
                 .isDeleted(false)
                 .build());
+        System.out.println("=== ======== ===");
         return commentRepository.findOne(example).orElseThrow(
                 () -> new ResourceNotFoundException("Comment not found"));
     }
@@ -245,10 +256,14 @@ public class CommentService implements ICommentService {
     }
 
     private Comment buildComment(UUID postId, UUID userId, String content, int level, UUID parentCommentId) {
+        // Analyze the sentiment of the content
+        SentimentType type = sentimentService.analyzeSentiment(content);
+
         return Comment.builder()
                 .post(Post.builder().id(postId).build())
                 .user(User.builder().id(userId).build())
                 .content(content)
+                .sentiment(type)
                 .parentComment(parentCommentId != null ? Comment.builder().id(parentCommentId).build() : null)
                 .likeCount(0)
                 .replyCount(0)

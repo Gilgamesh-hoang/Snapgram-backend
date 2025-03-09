@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.snapgram.enums.SentimentType;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
@@ -22,4 +23,5 @@ public class CommentDTO implements Serializable {
     private Integer likeCount = 0;
     private Integer level;
     private int replyCount;
+    private SentimentType sentiment;
 }

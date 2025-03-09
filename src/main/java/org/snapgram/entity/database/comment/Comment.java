@@ -11,6 +11,7 @@ import org.hibernate.type.SqlTypes;
 import org.snapgram.entity.database.post.Post;
 import org.snapgram.entity.database.user.User;
 import org.snapgram.entity.database.generator.UUIDGenerator;
+import org.snapgram.enums.SentimentType;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -65,4 +66,7 @@ public class Comment {
     @Column(name = "replyCount", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Integer replyCount;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sentiment", nullable = false)
+    private SentimentType sentiment;
 }
