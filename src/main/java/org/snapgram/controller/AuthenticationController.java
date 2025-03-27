@@ -69,8 +69,13 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh-token")
-    public ResponseObject<JwtResponse> refreshToken(@CookieValue(AppConstant.REFRESH_TOKEN) @NotBlank String refreshToken) {
+    public ResponseObject<JwtResponse> refreshToken(@CookieValue(AppConstant.REFRESH_TOKEN) @NotBlank String refreshToken,
+                                                    HttpServletResponse response
+    ) {
         JwtResponse jwtObj = authenticationService.refreshToken(refreshToken);
+        Cookie refreshTokenCookie = CookieUtil.createCookie(AppConstant.REFRESH_TOKEN, null, "localhost",
+                0, true, false);
+        response.addCookie(refreshTokenCookie);
         return new ResponseObject<>(HttpStatus.OK, "Refresh token successfully", jwtObj);
     }
 

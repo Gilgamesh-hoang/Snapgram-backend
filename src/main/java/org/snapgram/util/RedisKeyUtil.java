@@ -7,6 +7,7 @@ import java.util.UUID;
 @UtilityClass
 public class RedisKeyUtil {
     public final String JWT_BLACKLIST = "jwt_blacklist";
+    public final String JWT_SENTIMENT_SERVICE = "jwt_sentiment";
     public final String ASYM_KEYPAIR = "asymmetric:keypair:users";
     public final String POST_LIKE_COUNT = "post:likes";
     public final String LAST_REFRESH_TOKEN = "auth:refresh_token_last_used";
