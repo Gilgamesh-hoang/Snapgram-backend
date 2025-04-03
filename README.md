@@ -5,6 +5,7 @@
 ##  Table of Contents
 
 - [Overview](#overview)
+- [Github Frontend and Sentiment Analysis](#github-backend-and-sentiments-analysis)
 - [Technologies Used](#technologies-used)
 - [Features](#features)
 - [Getting Started](#getting-started)
@@ -17,6 +18,13 @@
 ##  Overview
 
 Snapgram is a modern social media application inspired by Instagram, designed to provide users with a seamless platform for sharing photos and connecting with others. This repository contains the backend services that power the Snapgram application.
+
+---
+
+##  Github Frontend and Sentiment Analysis
+
+* Frontend: [here](https://github.com/Gilgamesh-hoang/Snapgram-frontend.git)
+* Sentiment Analysis: [here](https://github.com/Gilgamesh-hoang/Sentiment-Analysis-Comments.git)
 
 ---
 
