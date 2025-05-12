@@ -78,7 +78,7 @@ public class SentimentService implements ISentimentService {
         }
 
         // Default case for unhandled errors
-        return SentimentType.OTHER;
+        return SentimentType.NEUTRAL;
     }
 
     /**

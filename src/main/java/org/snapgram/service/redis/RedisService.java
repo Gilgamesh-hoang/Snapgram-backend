@@ -46,7 +46,10 @@ public class RedisService implements IRedisService {
     @Override
     public <T> void saveList(String key, List<T> list, Integer index) {
         if (index == null) {
-            redisTemplate.opsForList().rightPushAll(key, list.toArray());
+            for (T item : list) {
+                redisTemplate.opsForList().rightPush(key, item);
+            }
+
         } else {
             for (T item : list) {
                 redisTemplate.opsForList().set(key, index, item);
