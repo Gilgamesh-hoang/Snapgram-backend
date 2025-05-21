@@ -13,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.snapgram.dto.CustomUserSecurity;
 import org.snapgram.dto.request.MessageRequest;
+import org.snapgram.dto.response.ConversationDTO;
+import org.snapgram.enums.ConversationType;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.jwt.JwtService;
@@ -22,6 +24,7 @@ import org.snapgram.service.user.UserDetailServiceImpl;
 import org.snapgram.util.AppConstant;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.UUID;
 
 
@@ -55,13 +58,41 @@ public class SocketModule {
 
             UUID userId = authentication(jwt, client);
             if (userId != null) {
+                addUserToConversationRooms(userId, client);
+
                 userSocketManager.addUserSocket(userId, client);
+
                 log.info("User [{}] connected with socket ID [{}]", userId, client.getSessionId());
-            }else {
+            } else {
                 rejectClient(client, "Authentication failed.");
                 return;
             }
         };
+    }
+
+    private DisconnectListener onDisconnected() {
+        return client -> {
+            UUID userId = userSocketManager.removeSocket(client);
+
+            outOfRooms(userId, client);
+            if (userId != null) {
+                log.info("User [{}] disconnected from socket", userId);
+            }
+        };
+    }
+
+    private void addUserToConversationRooms(UUID userId, SocketIOClient client) {
+        List<ConversationDTO> conversations = messageService.getConversationsByType(userId, ConversationType.GROUP);
+        for (ConversationDTO conversation : conversations) {
+            String roomId = conversation.getId().toString();
+            client.joinRoom(roomId);
+            log.info("User {} joined room {}", userId, roomId);
+        }
+    }
+
+    private void outOfRooms(UUID userId, SocketIOClient client) {
+        client.getAllRooms().forEach(client::leaveRoom);
+        log.info("User {} disconnected and left all rooms", userId);
     }
 
     private UUID authentication(String jwt, SocketIOClient client) {
@@ -121,13 +152,6 @@ public class SocketModule {
         client.disconnect();
     }
 
-    private DisconnectListener onDisconnected() {
-        return client -> {
-            UUID userId = userSocketManager.removeSocket(client);
-            if (userId != null) {
-                log.info("User [{}] disconnected from socket", userId);
-            }
-        };
-    }
+
 
 }

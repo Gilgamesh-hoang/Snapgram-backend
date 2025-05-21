@@ -11,7 +11,6 @@ import org.snapgram.util.AppConstant;
 import org.snapgram.util.RedisKeyUtil;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.UUID;
@@ -24,9 +23,8 @@ public class UpdateAffinityTask {
     IRedisService redisService;
     IAffinityService affinityService;
 
-//    @Scheduled(fixedRate = 10000)  // Chạy mỗi 10 giây (fixed rate)
-    @Transactional
-    public void fetchAndDeleteHash() {
+    @Scheduled(fixedRate = 10000)  // Chạy mỗi 10 giây (fixed rate)
+    private void fetchAndDeleteHash() {
         Map<Object, Object> affinities = redisService.popAllEntriesFromMapWithLock(RedisKeyUtil.AFFINITY);
         for (Map.Entry<Object, Object> entry : affinities.entrySet()) {
             String[] ids = entry.getKey().toString().split(AppConstant.AFFINITY_SEPARATOR);

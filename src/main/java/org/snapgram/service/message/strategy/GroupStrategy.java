@@ -1,6 +1,6 @@
 package org.snapgram.service.message.strategy;
 
-import com.corundumstudio.socketio.SocketIOClient;
+import com.corundumstudio.socketio.SocketIOServer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
@@ -43,7 +43,6 @@ import java.util.UUID;
 @Slf4j
 @FieldDefaults(makeFinal = true, level = lombok.AccessLevel.PRIVATE)
 public class GroupStrategy extends MessageStrategy {
-    UserSocketManager userSocketManager;
     ObjectMapper objectMapper;
     MessageRepository messageRepository;
     MessageRecipientRepository recipientRepository;
@@ -52,9 +51,9 @@ public class GroupStrategy extends MessageStrategy {
     MessageConversationRepository conversationRepository;
     ConversationMapper conversationMapper;
     MessageMapper messageMapper;
+    SocketIOServer socketServer;
 
     public GroupStrategy(MessageParticipantRepository participantRepository,
-                         UserSocketManager userSocketManager,
                          ObjectMapper objectMapper,
                          MessageRepository messageRepository,
                          MessageRecipientRepository recipientRepository,
@@ -62,9 +61,9 @@ public class GroupStrategy extends MessageStrategy {
                          IAffinityService affinityService,
                          MessageConversationRepository conversationRepository,
                          ConversationMapper conversationMapper,
-                         MessageMapper messageMapper) {
+                         MessageMapper messageMapper,
+                         SocketIOServer socketServer) {
         super(participantRepository);
-        this.userSocketManager = userSocketManager;
         this.objectMapper = objectMapper;
         this.messageRepository = messageRepository;
         this.recipientRepository = recipientRepository;
@@ -73,11 +72,12 @@ public class GroupStrategy extends MessageStrategy {
         this.conversationRepository = conversationRepository;
         this.conversationMapper = conversationMapper;
         this.messageMapper = messageMapper;
+        this.socketServer = socketServer;
     }
 
     @Override
     @Transactional
-    public MessageResponse sendMessage(SocketIOClient senderClient, MessageRequest request) {
+    public MessageResponse sendMessage(MessageRequest request) {
         if (request.getConversationId() == null)
             throw new IllegalArgumentException("Conversation ID is required");
 
@@ -91,26 +91,22 @@ public class GroupStrategy extends MessageStrategy {
         MessageResponse response = saveMessage(request, participants, conversation);
 
         // Increase affinity for each participant
-        increaseAffinity(participants);
+        increaseAffinity(request.getSenderId(), participants);
 
-        // Get the recipient's socket client
-        List<SocketIOClient> recipientClients = userSocketManager.getUserSocketsByUserIds(participants.stream().map(p -> p.getUser().getId()).toList());
-        // If the recipient is connected, send the message
-        if (!recipientClients.isEmpty()) {
-            recipientClients.forEach(client -> {
-                try {
-                    client.sendEvent(AppConstant.RECEIVE_MESSAGE_EVENT, objectMapper.writeValueAsString(response));
-                } catch (JsonProcessingException e) {
-                    log.error("Error while sending message to recipient", e);
-                }
-            });
+        try {
+            String roomId = request.getConversationId().toString();
+            socketServer.getRoomOperations(roomId)
+                    .sendEvent(AppConstant.RECEIVE_MESSAGE_EVENT, objectMapper.writeValueAsString(response));
+            log.info("Sent message to room {}", roomId);
+        } catch (JsonProcessingException e) {
+            log.error("Error while sending message to room", e);
         }
 
         return response;
     }
 
-    private void increaseAffinity(List<Participant> participants) {
-        participants.forEach(participant -> affinityService.increaseAffinity(participant.getUser().getId()));
+    private void increaseAffinity(UUID currentUser, List<Participant> participants) {
+        participants.forEach(participant -> affinityService.increaseAffinity(currentUser, participant.getUser().getId()));
     }
 
     private MessageResponse saveMessage(@Valid MessageRequest request, List<Participant> participants, Conversation conversation) {

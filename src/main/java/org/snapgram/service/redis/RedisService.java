@@ -147,13 +147,24 @@ public class RedisService implements IRedisService {
 
     @Override
     public void deleteEntriesFromMap(String key, List<Object> fields) {
-        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
-            StringRedisConnection stringRedisConn = (StringRedisConnection) connection;
-            for (Object field : fields) {
-                stringRedisConn.hDel(key, (String) field);
-            }
-            return null;
-        });
+//        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+//            StringRedisConnection stringRedisConn = (StringRedisConnection) connection;
+//            for (Object field : fields) {
+//                stringRedisConn.hDel(key, (String) field);
+//            }
+//            return null;
+//        });
+        try {
+            // Convert keys to String array for hDel
+            String[] keyArray = fields.stream()
+                    .map(Object::toString)
+                    .toArray(String[]::new);
+            redisTemplate.opsForHash().delete(key, (Object[]) keyArray);
+            log.info("Deleted {} keys from Redis hash: {}", fields.size(), key);
+        } catch (Exception e) {
+            log.error("Error deleting keys from Redis hash: {}", key, e);
+            throw new IllegalStateException("Failed to delete entries from Redis", e);
+        }
     }
 
     @Override

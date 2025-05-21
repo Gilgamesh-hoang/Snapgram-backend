@@ -1,5 +1,6 @@
 package org.snapgram.service.token;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -34,12 +35,23 @@ public class TokenService implements ITokenService {
     IRedisService redisService;
     AsyncTokenService asyncTokenService;
     RedisProducer redisProducer;
+    ObjectMapper objectMapper;
 
     @Override
     public void removeExpiredTokens() {
         List<Object> tokenExpired = new ArrayList<>();
         redisService.getMap(RedisKeyUtil.JWT_BLACKLIST).forEach((key, value) -> {
-            TokenDTO token = (TokenDTO) value;
+            TokenDTO token;
+
+            if (value instanceof TokenDTO tokenDTO) {
+                token = tokenDTO;
+            } else if (value instanceof HashMap<?, ?> map) {
+                token = objectMapper.convertValue(map, TokenDTO.class);
+            } else {
+                log.error("Invalid type for token: {}", value.getClass());
+                return; // Skip this entry if the type is invalid
+            }
+
             // check token expired
             if (token.getExpiredDate().before(new Date())) {
                 tokenExpired.add(key);

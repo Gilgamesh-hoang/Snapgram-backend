@@ -11,5 +11,7 @@ public interface IAffinityService {
 
    void increaseAffinity(UUID otherUserId);
 
+   void increaseAffinity(UUID currentUserId, UUID otherUserId);
+
    void updateAffinity(AffinityDTO affinity);
 }

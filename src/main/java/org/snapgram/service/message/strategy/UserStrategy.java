@@ -106,7 +106,7 @@ public class UserStrategy extends MessageStrategy {
 
     @Override
     @Transactional
-    public MessageResponse sendMessage(SocketIOClient senderClient, MessageRequest request) {
+    public MessageResponse sendMessage( MessageRequest request) {
         // Save the message and get the response
         MessageResponse response = saveMessage(request);
 

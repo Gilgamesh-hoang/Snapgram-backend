@@ -20,6 +20,8 @@ public interface IMessageService {
      */
     List<MessageResponse> getConversations(Pageable pageable, UUID currentUser);
 
+    List<ConversationDTO> getConversationsByType(UUID currentUser, ConversationType type);
+
     /**
      * Retrieves information about a conversation.
      *

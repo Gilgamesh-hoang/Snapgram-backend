@@ -28,11 +28,10 @@ public abstract class MessageStrategy {
     /**
      * Sends a message.
      *
-     * @param senderClient the client sending the message
      * @param request the message request containing the message details
      * @return a MessageResponse object containing the details of the sent message
      */
-    public abstract MessageResponse sendMessage(SocketIOClient senderClient, MessageRequest request);
+    public abstract MessageResponse sendMessage(MessageRequest request);
 
     /**
      * Retrieves information about a conversation.

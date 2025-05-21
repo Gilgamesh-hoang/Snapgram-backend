@@ -1,5 +1,6 @@
 package org.snapgram.service.cron;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.service.token.ITokenService;
@@ -12,8 +13,13 @@ import org.springframework.stereotype.Service;
 public class BlackListCleanupTask {
     private final ITokenService tokenService;
 
-//    @Scheduled(cron = "0 0 0 */2 * ?")
-//    @Scheduled(fixedRate = 2000)
+    @PostConstruct
+    public void init() {
+        log.info("Running initial token cleanup on server startup...");
+        deleteExpiredTokens();
+    }
+
+    @Scheduled(cron = "0 0 0 */2 * ?")
     private void deleteExpiredTokens() {
         log.info("Running token cleanup task...");
         tokenService.removeExpiredTokens();

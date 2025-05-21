@@ -1,6 +1,7 @@
 package org.snapgram.util;
 
 import lombok.experimental.UtilityClass;
+import org.snapgram.enums.ConversationType;
 
 import java.util.UUID;
 
@@ -70,4 +71,8 @@ public class RedisKeyUtil {
         return String.format("saved-posts:user:%s:page:%d:size:%d", userId.toString(), pageNumber,pageSize);
     }
 
+    /*message key*/
+    public static String getConversationsKey(UUID currentUser, ConversationType type) {
+        return String.format("conversations:user:%s:type:%s", currentUser.toString(), type.name());
+    }
 }

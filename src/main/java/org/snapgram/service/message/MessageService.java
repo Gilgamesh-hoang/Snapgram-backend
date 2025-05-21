@@ -24,6 +24,7 @@ import org.snapgram.entity.database.user.User;
 import org.snapgram.enums.ConversationType;
 import org.snapgram.exception.ResourceNotFoundException;
 import org.snapgram.exception.UnauthorizedActionException;
+import org.snapgram.kafka.producer.RedisProducer;
 import org.snapgram.mapper.ConversationMapper;
 import org.snapgram.mapper.MessageMapper;
 import org.snapgram.mapper.UserMapper;
@@ -33,9 +34,11 @@ import org.snapgram.repository.database.MessageRecipientRepository;
 import org.snapgram.service.cloudinary.ICloudinarySignatureService;
 import org.snapgram.service.message.factory.MessageFactory;
 import org.snapgram.service.message.strategy.MessageStrategy;
+import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.socket.UserSocketManager;
 import org.snapgram.util.AppConstant;
+import org.snapgram.util.RedisKeyUtil;
 import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -64,6 +67,8 @@ public class MessageService implements IMessageService, DataListener<MessageRequ
     ConversationMapper conversationMapper;
     IUserService userService;
     ICloudinarySignatureService signatureService;
+    IRedisService redisService;
+    RedisProducer redisProducer;
 
     @Override
     public void onData(SocketIOClient senderClient, MessageRequest request, AckRequest ackSender) {
@@ -80,7 +85,7 @@ public class MessageService implements IMessageService, DataListener<MessageRequ
         MessageStrategy messageStrategy = messageFactory.get(request.getConversationType());
 
         // Send the message using the selected strategy
-        MessageResponse response = messageStrategy.sendMessage(senderClient, request);
+        MessageResponse response = messageStrategy.sendMessage(request);
 
         // Send an acknowledgment if requested
         if (ackSender.isAckRequested()) {
@@ -110,6 +115,26 @@ public class MessageService implements IMessageService, DataListener<MessageRequ
         results.forEach(message ->
                 enrichMessage(message, currentUser)
         );
+
+        return results;
+    }
+
+    @Override
+    public List<ConversationDTO> getConversationsByType(UUID currentUser, ConversationType type) {
+        String redisKey = RedisKeyUtil.getConversationsKey(currentUser, type);
+        List<ConversationDTO> results = redisService.getList(redisKey, ConversationDTO.class);
+
+        if (results != null) {
+            return results;
+        }
+
+        List<Conversation> conversations = conversationRepository.findAllByUser(currentUser, type, Pageable.unpaged());
+        results = conversations.stream()
+                .map(conversationMapper::toDTO)
+                .toList();
+
+        // Cache the results in Redis
+        redisProducer.sendSaveList(redisKey, results, null, null);
 
         return results;
     }
@@ -315,6 +340,13 @@ public class MessageService implements IMessageService, DataListener<MessageRequ
                 .toList();
 
         participantRepository.saveAll(newParticipants);
+
+        userSocketManager.getUserSocketsByUserIds(uniqueNewParticipantIds)
+                .forEach(socket -> {
+                            socket.joinRoom(conversationId.toString());
+                            log.info("User {} joined room {}", socket.getSessionId(), conversationId);
+                        }
+                );
     }
 
 }
