@@ -6,6 +6,7 @@
 
 - [Overview](#overview)
 - [Github Frontend and Sentiment Analysis](#github-backend-and-sentiments-analysis)
+- [Quality of source code](#quality-of-source-code)
 - [Technologies Used](#technologies-used)
 - [Features](#features)
 - [Getting Started](#getting-started)
@@ -25,6 +26,16 @@ Snapgram is a modern social media application inspired by Instagram, designed to
 
 * Frontend: [here](https://github.com/Gilgamesh-hoang/Snapgram-frontend.git)
 * Sentiment Analysis: [here](https://github.com/Gilgamesh-hoang/Sentiment-Analysis-Comments.git)
+
+---
+
+##  Quality of source code
+
+[//]: # (SonarQube quality)
+The source code quality of Snapgram-backend is maintained using SonarQube, which provides insights into code quality, security vulnerabilities, and code smells.
+
+![SonarQube](/src/main/resources/templates/images/sonar-qube.png)
+
 
 ---
 
