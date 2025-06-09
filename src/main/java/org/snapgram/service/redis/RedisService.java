@@ -154,6 +154,12 @@ public class RedisService implements IRedisService {
 //            }
 //            return null;
 //        });
+
+        if (fields == null || fields.isEmpty()) {
+            log.warn("No fields provided for deletion from Redis hash: {}", key);
+            return;
+        }
+
         try {
             // Convert keys to String array for hDel
             String[] keyArray = fields.stream()

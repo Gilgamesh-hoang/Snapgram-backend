@@ -57,6 +57,7 @@ public class TokenService implements ITokenService {
                 tokenExpired.add(key);
             }
         });
+
         redisProducer.sendDeleteElementsInMap(RedisKeyUtil.JWT_BLACKLIST, tokenExpired);
     }
 

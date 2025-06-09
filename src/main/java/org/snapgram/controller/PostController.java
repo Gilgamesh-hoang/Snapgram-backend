@@ -18,6 +18,7 @@ import org.snapgram.service.post.IPostService;
 import org.snapgram.validation.media.ValidMedia;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
@@ -46,7 +47,8 @@ public class PostController {
     public ResponseObject<List<PostDTO>> getPostsByUser(@RequestParam("nickname") @NotBlank String nickname,
                                                         @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
                                                         @RequestParam(value = "pageSize", defaultValue = "10") @Min(0) @Max(50) Integer pageSize) {
-        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize);
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(pageNumber - 1, pageSize, sort);
         nickname = nickname.trim();
         return new ResponseObject<>(HttpStatus.OK, postService.getPostsByUser(nickname, pageable));
     }
