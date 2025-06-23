@@ -27,10 +27,13 @@ import org.snapgram.service.redis.IRedisService;
 import org.snapgram.service.sentiment.ISentimentService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.util.RedisKeyUtil;
+import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.UUID;
@@ -165,7 +168,6 @@ public class CommentService implements ICommentService {
                 .id(commentId)
                 .isDeleted(false)
                 .build());
-        System.out.println("=== ======== ===");
         return commentRepository.findOne(example).orElseThrow(
                 () -> new ResourceNotFoundException("Comment not found"));
     }
@@ -183,6 +185,7 @@ public class CommentService implements ICommentService {
     }
 
     @Override
+    @Transactional
     public CommentDTO createComment(UUID currentUser, CommentRequest request) {
         UUID postId = request.getPostId();
 
@@ -193,14 +196,18 @@ public class CommentService implements ICommentService {
 
         CompletableFuture.runAsync(() -> handleAsyncCommentCreation(postId, null));
 
-        notificationService.createNotification(CreateNotifyDTO.builder()
-                .type(NotificationType.COMMENT_POST)
-                .entityId(comment.getId())
-                .actorId(comment.getUser().getId())
-                .build());
-
         affinityService.increaseAffinityByComment(currentUser, postId);
 
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                notificationService.createNotification(CreateNotifyDTO.builder()
+                        .type(NotificationType.COMMENT_POST)
+                        .entityId(comment.getId())
+                        .actorId(comment.getUser().getId())
+                        .build());
+            }
+        });
         return buildCommentResponse(comment, currentUser);
     }
 
@@ -210,18 +217,21 @@ public class CommentService implements ICommentService {
         UUID postId = parentComment.getPost().getId();
         Comment comment = buildComment(postId, currentUserId, bannedService.removeBannedWords(request.getContent()), 1,
                 parentComment.getId());
-
         commentRepository.saveAndFlush(comment);
 
         CompletableFuture.runAsync(() -> handleAsyncCommentCreation(postId, parentComment.getId()));
+        affinityService.increaseAffinity(UserSecurityHelper.getCurrentUser().getId(), parentComment.getUser().getId());
 
-        notificationService.createNotification(CreateNotifyDTO.builder()
-                .type(NotificationType.REPLY_COMMENT)
-                .entityId(comment.getId())
-                .actorId(comment.getUser().getId())
-                .build());
-
-        affinityService.increaseAffinity(parentComment.getUser().getId());
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                notificationService.createNotification(CreateNotifyDTO.builder()
+                        .type(NotificationType.REPLY_COMMENT)
+                        .entityId(comment.getId())
+                        .actorId(comment.getUser().getId())
+                        .build());
+            }
+        });
 
         return buildCommentResponse(comment, currentUserId);
     }

@@ -47,13 +47,6 @@ public class AffinityService implements IAffinityService {
     }
 
     @Override
-    @Async
-    public void increaseAffinity(UUID otherUserId) {
-        UUID currentUserId = UserSecurityHelper.getCurrentUser().getId();
-        increaseAffinity(currentUserId, otherUserId);
-    }
-
-    @Override
     public void increaseAffinity(UUID currentUserId, UUID otherUserId) {
         affinityProducer.sendAffinityMessage(currentUserId, otherUserId);
     }

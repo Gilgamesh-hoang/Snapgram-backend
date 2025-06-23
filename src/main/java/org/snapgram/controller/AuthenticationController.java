@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.snapgram.dto.request.AuthenticationRequest;
 import org.snapgram.dto.request.TokenRequest;
@@ -20,6 +21,7 @@ import org.snapgram.service.authentication.IAuthenticationService;
 import org.snapgram.service.user.IUserService;
 import org.snapgram.util.AppConstant;
 import org.snapgram.util.CookieUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -43,6 +45,10 @@ public class AuthenticationController {
     ClientRegistrationRepository clientRegistrationRepository;
     UserMapper userMapper;
 
+    @NonFinal
+    @Value("${jwt.refresh_token.duration}")
+    long REFRESH_TOKEN_LIFETIME;
+
     @PostMapping("/google")
     public ResponseObject<JwtResponse> google(@RequestBody @Valid TokenRequest request, HttpServletResponse response) {
         DefaultOAuth2UserService oAuth2Service = new DefaultOAuth2UserService();
@@ -50,22 +56,24 @@ public class AuthenticationController {
                 new OAuth2AccessToken(OAuth2AccessToken.TokenType.BEARER, request.getToken(), null, null, null));
         OAuth2User user = oAuth2Service.loadUser(userRequest);
         JwtResponse jwtObj = authenticationService.oauth2GoogleLogin(userMapper.toGooglePojo(user));
-        return createResponse(response, jwtObj);
+        return createLoginResponse(response, jwtObj);
     }
 
-    private ResponseObject<JwtResponse> createResponse(HttpServletResponse response, JwtResponse jwtObj) {
+    private ResponseObject<JwtResponse> createLoginResponse(HttpServletResponse response, JwtResponse jwtObj) {
+        // divide REFRESH_TOKEN_LIFETIME by 1000 to convert milliseconds to seconds and plus 100 seconds for safety
+        final int TTL_SECOND = (int) (REFRESH_TOKEN_LIFETIME / 1000) + 100;
         // Set refresh token in HTTP-Only cookie
         Cookie refreshTokenCookie = CookieUtil.createCookie(AppConstant.REFRESH_TOKEN, jwtObj.getRefreshToken(),
-                "localhost", 604800, true, false);
+                "localhost", TTL_SECOND, true, false);
         response.addCookie(refreshTokenCookie);
-        return new ResponseObject<>(HttpStatus.OK, "Login successfully", jwtObj);
+        return new ResponseObject<>(HttpStatus.OK, "Authentication successfully", jwtObj);
     }
 
 
     @PostMapping("/login")
     public ResponseObject<JwtResponse> authenticate(@RequestBody @Valid AuthenticationRequest request, HttpServletResponse response) {
         JwtResponse jwtObj = authenticationService.login(request);
-        return createResponse(response, jwtObj);
+        return createLoginResponse(response, jwtObj);
     }
 
     @PostMapping("/refresh-token")
@@ -73,10 +81,7 @@ public class AuthenticationController {
                                                     HttpServletResponse response
     ) {
         JwtResponse jwtObj = authenticationService.refreshToken(refreshToken);
-        Cookie refreshTokenCookie = CookieUtil.createCookie(AppConstant.REFRESH_TOKEN, null, "localhost",
-                0, true, false);
-        response.addCookie(refreshTokenCookie);
-        return new ResponseObject<>(HttpStatus.OK, "Refresh token successfully", jwtObj);
+        return createLoginResponse(response, jwtObj);
     }
 
     @PostMapping("/logout")

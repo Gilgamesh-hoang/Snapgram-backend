@@ -18,6 +18,8 @@ import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.UUID;
@@ -53,6 +55,7 @@ public class CommentLikeService implements ICommentLikeService {
     }
 
     @Override
+    @Transactional
     public int like(UUID commentId) {
         Comment comment = validateComment(commentId);
         User user = User.builder().id(UserSecurityHelper.getCurrentUser().getId()).build();
@@ -73,11 +76,16 @@ public class CommentLikeService implements ICommentLikeService {
         // Delete the Redis cache for the post comments
         redisProducer.sendDeleteByKey(redisKey.substring(0, redisKey.indexOf("page")));
 
-        notificationService.createNotification(CreateNotifyDTO.builder()
-                .type(NotificationType.LIKE_COMMENT)
-                .entityId(commentId)
-                .actorId(user.getId())
-                .build());
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                notificationService.createNotification(CreateNotifyDTO.builder()
+                        .type(NotificationType.LIKE_COMMENT)
+                        .entityId(commentId)
+                        .actorId(user.getId())
+                        .build());
+            }
+        });
 
         return comment.getLikeCount();
     }

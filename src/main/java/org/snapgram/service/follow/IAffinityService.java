@@ -9,8 +9,6 @@ public interface IAffinityService {
 
    void increaseAffinityByComment(UUID currentUserId, UUID postId);
 
-   void increaseAffinity(UUID otherUserId);
-
    void increaseAffinity(UUID currentUserId, UUID otherUserId);
 
    void updateAffinity(AffinityDTO affinity);

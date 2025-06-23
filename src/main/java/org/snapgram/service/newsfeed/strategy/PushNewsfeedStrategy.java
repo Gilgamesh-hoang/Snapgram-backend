@@ -32,6 +32,7 @@ public class PushNewsfeedStrategy implements NewsfeedStrategy {
     RedisProducer redisProducer;
     IPostService postService;
     IFollowService followService;
+    float BIAS = 0.1F; // Bias for ranking posts
 
     @Override
     public List<PostDTO> getNewsfeed(UUID userId, Pageable pageable) {
@@ -82,9 +83,9 @@ public class PushNewsfeedStrategy implements NewsfeedStrategy {
 
                 List<Map.Entry<Float, PostDTO>> rankedListForUser = new ArrayList<>();
                 for (PostDTO post : userPosts) {
-                    float weight = post.getCommentCount() * 0.7F + post.getLikeCount() * 0.3F;
+                    float weight = post.getCommentCount() * 0.7F + post.getLikeCount() * 0.3F + BIAS;// plus a bias to new posts
                     long decayInMinutes = (System.currentTimeMillis() - post.getCreatedAt().getTime()) / 60000;
-                    float rank = closeness * weight / (decayInMinutes + 0.1F);
+                    float rank = closeness * weight / (decayInMinutes + BIAS);
 
                     rankedListForUser.add(Map.entry(rank * 10000, post));
                 }

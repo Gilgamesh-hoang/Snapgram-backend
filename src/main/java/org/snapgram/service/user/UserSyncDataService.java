@@ -23,28 +23,32 @@ public class UserSyncDataService implements IUserSyncDataService{
 
     @Override
     public void createUser(UUID id) {
-        User user = validateUserRepo(id);
-//        userElasticRepo.save(userMapper.toUserDocument(user));
+        User user = validAndGetUserRepo(id);
+        UserDocument userDocument = validAndGetUserDocument(id);
+        if(userDocument != null) {
+            throw new ResourceNotFoundException("User document already exists");
+        }
+        userElasticRepo.save(userMapper.toUserDocument(user));
     }
 
     @Override
     public void updateUser(UUID id) {
-        UserDocument userDocument = validateUserDocument(id);
-        User user = validateUserRepo(id);
+        UserDocument userDocument = validAndGetUserDocument(id);
+        User user = validAndGetUserRepo(id);
         userMapper.updateUserDocumentFromUser(userDocument, user);
-//        userElasticRepo.save(userDocument);
+        userElasticRepo.save(userDocument);
     }
 
     @Override
     public void deleteUser(UUID id) {
-//        userElasticRepo.delete(validateUserDocument(id));
+        userElasticRepo.delete(validAndGetUserDocument(id));
     }
 
-    private User validateUserRepo(UUID id) {
+    private User validAndGetUserRepo(UUID id) {
         return userRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
-    private UserDocument validateUserDocument(UUID id) {
+    private UserDocument validAndGetUserDocument(UUID id) {
         return userElasticRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 }

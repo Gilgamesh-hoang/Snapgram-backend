@@ -19,7 +19,7 @@ public class BlackListCleanupTask {
         deleteExpiredTokens();
     }
 
-    @Scheduled(cron = "0 0 0 */2 * ?")
+    @Scheduled(cron = "0 0 0 */2 * ?") // Runs every 2 days at midnight
     private void deleteExpiredTokens() {
         log.info("Running token cleanup task...");
         tokenService.removeExpiredTokens();

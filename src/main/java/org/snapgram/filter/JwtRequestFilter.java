@@ -13,6 +13,7 @@ import org.snapgram.service.jwt.JwtHelper;
 import org.snapgram.service.jwt.JwtService;
 import org.snapgram.service.key.IKeyService;
 import org.snapgram.service.user.UserDetailServiceImpl;
+import org.snapgram.util.EndPoint;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -36,12 +37,21 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     UserDetailServiceImpl userDetailService;
     JwtService jwtService;
     JwtHelper jwtHelper;
+    EndPoint endPoint;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        final String requestTokenHeader = request.getHeader("Authorization");
+        String requestPath = request.getRequestURI();
 
+        // check if the request path requires authentication
+        boolean isPublic = endPoint.isPublicPath(requestPath);
+        if (isPublic) {
+            chain.doFilter(request, response); // continue the filter chain
+            return;
+        }
+
+        final String requestTokenHeader = request.getHeader("Authorization");
         String email = null;
         String jwtToken = null;
         // JWT Token is in the form "Bearer token". Remove Bearer word and get

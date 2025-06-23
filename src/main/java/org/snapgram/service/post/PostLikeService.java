@@ -22,6 +22,8 @@ import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.UUID;
@@ -62,7 +64,7 @@ public class PostLikeService implements IPostLikeService {
         if (!isPostLikedByUser(postId, user.getId())) {
 
             PostLike postLike = new PostLike(post, user);
-            postLikeRepository.save(postLike);
+            postLikeRepository.saveAndFlush(postLike);
 
             likeProducer.sendUpdateLike(
                     PostLikeUpdateMessage.builder().postId(postId).action(PostLikeUpdateMessage.Action.INCREMENT).build()
@@ -70,16 +72,23 @@ public class PostLikeService implements IPostLikeService {
 //            post.setLikeCount(postLikeService.countByPost(postId));
 //            postRepository.save(post);
 
-            notificationService.createNotification(CreateNotifyDTO.builder()
-                    .type(NotificationType.LIKE_POST)
-                    .entityId(postId)
-                    .actorId(user.getId())
-                    .build());
 
             affinityService.increaseAffinityByLike(user.getId(), postId);
+
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    notificationService.createNotification(CreateNotifyDTO.builder()
+                            .type(NotificationType.LIKE_POST)
+                            .entityId(postId)
+                            .actorId(user.getId())
+                            .build());
+                }
+            });
+
         }
 
-        return buildPostMetricDTO(post);
+        return buildPostMetricDTO(post.getLikeCount() + 1, post.getCommentCount());
 
     }
 
@@ -96,7 +105,7 @@ public class PostLikeService implements IPostLikeService {
         }
 //        post.setLikeCount(postLikeService.countByPost(postId));
 //        postRepository.save(post);
-        return buildPostMetricDTO(post);
+        return buildPostMetricDTO(post.getLikeCount() - 1, post.getCommentCount());
 
     }
 
@@ -104,10 +113,10 @@ public class PostLikeService implements IPostLikeService {
         return postRepository.findById(postId).orElseThrow(() -> new ResourceNotFoundException("Post not found"));
     }
 
-    private PostMetricDTO buildPostMetricDTO(Post post) {
+    private PostMetricDTO buildPostMetricDTO(int likeCount, int commentCount) {
         return PostMetricDTO.builder()
-                .likeCount(post.getLikeCount())
-                .commentCount(post.getCommentCount())
+                .likeCount(likeCount)
+                .commentCount(commentCount)
                 .build();
     }
 

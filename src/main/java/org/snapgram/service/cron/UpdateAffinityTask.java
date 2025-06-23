@@ -26,6 +26,9 @@ public class UpdateAffinityTask {
     @Scheduled(fixedRate = 10000)  // Chạy mỗi 10 giây (fixed rate)
     private void fetchAndDeleteHash() {
         Map<Object, Object> affinities = redisService.popAllEntriesFromMapWithLock(RedisKeyUtil.AFFINITY);
+        if(!affinities.isEmpty()) {
+            log.info("Fetched {} affinities from Redis", affinities.size());
+        }
         for (Map.Entry<Object, Object> entry : affinities.entrySet()) {
             String[] ids = entry.getKey().toString().split(AppConstant.AFFINITY_SEPARATOR);
             UUID followerId = UUID.fromString(ids[0]);

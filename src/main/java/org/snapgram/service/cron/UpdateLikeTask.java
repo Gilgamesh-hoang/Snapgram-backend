@@ -7,7 +7,6 @@ import org.snapgram.service.redis.IRedisService;
 import org.snapgram.util.RedisKeyUtil;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.UUID;
@@ -19,9 +18,13 @@ public class UpdateLikeTask {
     private final IRedisService redisService;
     private final IPostService postService;
 
-    @Scheduled(fixedRate = 3000)  // Chạy mỗi 3 giây (fixed rate)
+    @Scheduled(fixedRate = 2000)  // Chạy mỗi 2 giây (fixed rate)
     private void fetchAndDeleteHash() {
         Map<Object, Object> likes = redisService.popAllEntriesFromMapWithLock(RedisKeyUtil.POST_LIKE_COUNT);
+        if (!likes.isEmpty()) {
+            log.info("Fetched {} likes from Redis", likes.size());
+        }
+
         for (Map.Entry<Object, Object> entry : likes.entrySet()) {
             UUID postId = UUID.fromString((String) entry.getKey());
             Integer likeCount = (Integer) entry.getValue();

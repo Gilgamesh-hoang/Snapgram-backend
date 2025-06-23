@@ -77,7 +77,6 @@ public class NotificationService implements INotificationService {
                         try {
                             return future.get();
                         } catch (Exception e) {
-                            Thread.currentThread().interrupt();
                             log.error("Error while generating notification", e);
                             return null;
                         }

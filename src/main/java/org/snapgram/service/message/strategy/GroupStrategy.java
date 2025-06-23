@@ -26,7 +26,6 @@ import org.snapgram.repository.database.MessageRecipientRepository;
 import org.snapgram.repository.database.MessageRepository;
 import org.snapgram.service.follow.IAffinityService;
 import org.snapgram.service.user.IUserService;
-import org.snapgram.socket.UserSocketManager;
 import org.snapgram.util.AppConstant;
 import org.snapgram.util.UserSecurityHelper;
 import org.springframework.data.domain.Pageable;

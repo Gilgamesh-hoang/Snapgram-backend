@@ -45,8 +45,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
         httpSecurity.authorizeHttpRequests(config ->
-                config.requestMatchers(HttpMethod.GET, endPoint.publicGetEndpoints()).permitAll()
-                        .requestMatchers(HttpMethod.POST, endPoint.publicPostEndpoints()).permitAll()
+                config.requestMatchers(endPoint.publicEndpoints()).permitAll()
                         .anyRequest().authenticated());
 
         httpSecurity.exceptionHandling(exp -> exp.authenticationEntryPoint(jwtAuthenticationEntryPoint));

@@ -78,13 +78,18 @@ public class UserStrategy extends MessageStrategy {
 
     @Override
     public ConversationDTO getConservationInfo(UUID conversationId) {
+        // check current user is part of the conversation
+        CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
+        return getConservationInfo(currentUser.getId(), conversationId);
+    }
+
+    private ConversationDTO getConservationInfo(UUID currentUserId, UUID conversationId) {
         // get the conversation
         Conversation conversation = conversationRepository.findByIdAndTypeAndIsDeletedIsFalse(conversationId, ConversationType.USER)
                 .orElseThrow(() -> new ResourceNotFoundException("Conversation not found"));
 
         // check current user is part of the conversation
-        CustomUserSecurity currentUser = UserSecurityHelper.getCurrentUser();
-        Participant participant = validateUserParticipation(conversation.getId(), currentUser.getId()).get(0);
+        Participant participant = validateUserParticipation(conversation.getId(), currentUserId).get(0);
 
         return ConversationDTO.builder()
                 .id(conversation.getId())
@@ -106,7 +111,7 @@ public class UserStrategy extends MessageStrategy {
 
     @Override
     @Transactional
-    public MessageResponse sendMessage( MessageRequest request) {
+    public MessageResponse sendMessage(MessageRequest request) {
         // Save the message and get the response
         MessageResponse response = saveMessage(request);
 
@@ -114,7 +119,7 @@ public class UserStrategy extends MessageStrategy {
         UUID recipientId = response.getRecipient().getId();
 
         // Increase affinity between sender and recipient
-        affinityService.increaseAffinity(recipientId);
+        affinityService.increaseAffinity(request.getSenderId(), recipientId);
         // Get the recipient's socket client
         List<SocketIOClient> recipientClients = userSocketManager.getUserSockets(recipientId);
         // If the recipient is connected, send the message
@@ -156,8 +161,7 @@ public class UserStrategy extends MessageStrategy {
      */
     private MessageResponse handleExistingConversation(MessageRequest request) {
         // Retrieve the conversation by ID, throw an exception if not found
-        Conversation conversation = conversationRepository.findById(request.getConversationId())
-                .orElseThrow(() -> new ResourceNotFoundException("Cannot find conversation"));
+        ConversationDTO conversation = this.getConservationInfo(request.getSenderId(), request.getConversationId());
 
         // Validate the sender's participation in the conversation
         Participant participant = validateUserParticipation(conversation.getId(), request.getSenderId()).get(0);
@@ -207,8 +211,14 @@ public class UserStrategy extends MessageStrategy {
         MessageRecipient messageRecipient = createMessageRecipient(message, recipientParticipant);
         recipientRepository.save(messageRecipient);
 
+        ConversationDTO conv = ConversationDTO.builder()
+                .id(conversation.getId())
+                .type(conversation.getType())
+                .name(recipientParticipant.getUser().getNickname())
+                .avatar(recipientParticipant.getUser().getAvatarUrl())
+                .build();
         // Build and return the message response
-        return buildMessageResponse(message, recipientParticipant.getUser(), conversation);
+        return buildMessageResponse(message, recipientParticipant.getUser(), conv);
     }
 
     private Participant createParticipant(Conversation conversation, UUID userId) {
@@ -234,14 +244,14 @@ public class UserStrategy extends MessageStrategy {
                 .build();
     }
 
-    private MessageResponse buildMessageResponse(Message message, User recipient, Conversation conversation) {
+    private MessageResponse buildMessageResponse(Message message, User recipient, ConversationDTO conversation) {
         return MessageResponse.builder()
                 .id(message.getId())
                 .sender(userService.getCreatorById(message.getSender().getId()))
                 .recipient(userService.getCreatorById(recipient.getId()))
                 .content(message.getContent())
                 .contentType(message.getType())
-                .conversation(conversationMapper.toDTO(conversation))
+                .conversation(conversation)
                 .createdAt(message.getCreatedAt())
                 .build();
     }

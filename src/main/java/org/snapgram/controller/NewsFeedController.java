@@ -33,7 +33,7 @@ public class NewsFeedController {
     RedisProducer redisProducer;
 
     @GetMapping
-    public ResponseObject<List<PostDTO>> getCommentsByPost(
+    public ResponseObject<List<PostDTO>> getNewsfeed(
             @AuthenticationPrincipal CustomUserSecurity user,
             @RequestParam(value = "pageNum", defaultValue = "1") @Min(0) Integer pageNumber,
             @RequestParam(value = "pageSize", defaultValue = "20") @Min(0) @Max(30) Integer pageSize
