@@ -20,6 +20,7 @@
 
 Snapgram is a modern social media application inspired by Instagram, designed to provide users with a seamless platform for sharing photos and connecting with others. This repository contains the backend services that power the Snapgram application.
 
+![Architect](/src/main/resources/templates/images/architect.png)
 ---
 
 ##  Github Frontend and Sentiment Analysis
